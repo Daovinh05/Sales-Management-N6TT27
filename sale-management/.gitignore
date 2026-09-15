@@ -1,0 +1,55 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### OS System Files ###
+# Chặn file rác sinh ra trên máy macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Chặn file rác sinh ra trên máy Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+### Logs ###
+# Chặn các file log ghi lại lỗi của Spring Boot
+*.log
+
+### Secrets & Environment Variables ###
+# Chặn file chứa cấu hình nhạy cảm (Mật khẩu MySQL, JWT Secret Key)
+.env
+.env.local
