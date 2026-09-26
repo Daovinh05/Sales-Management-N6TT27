@@ -25,6 +25,19 @@ services:
     volumes:
       - redis-data:/data
 
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: sales-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    depends_on:
+      mysql:
+        condition: service_healthy
+
   # Backend Spring Boot (bật lên sau khi có Dockerfile trong backend/)
   # backend:
   #   build: ./backend
@@ -35,6 +48,7 @@ services:
   #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/banhang
   #     SPRING_DATASOURCE_USERNAME: root
   #     SPRING_DATASOURCE_PASSWORD: banhang123
+  #     APP_JWT_SECRET: ${JWT_SECRET}
   #   depends_on:
   #     mysql:
   #       condition: service_healthy
