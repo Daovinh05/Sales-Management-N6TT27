@@ -4,24 +4,24 @@ flowchart LR
     %% ACTORS
     %% =========================
 
-    Admin["👑 Admin"]
-    Customer["👤 Customer"]
-    Warehouse["📦 Warehouse Staff"]
+    Admin["Admin"]
+    Customer["Customer"]
+    Warehouse["Warehouse Staff"]
 
     %% =========================
     %% SYSTEM
     %% =========================
 
-    subgraph SYSTEM["🏪 SALES MANAGEMENT SYSTEM"]
+    subgraph SYSTEM["SALES MANAGEMENT SYSTEM"]
 
-        subgraph AUTH["🔐 Authentication & Authorization"]
+        subgraph AUTH["Authentication & Authorization"]
             UC1["Đăng ký"]
             UC2["Đăng nhập"]
             UC3["Đăng xuất"]
             UC4["Quản lý phân quyền"]
         end
 
-        subgraph PRODUCT["📱 Product Management"]
+        subgraph PRODUCT["Product Management"]
             UC5["Xem sản phẩm"]
             UC6["Thêm sản phẩm"]
             UC7["Cập nhật sản phẩm"]
@@ -30,14 +30,14 @@ flowchart LR
             UC10["Quản lý thương hiệu"]
         end
 
-        subgraph CART["🛒 Shopping Cart"]
+        subgraph CART["Shopping Cart"]
             UC11["Xem giỏ hàng"]
             UC12["Thêm vào giỏ"]
             UC13["Cập nhật số lượng"]
             UC14["Xóa khỏi giỏ"]
         end
 
-        subgraph ORDER["📋 Order Management"]
+        subgraph ORDER["Order Management"]
             UC15["Đặt hàng"]
             UC16["Xem đơn hàng"]
             UC17["Xác nhận đơn"]
@@ -45,13 +45,13 @@ flowchart LR
             UC19["Cập nhật trạng thái"]
         end
 
-        subgraph PAYMENT["💳 Payment"]
+        subgraph PAYMENT["Payment"]
             UC20["Thanh toán"]
             UC21["Kiểm tra thanh toán"]
             UC22["Hoàn tiền"]
         end
 
-        subgraph WAREHOUSE_MODULE["🏭 Warehouse Management"]
+        subgraph WAREHOUSE_MODULE["Warehouse Management"]
             UC23["Xem tồn kho"]
             UC24["Nhập kho"]
             UC25["Xuất kho"]
@@ -59,7 +59,7 @@ flowchart LR
             UC27["Quản lý nhà cung cấp"]
         end
 
-        subgraph ADMIN_MODULE["⚙️ Administration"]
+        subgraph ADMIN_MODULE["Administration"]
             UC28["Quản lý người dùng"]
             UC29["Quản lý vai trò"]
             UC30["Dashboard"]
