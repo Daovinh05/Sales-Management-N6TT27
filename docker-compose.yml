@@ -1,0 +1,53 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: sales-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: sale_management
+      MYSQL_ROOT_PASSWORD: anhthanhpro2005
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-panhthanhpro2005"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: sales-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  # Backend Spring Boot (bật lên sau khi có Dockerfile trong backend/)
+  # backend:
+  #   build: ./backend
+  #   container_name: sales-backend
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sale_management
+  #     SPRING_DATASOURCE_USERNAME: root
+  #     SPRING_DATASOURCE_PASSWORD: anhthanhpro2005
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+
+  # Frontend React Vite (bật lên sau khi có Dockerfile trong frontend/)
+  # frontend:
+  #   build: ./frontend
+  #   container_name: sales-frontend
+  #   ports:
+  #     - "5173:5173"
+  #   environment:
+  #     VITE_API_URL: http://localhost:8080/api
+
+volumes:
+  mysql-data:
+  redis-data:

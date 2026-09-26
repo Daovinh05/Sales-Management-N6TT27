@@ -1,1 +1,12 @@
 .vscode/settings.json
+
+# Frontend - React Vite
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.env
+frontend/.env.local
+
+# Backend build output (dự phòng ở root, chính vẫn ở backend/.gitignore)
+target/
+*.log
