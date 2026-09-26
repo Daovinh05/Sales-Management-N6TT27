@@ -38,29 +38,33 @@ services:
       mysql:
         condition: service_healthy
 
-  # Backend Spring Boot (bật lên sau khi có Dockerfile trong backend/)
-  # backend:
-  #   build: ./backend
-  #   container_name: sales-backend
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/banhang
-  #     SPRING_DATASOURCE_USERNAME: root
-  #     SPRING_DATASOURCE_PASSWORD: banhang123
-  #     APP_JWT_SECRET: ${JWT_SECRET}
-  #   depends_on:
-  #     mysql:
-  #       condition: service_healthy
+  backend:
+    build: ./backend
+    container_name: sales-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/banhang?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: banhang123
+      APP_JWT_SECRET: ${JWT_SECRET}
+      APP_CORS_ORIGINS: http://localhost:5173
+    depends_on:
+      mysql:
+        condition: service_healthy
 
-  # Frontend React Vite (bật lên sau khi có Dockerfile trong frontend/)
-  # frontend:
-  #   build: ./frontend
-  #   container_name: sales-frontend
-  #   ports:
-  #     - "5173:5173"
-  #   environment:
-  #     VITE_API_URL: http://localhost:8080/api
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8080/api
+    container_name: sales-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
 
 volumes:
   mysql-data:
