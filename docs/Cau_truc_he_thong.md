@@ -35,9 +35,9 @@ Mình đề xuất scope như sau:
 
 1. Phân quyền
 Actor	Chức năng
-👑 Admin	Quản lý toàn hệ thống
-👤 Customer	Mua hàng, thanh toán, theo dõi đơn
-📦 Warehouse Staff	Nhập/xuất và kiểm kê kho
+Admin	Quản lý toàn hệ thống
+Customer	Mua hàng, thanh toán, theo dõi đơn
+Warehouse Staff	Nhập/xuất và kiểm kê kho
 2. Module chính
 Sales Management System
 │

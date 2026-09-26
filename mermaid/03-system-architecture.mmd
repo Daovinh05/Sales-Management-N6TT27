@@ -4,12 +4,12 @@ flowchart TB
     %% CLIENT
     %% ==========================================
 
-    subgraph CLIENT["🖥️ CLIENT"]
-        Customer["👤 Customer"]
-        Admin["👑 Admin"]
-        Warehouse["📦 Warehouse Staff"]
+    subgraph CLIENT["CLIENT"]
+        Customer["Customer"]
+        Admin["Admin"]
+        Warehouse["Warehouse Staff"]
 
-        Browser["🌐 Web Browser"]
+        Browser["Web Browser"]
 
         Customer --> Browser
         Admin --> Browser
@@ -21,7 +21,7 @@ flowchart TB
     %% FRONTEND
     %% ==========================================
 
-    subgraph FRONTEND["⚛️ FRONTEND - REACT"]
+    subgraph FRONTEND["FRONTEND - REACT"]
 
         UI["React UI"]
 
@@ -42,7 +42,7 @@ flowchart TB
     %% BACKEND
     %% ==========================================
 
-    subgraph BACKEND["☕ BACKEND - SPRING BOOT"]
+    subgraph BACKEND["BACKEND - SPRING BOOT"]
 
         Gateway["API / Controller"]
 
@@ -85,11 +85,11 @@ flowchart TB
     %% DATABASE
     %% ==========================================
 
-    subgraph DATA["💾 DATA LAYER"]
+    subgraph DATA["DATA LAYER"]
 
-        MySQL[("🗄️ MySQL / PostgreSQL")]
+        MySQL[("MySQL / PostgreSQL")]
 
-        Redis[("⚡ Redis Cache")]
+        Redis[("Redis Cache")]
 
     end
 
@@ -98,11 +98,11 @@ flowchart TB
     %% EXTERNAL SERVICES
     %% ==========================================
 
-    subgraph EXTERNAL["🌐 EXTERNAL SERVICES"]
+    subgraph EXTERNAL["EXTERNAL SERVICES"]
 
-        PaymentGateway["💳 Payment Gateway"]
+        PaymentGateway["Payment Gateway"]
 
-        Email["📧 Email Service"]
+        Email["Email Service"]
 
     end
 
