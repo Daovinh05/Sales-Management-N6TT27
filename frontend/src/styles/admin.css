@@ -1,0 +1,27 @@
+/* Clone trang Quanly web cũ */
+.ad-wrap { display: flex; height: 100vh; background: #f8fafc; font-family: Inter, 'Be Vietnam Pro', sans-serif; }
+.ad-side { width: 260px; background: #fff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 22px 16px; overflow-y: auto; flex-shrink: 0; }
+.ad-brand { font-size: 22px; font-weight: 800; color: #4361ee; display: flex; align-items: center; gap: 10px; padding: 0 8px 20px; font-family: Nunito, Inter, sans-serif; }
+.ad-menu { display: flex; flex-direction: column; gap: 8px; }
+.ad-menu a { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; color: #64748b; font-size: 16px; font-weight: 500; cursor: pointer; }
+.ad-menu a:hover, .ad-menu a.active { background: #eff6ff; color: #4361ee; }
+.ad-menu a .fa-fw { width: 20px; text-align: center; }
+.ad-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.ad-top { height: 70px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; }
+.ad-title { font-size: 20px; font-weight: 700; font-family: Nunito, Inter, sans-serif; }
+.ad-user { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.ad-user img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #e2e8f0; }
+.ad-content { flex: 1; overflow-y: auto; padding: 30px; }
+.ad-welcome { background: linear-gradient(135deg, #4361ee, #3a0ca3); border-radius: 16px; padding: 30px; color: #1e293b; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); position: relative; overflow: hidden; }
+.ad-welcome h2 { font-size: 24px; margin-bottom: 8px; color: #0f172a; }
+.ad-welcome p { font-size: 15px; color: #fff; opacity: .9; }
+.ad-welcome .d { font-size: 13px; color: #fff; opacity: .8; margin-top: 10px; display: flex; gap: 8px; align-items: center; }
+.ad-welcome .big { font-size: 110px; opacity: .25; color: #fff; position: absolute; right: 40px; }
+.ad-sec { font-size: 22px; margin-bottom: 16px; display: flex; gap: 10px; align-items: center; }
+.ad-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; }
+.ad-card { background: #fff; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; cursor: pointer; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.06); min-height: 150px; }
+.ad-card:hover { transform: translateY(-5px); }
+.ad-ic { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; }
+.ad-card h3 { font-size: 16px; }
+.ad-card p { font-size: 13px; color: #64748b; }
+@media (max-width: 768px) { .ad-side { display: none; } .ad-content { padding: 16px; } }
