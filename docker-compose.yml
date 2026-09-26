@@ -4,14 +4,14 @@ services:
     container_name: sales-mysql
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: sale_management
-      MYSQL_ROOT_PASSWORD: anhthanhpro2005
+      MYSQL_DATABASE: banhang
+      MYSQL_ROOT_PASSWORD: banhang123
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-panhthanhpro2005"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pbanhang123"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,9 +32,9 @@ services:
   #   ports:
   #     - "8080:8080"
   #   environment:
-  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sale_management
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/banhang
   #     SPRING_DATASOURCE_USERNAME: root
-  #     SPRING_DATASOURCE_PASSWORD: anhthanhpro2005
+  #     SPRING_DATASOURCE_PASSWORD: banhang123
   #   depends_on:
   #     mysql:
   #       condition: service_healthy
