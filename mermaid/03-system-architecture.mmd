@@ -1,0 +1,126 @@
+flowchart TB
+
+    %% ==========================================
+    %% CLIENT
+    %% ==========================================
+
+    subgraph CLIENT["🖥️ CLIENT"]
+        Customer["👤 Customer"]
+        Admin["👑 Admin"]
+        Warehouse["📦 Warehouse Staff"]
+
+        Browser["🌐 Web Browser"]
+
+        Customer --> Browser
+        Admin --> Browser
+        Warehouse --> Browser
+    end
+
+
+    %% ==========================================
+    %% FRONTEND
+    %% ==========================================
+
+    subgraph FRONTEND["⚛️ FRONTEND - REACT"]
+
+        UI["React UI"]
+
+        Pages["Pages"]
+        Components["Components"]
+        Services["API Services"]
+        State["State Management"]
+
+        UI --> Pages
+        UI --> Components
+        UI --> Services
+        UI --> State
+
+    end
+
+
+    %% ==========================================
+    %% BACKEND
+    %% ==========================================
+
+    subgraph BACKEND["☕ BACKEND - SPRING BOOT"]
+
+        Gateway["API / Controller"]
+
+        Security["Spring Security"]
+        JWT["JWT Authentication"]
+
+        ProductService["Product Service"]
+        UserService["User Service"]
+        OrderService["Order Service"]
+        CartService["Cart Service"]
+        PaymentService["Payment Service"]
+        WarehouseService["Warehouse Service"]
+        ReportService["Report Service"]
+
+        Repository["Spring Data JPA / Repository"]
+
+        Gateway --> Security
+        Security --> JWT
+
+        Gateway --> ProductService
+        Gateway --> UserService
+        Gateway --> OrderService
+        Gateway --> CartService
+        Gateway --> PaymentService
+        Gateway --> WarehouseService
+        Gateway --> ReportService
+
+        ProductService --> Repository
+        UserService --> Repository
+        OrderService --> Repository
+        CartService --> Repository
+        PaymentService --> Repository
+        WarehouseService --> Repository
+        ReportService --> Repository
+
+    end
+
+
+    %% ==========================================
+    %% DATABASE
+    %% ==========================================
+
+    subgraph DATA["💾 DATA LAYER"]
+
+        MySQL[("🗄️ MySQL / PostgreSQL")]
+
+        Redis[("⚡ Redis Cache")]
+
+    end
+
+
+    %% ==========================================
+    %% EXTERNAL SERVICES
+    %% ==========================================
+
+    subgraph EXTERNAL["🌐 EXTERNAL SERVICES"]
+
+        PaymentGateway["💳 Payment Gateway"]
+
+        Email["📧 Email Service"]
+
+    end
+
+
+    %% ==========================================
+    %% CONNECTION
+    %% ==========================================
+
+    Browser --> UI
+
+    Services --> Gateway
+
+    Repository --> MySQL
+
+    ProductService --> Redis
+    CartService --> Redis
+
+    PaymentService --> PaymentGateway
+
+    OrderService --> Email
+    PaymentService --> Email

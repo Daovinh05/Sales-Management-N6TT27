@@ -1,0 +1,186 @@
+Luồng:
+
+Customer
+   ↓
+React
+   ↓
+Spring Boot
+   ↓
+Auth
+   ↓
+Order Service
+   ↓
+Inventory
+   ↓
+Database
+   ↓
+Payment
+   ↓
+Update Order
+
+File :
+sequenceDiagram
+
+    autonumber
+
+    actor Customer as 👤 Customer
+
+    participant FE as ⚛️ React Frontend
+    participant API as ☕ Spring Boot API
+    participant Auth as 🔐 Spring Security
+    participant Order as 📋 Order Service
+    participant Inventory as 📦 Inventory Service
+    participant DB as 🗄️ Database
+    participant Payment as 💳 Payment Gateway
+
+    %% ==========================================
+    %% LOGIN
+    %% ==========================================
+
+    Customer->>FE: Đăng nhập
+
+    FE->>API: POST /api/auth/login
+
+    API->>Auth: Xác thực username/password
+
+    Auth->>DB: Kiểm tra USER
+
+    DB-->>Auth: User information
+
+    Auth-->>API: JWT Token
+
+    API-->>FE: JWT Token
+
+    FE-->>Customer: Đăng nhập thành công
+
+
+    %% ==========================================
+    %% VIEW PRODUCT
+    %% ==========================================
+
+    Customer->>FE: Xem sản phẩm
+
+    FE->>API: GET /api/products
+
+    API->>DB: Query products
+
+    DB-->>API: Product list
+
+    API-->>FE: Product list
+
+    FE-->>Customer: Hiển thị sản phẩm
+
+
+    %% ==========================================
+    %% ADD CART
+    %% ==========================================
+
+    Customer->>FE: Thêm sản phẩm vào giỏ
+
+    FE->>API: POST /api/cart/items
+
+    API->>DB: Kiểm tra PRODUCT
+
+    DB-->>API: Product information
+
+    API->>DB: INSERT / UPDATE CART_ITEM
+
+    DB-->>API: Cart updated
+
+    API-->>FE: Cart updated
+
+    FE-->>Customer: Hiển thị giỏ hàng
+
+
+    %% ==========================================
+    %% CREATE ORDER
+    %% ==========================================
+
+    Customer->>FE: Nhấn "Đặt hàng"
+
+    FE->>API: POST /api/orders
+
+    API->>Auth: Validate JWT
+
+    Auth-->>API: User authenticated
+
+    API->>Order: Create order
+
+    Order->>DB: Get CART_ITEM
+
+    DB-->>Order: Cart items
+
+
+    %% ==========================================
+    %% CHECK INVENTORY
+    %% ==========================================
+
+    Order->>Inventory: Kiểm tra tồn kho
+
+    Inventory->>DB: SELECT INVENTORY
+
+    DB-->>Inventory: Current stock
+
+    alt Đủ tồn kho
+
+        Inventory-->>Order: Stock available
+
+        Order->>DB: Create ORDERS
+
+        Order->>DB: Create ORDER_DETAIL
+
+        Order->>DB: Reserve stock
+
+        DB-->>Order: Order created
+
+
+        %% ======================================
+        %% PAYMENT
+        %% ======================================
+
+        Order->>Payment: Create payment
+
+        Payment-->>Order: Payment URL
+
+        Order-->>API: Payment URL
+
+        API-->>FE: Payment URL
+
+        FE-->>Customer: Chuyển đến thanh toán
+
+
+        Customer->>Payment: Thanh toán
+
+        Payment-->>API: Payment callback
+
+        API->>Order: Update payment status
+
+        Order->>DB: UPDATE PAYMENT
+
+        Order->>DB: UPDATE ORDER
+
+        Order->>Inventory: Confirm stock deduction
+
+        Inventory->>DB: UPDATE INVENTORY
+
+        DB-->>Inventory: Stock updated
+
+        Inventory-->>Order: Inventory updated
+
+        Order-->>API: Order completed
+
+        API-->>FE: Order successful
+
+        FE-->>Customer: Đặt hàng thành công
+
+    else Không đủ tồn kho
+
+        Inventory-->>Order: Insufficient stock
+
+        Order-->>API: Out of stock
+
+        API-->>FE: 400 - Không đủ tồn kho
+
+        FE-->>Customer: Thông báo hết hàng
+
+    end

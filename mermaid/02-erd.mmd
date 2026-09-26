@@ -1,0 +1,224 @@
+erDiagram
+
+    %% ==========================================
+    %% USER & ROLE
+    %% ==========================================
+
+    USER {
+        bigint id PK
+        string username UK
+        string password
+        string full_name
+        string email UK
+        string phone
+        string address
+        string status
+        datetime created_at
+        datetime updated_at
+    }
+
+    ROLE {
+        bigint id PK
+        string name UK
+        string description
+    }
+
+    USER_ROLE {
+        bigint user_id PK, FK
+        bigint role_id PK, FK
+    }
+
+
+    %% ==========================================
+    %% PRODUCT
+    %% ==========================================
+
+    CATEGORY {
+        bigint id PK
+        string name UK
+        string description
+        string status
+        datetime created_at
+    }
+
+    BRAND {
+        bigint id PK
+        string name UK
+        string description
+        string status
+        datetime created_at
+    }
+
+    PRODUCT {
+        bigint id PK
+        bigint category_id FK
+        bigint brand_id FK
+        string name
+        string sku UK
+        text description
+        decimal price
+        decimal sale_price
+        string image_url
+        string status
+        datetime created_at
+        datetime updated_at
+    }
+
+
+    %% ==========================================
+    %% SUPPLIER
+    %% ==========================================
+
+    SUPPLIER {
+        bigint id PK
+        string name
+        string phone
+        string email
+        string address
+        string tax_code
+        string status
+        datetime created_at
+    }
+
+
+    %% ==========================================
+    %% WAREHOUSE
+    %% ==========================================
+
+    WAREHOUSE {
+        bigint id PK
+        string name
+        string address
+        string phone
+        string status
+        datetime created_at
+    }
+
+    INVENTORY {
+        bigint id PK
+        bigint warehouse_id FK
+        bigint product_id FK
+        int quantity
+        int reserved_quantity
+        int min_quantity
+        datetime updated_at
+    }
+
+
+    %% ==========================================
+    %% IMPORT
+    %% ==========================================
+
+    IMPORT_RECEIPT {
+        bigint id PK
+        bigint warehouse_id FK
+        bigint supplier_id FK
+        bigint created_by FK
+        decimal total_amount
+        string status
+        datetime import_date
+        datetime created_at
+    }
+
+    IMPORT_DETAIL {
+        bigint id PK
+        bigint import_receipt_id FK
+        bigint product_id FK
+        int quantity
+        decimal import_price
+        decimal total_price
+    }
+
+
+    %% ==========================================
+    %% CART
+    %% ==========================================
+
+    CART {
+        bigint id PK
+        bigint user_id FK
+        datetime created_at
+        datetime updated_at
+    }
+
+    CART_ITEM {
+        bigint id PK
+        bigint cart_id FK
+        bigint product_id FK
+        int quantity
+        decimal price
+    }
+
+
+    %% ==========================================
+    %% ORDER
+    %% ==========================================
+
+    ORDERS {
+        bigint id PK
+        bigint user_id FK
+        string order_code UK
+        decimal total_amount
+        string status
+        string shipping_address
+        string phone
+        string note
+        datetime order_date
+        datetime updated_at
+    }
+
+    ORDER_DETAIL {
+        bigint id PK
+        bigint order_id FK
+        bigint product_id FK
+        int quantity
+        decimal unit_price
+        decimal total_price
+    }
+
+
+    %% ==========================================
+    %% PAYMENT
+    %% ==========================================
+
+    PAYMENT {
+        bigint id PK
+        bigint order_id FK
+        string payment_method
+        string payment_code
+        decimal amount
+        string status
+        datetime paid_at
+        datetime created_at
+    }
+
+
+    %% ==========================================
+    %% RELATIONSHIPS
+    %% ==========================================
+
+    USER ||--o{ USER_ROLE : has
+    ROLE ||--o{ USER_ROLE : assigned
+
+    CATEGORY ||--o{ PRODUCT : contains
+    BRAND ||--o{ PRODUCT : owns
+
+    PRODUCT ||--o{ INVENTORY : stocked
+    WAREHOUSE ||--o{ INVENTORY : stores
+
+    SUPPLIER ||--o{ IMPORT_RECEIPT : supplies
+    WAREHOUSE ||--o{ IMPORT_RECEIPT : receives
+    USER ||--o{ IMPORT_RECEIPT : creates
+
+    IMPORT_RECEIPT ||--|{ IMPORT_DETAIL : contains
+    PRODUCT ||--o{ IMPORT_DETAIL : imported
+
+    USER ||--o| CART : owns
+    CART ||--|{ CART_ITEM : contains
+    PRODUCT ||--o{ CART_ITEM : added
+
+    USER ||--o{ ORDERS : places
+    ORDERS ||--|{ ORDER_DETAIL : contains
+    PRODUCT ||--o{ ORDER_DETAIL : ordered
+
+    ORDERS ||--o{ PAYMENT : has

@@ -1,0 +1,138 @@
+flowchart LR
+
+    %% =========================
+    %% ACTORS
+    %% =========================
+
+    Admin["👑 Admin"]
+    Customer["👤 Customer"]
+    Warehouse["📦 Warehouse Staff"]
+
+    %% =========================
+    %% SYSTEM
+    %% =========================
+
+    subgraph SYSTEM["🏪 SALES MANAGEMENT SYSTEM"]
+
+        subgraph AUTH["🔐 Authentication & Authorization"]
+            UC1["Đăng ký"]
+            UC2["Đăng nhập"]
+            UC3["Đăng xuất"]
+            UC4["Quản lý phân quyền"]
+        end
+
+        subgraph PRODUCT["📱 Product Management"]
+            UC5["Xem sản phẩm"]
+            UC6["Thêm sản phẩm"]
+            UC7["Cập nhật sản phẩm"]
+            UC8["Xóa sản phẩm"]
+            UC9["Quản lý danh mục"]
+            UC10["Quản lý thương hiệu"]
+        end
+
+        subgraph CART["🛒 Shopping Cart"]
+            UC11["Xem giỏ hàng"]
+            UC12["Thêm vào giỏ"]
+            UC13["Cập nhật số lượng"]
+            UC14["Xóa khỏi giỏ"]
+        end
+
+        subgraph ORDER["📋 Order Management"]
+            UC15["Đặt hàng"]
+            UC16["Xem đơn hàng"]
+            UC17["Xác nhận đơn"]
+            UC18["Hủy đơn"]
+            UC19["Cập nhật trạng thái"]
+        end
+
+        subgraph PAYMENT["💳 Payment"]
+            UC20["Thanh toán"]
+            UC21["Kiểm tra thanh toán"]
+            UC22["Hoàn tiền"]
+        end
+
+        subgraph WAREHOUSE_MODULE["🏭 Warehouse Management"]
+            UC23["Xem tồn kho"]
+            UC24["Nhập kho"]
+            UC25["Xuất kho"]
+            UC26["Kiểm kê kho"]
+            UC27["Quản lý nhà cung cấp"]
+        end
+
+        subgraph ADMIN_MODULE["⚙️ Administration"]
+            UC28["Quản lý người dùng"]
+            UC29["Quản lý vai trò"]
+            UC30["Dashboard"]
+            UC31["Báo cáo doanh thu"]
+            UC32["Thống kê bán hàng"]
+        end
+
+    end
+
+    %% =========================
+    %% CUSTOMER
+    %% =========================
+
+    Customer --> UC1
+    Customer --> UC2
+    Customer --> UC3
+
+    Customer --> UC5
+
+    Customer --> UC11
+    Customer --> UC12
+    Customer --> UC13
+    Customer --> UC14
+
+    Customer --> UC15
+    Customer --> UC16
+    Customer --> UC18
+
+    Customer --> UC20
+    Customer --> UC21
+
+    %% =========================
+    %% ADMIN
+    %% =========================
+
+    Admin --> UC2
+    Admin --> UC3
+
+    Admin --> UC6
+    Admin --> UC7
+    Admin --> UC8
+    Admin --> UC9
+    Admin --> UC10
+
+    Admin --> UC17
+    Admin --> UC18
+    Admin --> UC19
+
+    Admin --> UC22
+
+    Admin --> UC23
+    Admin --> UC24
+    Admin --> UC25
+    Admin --> UC26
+    Admin --> UC27
+
+    Admin --> UC28
+    Admin --> UC29
+    Admin --> UC30
+    Admin --> UC31
+    Admin --> UC32
+
+    %% =========================
+    %% WAREHOUSE STAFF
+    %% =========================
+
+    Warehouse --> UC2
+    Warehouse --> UC3
+
+    Warehouse --> UC23
+    Warehouse --> UC24
+    Warehouse --> UC25
+    Warehouse --> UC26
+    Warehouse --> UC27
+
+    Warehouse --> UC19
