@@ -1,5 +1,8 @@
 .vscode/settings.json
 
+# Secrets (root .env chứa JWT_SECRET, không commit)
+.env
+
 # Frontend - React Vite
 frontend/node_modules/
 frontend/dist/
