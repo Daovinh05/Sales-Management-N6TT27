@@ -1,0 +1,89 @@
+/* Clone trang Khachhang web cũ: xanh #00483d + đỏ #d70018 + Roboto */
+.kh-topbanner { background: #00483d; color: #fff; font-size: 13px; padding: 8px 0; }
+.kh-topbanner .tz-container { display: flex; justify-content: space-between; align-items: center; padding-top: 0; padding-bottom: 0; }
+.kh-topbanner .tb-group { display: flex; gap: 155px; }
+.kh-topbanner span { display: inline-flex; align-items: center; gap: 6px; }
+
+.kh-header { background: #fff; position: sticky; top: 0; z-index: 900; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.kh-header .tz-container { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 12px; padding-bottom: 12px; }
+.kh-logo { font-size: 28px; font-weight: 800; color: #00483d; display: flex; align-items: center; gap: 8px; }
+.kh-search { flex-grow: 1; max-width: 700px; display: flex; }
+.kh-search input { flex: 1; border: 1px solid #e0e0e0; border-right: none; border-radius: 8px 0 0 8px; padding: 10px 14px; font-size: 14px; outline: none; }
+.kh-search input:focus { border-color: #006a5b; }
+.kh-search button { width: 150px; background: #afe5dd; border-radius: 0 8px 8px 0; font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.kh-search button:hover { background: #bdd8be; }
+.kh-actions { display: flex; align-items: center; gap: 20px; }
+.kh-action { position: relative; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px; }
+.kh-action img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #eee; }
+.kh-badge { position: absolute; top: -2px; right: -8px; background: #d70018; color: #fff; font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
+.kh-account-menu { position: absolute; top: 45px; right: -10px; width: 200px; background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.15); display: none; overflow: hidden; z-index: 950; }
+.kh-account-menu.active { display: block; }
+.kh-account-menu a { display: flex; gap: 10px; align-items: center; padding: 12px 16px; font-size: 13px; font-weight: 400; color: #333; cursor: pointer; }
+.kh-account-menu a:hover { background: #f4f4f4; }
+.kh-account-menu a.logout { color: #d70018; }
+.kh-account-menu .divider { height: 1px; background: #eee; }
+
+.kh-crumb { font-size: 13px; color: #777; padding: 12px 0; }
+.kh-body { background: linear-gradient(180deg, #fff 0%, #fff6f6 100%); padding-bottom: 30px; }
+.kh-layout { display: grid; grid-template-columns: 250px 1fr; gap: 20px; align-items: start; }
+.kh-filter { background: #fff; border-radius: 8px; padding: 16px; border: 1px solid #eee; }
+.kh-filter h3 { font-size: 20px; font-weight: 700; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 14px; }
+.kh-fgroup { margin-bottom: 16px; }
+.kh-fgroup h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.kh-fopt { display: flex; align-items: center; gap: 8px; padding: 6px 0 6px 30px; font-size: 13px; cursor: pointer; position: relative; }
+.kh-fopt input { position: absolute; opacity: 0; }
+.kh-check { width: 18px; height: 18px; border-radius: 50%; border: 1px solid #ccc; position: absolute; left: 4px; display: flex; align-items: center; justify-content: center; }
+.kh-fopt input:checked + .kh-check { border-color: #006a5b; }
+.kh-fopt input:checked + .kh-check::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #006a5b; }
+
+.kh-fhead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.kh-fhead h2 { font-size: 18px; }
+.kh-fnow { background: #fff; border: 1px solid #e0e0e0; border-radius: 20px; padding: 8px 18px; font-size: 13px; font-weight: 600; display: flex; gap: 8px; align-items: center; }
+.kh-count { font-size: 13px; color: #555; margin-bottom: 12px; }
+.kh-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+.kh-card { background: rgba(242,238,238,.9); border-radius: 8px; padding: 15px; position: relative; border: 1px solid transparent; transition: all .2s; cursor: pointer; display: flex; flex-direction: column; }
+.kh-card:hover { border-color: #d70018; transform: translateY(-2px); }
+.kh-sticker { position: absolute; top: 10px; left: -5px; background: #d70018; color: #fff; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+.kh-card img { width: 100%; height: 180px; object-fit: contain; margin-bottom: 15px; background: #fff; border-radius: 6px; }
+.kh-card.out img { opacity: .5; }
+.kh-name { font-size: 14px; font-weight: 600; height: 40px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.kh-old { font-size: 13px; color: #999; text-decoration: line-through; }
+.kh-new { font-size: 16px; color: #d70018; font-weight: 700; }
+.kh-stock { font-size: 12px; margin-top: 4px; }
+.kh-stock.ok { color: #008000; } .kh-stock.low { color: #d97706; } .kh-stock.out { color: #d70018; }
+.kh-buy { background: #d70018; color: #fff; padding: 8px; border-radius: 4px; font-weight: 700; font-size: 14px; margin-top: 10px; opacity: 0; transition: opacity .2s; }
+.kh-card:hover .kh-buy { opacity: 1; }
+.kh-buy:disabled { opacity: .4; cursor: not-allowed; }
+.kh-pages { display: inline-flex; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-top: 20px; overflow: hidden; }
+.kh-pages button { min-width: 40px; height: 40px; font-size: 13px; }
+.kh-pages button.active { background: #00483d; color: #fff; }
+.kh-pages button:disabled { opacity: .4; }
+
+/* Cart sidebar */
+.kh-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 990; }
+.kh-cside { position: fixed; top: 0; right: -400px; width: 360px; max-width: 90vw; height: 100%; background: #fff; z-index: 1000; display: flex; flex-direction: column; transition: right .3s; }
+.kh-cside.active { right: 0; }
+.kh-chead { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #eee; font-weight: 700; }
+.kh-cbody { flex: 1; overflow-y: auto; padding: 16px; }
+.kh-cempty { color: #777; font-size: 14px; text-align: center; margin-top: 40px; }
+.kh-citem { display: flex; gap: 10px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px dashed #ddd; }
+.kh-citem img { width: 70px; height: 70px; object-fit: contain; background: #f4f4f4; border-radius: 6px; }
+.kh-citem .n { font-size: 13px; font-weight: 700; }
+.kh-citem .v { font-size: 11px; color: #777; text-transform: uppercase; }
+.kh-citem .p { font-size: 13px; color: #d70018; font-weight: 700; }
+.kh-citem .rm { margin-left: auto; width: 28px; height: 28px; border-radius: 50%; border: 1px solid #ddd; color: #777; }
+.kh-cfoot { padding: 16px; border-top: 1px solid #eee; }
+.kh-cfoot .tot { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+.kh-cfoot .tot strong { color: #d70018; }
+.kh-cbtns { display: flex; gap: 10px; }
+.kh-cbtns button { flex: 1; padding: 12px; border-radius: 24px; font-weight: 700; font-size: 13px; text-transform: uppercase; color: #fff; }
+.kh-cbtns .view { background: #d70018; }
+.kh-cbtns .pay { background: #2d72d2; }
+
+@media (max-width: 1024px) { .kh-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px) {
+  .kh-layout { grid-template-columns: 1fr; }
+  .kh-grid { grid-template-columns: repeat(2, 1fr); }
+  .kh-topbanner .tb-group { gap: 16px; }
+  .kh-search button { width: 44px; } .kh-search button span { display: none; }
+}
