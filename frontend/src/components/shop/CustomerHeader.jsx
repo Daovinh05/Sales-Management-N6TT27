@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCircleCheck, faRotateLeft, faPhoneVolume, faTruckFast,
-  faMagnifyingGlass, faCartShopping, faUserGear, faBoxOpen, faRightFromBracket
+  faMagnifyingGlass, faCartShopping, faUserGear, faBoxOpen, faRightFromBracket, faChevronDown
 } from '@fortawesome/free-solid-svg-icons';
 import { useState } from 'react';
 import { useAuth } from '../../store/auth.jsx';
@@ -21,10 +21,15 @@ export function TopBanner() {
   );
 }
 
-export function CustomerHeader({ cartCount, onCart, onSearch }) {
+export function CustomerHeader({ cartCount, onCart, onSearch, onAccount }) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const avatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user?.username || 'K') + '&background=006a5b&color=fff';
+  const toggleAccountMenu = () => setOpen((current) => !current);
+  const openProfile = () => {
+    setOpen(false);
+    onAccount?.();
+  };
 
   return (
     <header className="kh-header">
@@ -35,11 +40,16 @@ export function CustomerHeader({ cartCount, onCart, onSearch }) {
           <button type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /><span>Tìm kiếm ngay</span></button>
         </form>
         <div className="kh-actions">
-          <div className="kh-action" onClick={() => setOpen((o) => !o)}>
-            <img src={avatar} alt="avatar" />
-            <span>{user?.username}</span>
+          <div className="kh-action kh-account">
+            <button type="button" className="kh-account-trigger" onClick={toggleAccountMenu} aria-label="Mở menu tài khoản" aria-expanded={open}>
+              <img src={avatar} alt="" />
+              <span>{user?.fullName || user?.username}</span>
+            </button>
+            <button type="button" className="kh-account-toggle" onClick={() => setOpen((o) => !o)} aria-label="Mở menu tài khoản" aria-expanded={open}>
+              <FontAwesomeIcon icon={faChevronDown} />
+            </button>
             <div className={`kh-account-menu ${open ? 'active' : ''}`} onClick={(e) => e.stopPropagation()}>
-              <a><FontAwesomeIcon icon={faUserGear} /> Quản lý tài khoản</a>
+              <a onClick={openProfile}><FontAwesomeIcon icon={faUserGear} /> Quản lý tài khoản</a>
               <a><FontAwesomeIcon icon={faBoxOpen} /> Đơn hàng của tôi</a>
               <div className="divider" />
               <a className="logout" onClick={logout}><FontAwesomeIcon icon={faRightFromBracket} /> Đăng xuất</a>

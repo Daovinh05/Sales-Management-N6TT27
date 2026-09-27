@@ -22,6 +22,45 @@
 .kh-account-menu a:hover { background: #f4f4f4; }
 .kh-account-menu a.logout { color: #d70018; }
 .kh-account-menu .divider { height: 1px; background: #eee; }
+.kh-account { gap: 2px; }
+.kh-account-trigger, .kh-account-toggle { display: inline-flex; align-items: center; background: transparent; color: inherit; cursor: pointer; }
+.kh-account-trigger { gap: 8px; padding: 0; font-size: 14px; font-weight: 600; }
+.kh-account-trigger img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #eee; }
+.kh-account-toggle { justify-content: center; width: 26px; height: 32px; color: #666; font-size: 11px; }
+.kh-profile-page { min-height: 70vh; padding-bottom: 48px; }
+.kh-profile-back { display: inline-flex; align-items: center; gap: 8px; padding: 8px 0; margin: 0 0 16px; background: transparent; color: #006a5b; font-size: 13px; font-weight: 600; cursor: pointer; }
+.kh-profile-layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 20px; align-items: start; }
+.kh-profile-aside, .kh-profile-content { background: #fff; border: 1px solid #e7e9e8; border-radius: 8px; }
+.kh-profile-aside { padding: 28px 20px; text-align: center; }
+.kh-profile-avatar { display: grid; place-items: center; width: 72px; height: 72px; margin: 0 auto 14px; border-radius: 50%; background: #e5f3f0; color: #006a5b; font-size: 28px; }
+.kh-profile-aside h2 { margin: 0; color: #202b29; font-size: 18px; }
+.kh-profile-aside p { margin: 5px 0 12px; color: #777; font-size: 13px; }
+.kh-profile-role { display: inline-block; padding: 5px 10px; border-radius: 4px; background: #eaf5f2; color: #006a5b; font-size: 12px; font-weight: 700; }
+.kh-profile-member { margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee; color: #777; font-size: 12px; }
+.kh-profile-member strong { display: block; margin-top: 5px; color: #303735; font-size: 13px; }
+.kh-profile-content { padding: 28px 32px; }
+.kh-profile-heading { display: flex; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid #eceeed; }
+.kh-profile-eyebrow { color: #00806e; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.kh-profile-heading h1 { margin: 7px 0 5px; color: #202b29; font-size: 24px; }
+.kh-profile-heading p { margin: 0; color: #737a78; font-size: 13px; }
+.kh-profile-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; padding-top: 22px; }
+.kh-profile-field { display: flex; flex-direction: column; gap: 7px; color: #3b4442; font-size: 13px; font-weight: 600; }
+.kh-profile-field input, .kh-profile-field textarea { width: 100%; border: 1px solid #d9dedc; border-radius: 5px; padding: 11px 12px; outline: none; color: #202b29; font: inherit; font-weight: 400; resize: vertical; }
+.kh-profile-field input:focus, .kh-profile-field textarea:focus { border-color: #00806e; box-shadow: 0 0 0 3px rgba(0,128,110,.1); }
+.kh-profile-field input:disabled { background: #f4f6f5; color: #7a8380; }
+.kh-profile-field small { color: #858b89; font-size: 11px; font-weight: 400; }
+.kh-profile-address { grid-column: 1 / -1; }
+.kh-profile-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }
+.kh-profile-actions button { display: inline-flex; align-items: center; gap: 8px; border-radius: 5px; padding: 10px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.kh-profile-actions button:disabled { opacity: .6; cursor: wait; }
+.kh-profile-cancel { border: 1px solid #d7ddda; background: #fff; color: #4f5956; }
+.kh-profile-save { background: #006a5b; color: #fff; }
+.kh-profile-save:hover { background: #00483d; }
+.kh-profile-alert { margin-top: 18px; border-left: 3px solid #d70018; padding: 10px 12px; background: #fff2f2; color: #a60012; font-size: 13px; }
+.kh-profile-loading { padding: 24px 0; color: #777; font-size: 14px; }
+.kh-profile-load-error { margin-top: 20px; border-left: 3px solid #d70018; padding: 12px 14px; background: #fff2f2; color: #a60012; font-size: 13px; }
+.kh-profile-load-error p { margin: 0 0 10px; }
+.kh-profile-load-error button { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border: 1px solid #dfb6b9; border-radius: 4px; background: #fff; color: #8c0010; font-size: 12px; font-weight: 700; cursor: pointer; }
 
 .kh-crumb { font-size: 13px; color: #777; padding: 12px 0; }
 .kh-body { background: linear-gradient(180deg, #fff 0%, #fff6f6 100%); padding-bottom: 30px; }
@@ -83,6 +122,10 @@
 @media (max-width: 1024px) { .kh-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) {
   .kh-layout { grid-template-columns: 1fr; }
+  .kh-profile-layout { grid-template-columns: 1fr; }
+  .kh-profile-content { padding: 22px 18px; }
+  .kh-profile-form { grid-template-columns: 1fr; }
+  .kh-profile-address, .kh-profile-actions { grid-column: 1; }
   .kh-grid { grid-template-columns: repeat(2, 1fr); }
   .kh-topbanner .tb-group { gap: 16px; }
   .kh-search button { width: 44px; } .kh-search button span { display: none; }
