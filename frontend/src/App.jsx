@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './styles/theme.css';
 import './styles/customer.css';
 import './styles/admin.css';
@@ -8,6 +8,7 @@ import { TopBanner, CustomerHeader } from './components/shop/CustomerHeader.jsx'
 import CartSidebar from './components/shop/CartSidebar.jsx';
 import Home from './pages/shop/Home.jsx';
 import CustomerHome from './pages/shop/CustomerHome.jsx';
+import CustomerProfile from './pages/shop/CustomerProfile.jsx';
 import AdminLayout from './layouts/AdminLayout.jsx';
 import { LoginModal, RegisterModal } from './components/auth/AuthModal.jsx';
 import AppToast from './components/common/AppToast.jsx';
@@ -43,8 +44,25 @@ function Landing({ notify, toasts }) {
 
 function Shop({ notify, toasts }) {
   const [cartOpen, setCartOpen] = useState(false);
+  const [showProfile, setShowProfile] = useState(() => window.location.hash === '#/account');
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    const syncRoute = () => setShowProfile(window.location.hash === '#/account');
+    window.addEventListener('hashchange', syncRoute);
+    return () => window.removeEventListener('hashchange', syncRoute);
+  }, []);
+
+  const openProfile = () => {
+    if (window.location.hash === '#/account') setShowProfile(true);
+    else window.location.hash = '/account';
+  };
+
+  const closeProfile = () => {
+    if (window.location.hash === '#/account') window.location.hash = '';
+    else setShowProfile(false);
+  };
 
   const buy = (p) => {
     if (p.stock <= 0) { notify('error', 'Không đủ tồn kho, còn 0'); return; }
@@ -67,8 +85,11 @@ function Shop({ notify, toasts }) {
         cartCount={items.reduce((s, i) => s + i.qty, 0)}
         onSearch={setQuery}
         onCart={() => setCartOpen(true)}
+        onAccount={openProfile}
       />
-      <CustomerHome query={query} onBuy={buy} />
+      {showProfile
+        ? <CustomerProfile onBack={closeProfile} notify={notify} />
+        : <CustomerHome query={query} onBuy={buy} />}
       <Footer />
       <CartSidebar
         open={cartOpen} items={items}

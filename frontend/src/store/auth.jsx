@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import api from '../services/api.js';
 
 const AuthCtx = createContext(null);
@@ -8,6 +8,15 @@ export function AuthProvider({ children, notify }) {
   const [user, setUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
   });
+
+  useEffect(() => {
+    const handleExpiredSession = () => {
+      setUser(null);
+      notify?.('error', 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
+    };
+    window.addEventListener('auth:expired', handleExpiredSession);
+    return () => window.removeEventListener('auth:expired', handleExpiredSession);
+  }, [notify]);
 
   const login = async (username, password) => {
     const { data } = await api.post('/auth/login', { username, password });
@@ -25,6 +34,14 @@ export function AuthProvider({ children, notify }) {
     notify?.('success', 'Đăng ký thành công, mời đăng nhập');
   };
 
+  const updateProfile = async (payload) => {
+    const { data } = await api.put('/users/me', payload);
+    const updatedUser = { ...user, ...data };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
+    return data;
+  };
+
   const logout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -32,5 +49,5 @@ export function AuthProvider({ children, notify }) {
     setUser(null);
   };
 
-  return <AuthCtx.Provider value={{ user, login, register, logout }}>{children}</AuthCtx.Provider>;
+  return <AuthCtx.Provider value={{ user, login, register, updateProfile, logout }}>{children}</AuthCtx.Provider>;
 }
