@@ -24,7 +24,7 @@ public class DataSeeder {
             Role adminRole = roleRepository.findByName("ROLE_ADMIN")
                     .orElseGet(() -> roleRepository.save(Role.builder()
                             .name("ROLE_ADMIN").description("Quản lý toàn hệ thống").build()));
-            roleRepository.findByName("ROLE_CUSTOMER")
+            Role customerRole = roleRepository.findByName("ROLE_CUSTOMER")
                     .orElseGet(() -> roleRepository.save(Role.builder()
                             .name("ROLE_CUSTOMER").description("Khách hàng mua hàng").build()));
             roleRepository.findByName("ROLE_WAREHOUSE_STAFF")
@@ -39,6 +39,17 @@ public class DataSeeder {
                         .email("admin@shop.com")
                         .status("ACTIVE")
                         .roles(Set.of(adminRole))
+                        .build());
+            }
+
+            if (!userRepository.existsByUsername("customer")) {
+                userRepository.save(User.builder()
+                        .username("customer")
+                        .password(passwordEncoder.encode("123456"))
+                        .fullName("Khách hàng mẫu")
+                        .email("customer@shop.com")
+                        .status("ACTIVE")
+                        .roles(Set.of(customerRole))
                         .build());
             }
         };
