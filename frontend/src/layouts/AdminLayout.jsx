@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMobileScreen, faChartPie, faUsers, faList, faCopyright, faTruck,
@@ -5,6 +6,7 @@ import {
   faRightFromBracket, faCalendarDay, faMugHot, faGift, faBoxOpen
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../store/auth.jsx';
+import BrandManagement from '../pages/admin/BrandManagement.jsx';
 
 const MENU = [
   { icon: faChartPie, label: 'Tổng quan', active: true },
@@ -36,6 +38,7 @@ const ACTIONS = [
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
+  const [activePage, setActivePage] = useState('Tổng quan');
   const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
   const avatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user?.username || 'A') + '&background=4361ee&color=fff';
 
@@ -45,22 +48,23 @@ export default function AdminLayout() {
         <div className="ad-brand"><FontAwesomeIcon icon={faMobileScreen} /> Phone Store</div>
         <nav className="ad-menu">
           {MENU.map((m) => (
-            <a key={m.label} className={m.active ? 'active' : ''}>
+            <button key={m.label} type="button" className={activePage === m.label ? 'active' : ''} onClick={() => setActivePage(m.label)}>
               <FontAwesomeIcon icon={m.icon} className="fa-fw" /> {m.label}
-            </a>
+            </button>
           ))}
-          <a onClick={logout}><FontAwesomeIcon icon={faRightFromBracket} className="fa-fw" /> Đăng xuất</a>
+          <button type="button" onClick={logout}><FontAwesomeIcon icon={faRightFromBracket} className="fa-fw" /> Đăng xuất</button>
         </nav>
       </aside>
       <div className="ad-main">
         <header className="ad-top">
-          <div className="ad-title">Dashboard</div>
+          <div className="ad-title">{activePage === 'Tổng quan' ? 'Dashboard' : activePage}</div>
           <div className="ad-user">
             <span>Xin chào: <strong>{user?.username}</strong> (Quản trị viên)</span>
             <img src={avatar} alt="admin" />
           </div>
         </header>
         <div className="ad-content">
+          {activePage === 'Quản lý thương hiệu' ? <BrandManagement /> : <>
           <div className="ad-welcome">
             <div>
               <h2>Xin chào, {user?.username}! 👋</h2>
@@ -80,6 +84,7 @@ export default function AdminLayout() {
               </div>
             ))}
           </div>
+          </>}
         </div>
       </div>
     </div>
