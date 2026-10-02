@@ -7,6 +7,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../store/auth.jsx';
 import BrandManagement from '../pages/admin/BrandManagement.jsx';
+import UserManagement from '../pages/admin/UserManagement.jsx';
 
 const MENU = [
   { icon: faChartPie, label: 'Tổng quan', active: true },
@@ -64,7 +65,8 @@ export default function AdminLayout() {
           </div>
         </header>
         <div className="ad-content">
-          {activePage === 'Quản lý thương hiệu' ? <BrandManagement /> : <>
+          {activePage === 'Quản lý thương hiệu' ? <BrandManagement />
+            : activePage === 'Quản lý người dùng' ? <UserManagement /> : <>
           <div className="ad-welcome">
             <div>
               <h2>Xin chào, {user?.username}! 👋</h2>
