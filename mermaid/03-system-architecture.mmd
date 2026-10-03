@@ -1,4 +1,15 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'primaryColor': '#FFFFFF', 'primaryTextColor': '#111827', 'primaryBorderColor': '#3B82F6', 'lineColor': '#64748B', 'textColor': '#111827', 'fontSize': '14px'}}}%%
 flowchart TB
+
+    %% =========================
+    %% BRIGHT THEME
+    %% =========================
+    classDef client fill:#FEF9C3,stroke:#CA8A04,stroke-width:2px,color:#111827;
+    classDef frontend fill:#CFFAFE,stroke:#0891B2,stroke-width:2px,color:#111827;
+    classDef backend fill:#DBEAFE,stroke:#2563EB,stroke-width:2px,color:#111827;
+    classDef service fill:#EDE9FE,stroke:#7C3AED,stroke-width:2px,color:#111827;
+    classDef data fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#111827;
+    classDef external fill:#FCE7F3,stroke:#DB2777,stroke-width:2px,color:#111827;
 
     %% ==========================================
     %% CLIENT
@@ -124,3 +135,21 @@ flowchart TB
 
     OrderService --> Email
     PaymentService --> Email
+
+    %% =========================
+    %% APPLY COLORS
+    %% =========================
+    class Customer,Admin,Warehouse,Browser client;
+    class UI,Pages,Components,Services,State frontend;
+    class Gateway,Security,JWT,Repository backend;
+    class ProductService,UserService,OrderService,CartService,PaymentService,WarehouseService,ReportService service;
+    class MySQL,Redis data;
+    class PaymentGateway,Email external;
+
+    style CLIENT fill:#FFFBEB,stroke:#CA8A04,stroke-width:2px,color:#111827;
+    style FRONTEND fill:#ECFEFF,stroke:#0891B2,stroke-width:2px,color:#111827;
+    style BACKEND fill:#EFF6FF,stroke:#2563EB,stroke-width:2px,color:#111827;
+    style DATA fill:#F0FDF4,stroke:#16A34A,stroke-width:2px,color:#111827;
+    style EXTERNAL fill:#FDF2F8,stroke:#DB2777,stroke-width:2px,color:#111827;
+
+    linkStyle default stroke:#64748B,stroke-width:2px;

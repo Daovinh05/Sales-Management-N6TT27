@@ -7,7 +7,7 @@ services:
       MYSQL_DATABASE: banhang
       MYSQL_ROOT_PASSWORD: banhang123
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
@@ -15,15 +15,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: sales-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
