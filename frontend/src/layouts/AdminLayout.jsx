@@ -10,6 +10,7 @@ import BrandManagement from '../pages/admin/BrandManagement.jsx';
 import CategoryManagement from '../pages/admin/CategoryManagement.jsx';
 import PromotionManagement from '../pages/admin/PromotionManagement.jsx';
 import ReviewManagement from '../pages/admin/ReviewManagement.jsx';
+import SupplierManagement from '../pages/admin/SupplierManagement.jsx';
 import UserManagement from '../pages/admin/UserManagement.jsx';
 
 const MENU = [
@@ -70,6 +71,7 @@ export default function AdminLayout() {
           {activePage === 'Quản lý danh mục' ? <CategoryManagement />
             : activePage === 'Quản lý thương hiệu' ? <BrandManagement />
             : activePage === 'Quản lý khuyến mãi' ? <PromotionManagement />
+            : activePage === 'Quản lý nhà cung cấp' ? <SupplierManagement />
             : activePage === 'Quản lý người dùng' ? <UserManagement />
               : activePage === 'Quản lý đánh giá' ? <ReviewManagement /> : <>
           <div className="ad-welcome">
