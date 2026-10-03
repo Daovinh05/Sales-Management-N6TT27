@@ -34,7 +34,7 @@ export default function WarehouseForm({ warehouse, onClose, onSuccess, notify })
     setError('');
 
     if (!form.name.trim()) {
-      setError('Tên kho hàng không được để trống');
+      setError('Tên kho hàng không được để trống.');
       return;
     }
 
@@ -42,15 +42,15 @@ export default function WarehouseForm({ warehouse, onClose, onSuccess, notify })
     try {
       if (warehouse?.id) {
         await warehouseService.update(warehouse.id, form);
-        notify?.('success', 'Cập nhật kho hàng thành công');
+        notify?.('success', 'Cập nhật kho hàng thành công.');
       } else {
         await warehouseService.create(form);
-        notify?.('success', 'Thêm mới kho hàng thành công');
+        notify?.('success', 'Thêm mới kho hàng thành công.');
       }
       onSuccess?.();
       onClose();
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Có lỗi xảy ra khi lưu thông tin kho';
+      const msg = err.response?.data?.message || err.message || 'Không thể lưu kho hàng. Vui lòng kiểm tra lại dữ liệu.';
       setError(msg);
       notify?.('error', msg);
     } finally {
@@ -59,103 +59,94 @@ export default function WarehouseForm({ warehouse, onClose, onSuccess, notify })
   };
 
   return (
-    <div className="tz-overlay" onClick={onClose}>
-      <div className="tz-modal" onClick={(e) => e.stopPropagation()} style={{ width: '560px' }}>
-        <span className="tz-close" onClick={onClose}>
-          <FontAwesomeIcon icon={faXmark} />
-        </span>
-        <div className="tz-title">
-          {warehouse ? 'CẬP NHẬT KHO HÀNG' : 'THÊM MỚI KHO HÀNG'}
+    <div
+      className="ad-dialog-backdrop"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <form
+        className="ad-brand-dialog"
+        onSubmit={handleSubmit}
+        style={{ width: 'min(500px, 100%)' }}
+      >
+        <div className="ad-dialog-heading">
+          <h2>{warehouse ? 'Cập nhật kho hàng' : 'Thêm mới kho hàng'}</h2>
+          <button
+            className="ad-icon-button"
+            type="button"
+            aria-label="Đóng"
+            onClick={onClose}
+          >
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
         </div>
 
-        {error && <div className="tz-alert">{error}</div>}
+        <label>
+          Tên kho hàng (*)
+          <input
+            required
+            maxLength="150"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            placeholder="Ví dụ: Kho Tổng Hà Nội"
+            autoFocus
+          />
+        </label>
 
-        <form onSubmit={handleSubmit}>
-          <div className="tz-field">
-            <label>
-              Tên kho hàng <span style={{ color: 'var(--danger)' }}>*</span>
-            </label>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Ví dụ: Kho Tổng Hà Nội"
-              required
-            />
-          </div>
+        <label>
+          Số điện thoại
+          <input
+            type="tel"
+            maxLength="20"
+            name="phone"
+            value={form.phone}
+            onChange={handleChange}
+            placeholder="Ví dụ: 0912345678"
+          />
+        </label>
 
-          <div className="tz-field">
-            <label>Số điện thoại</label>
-            <input
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="Ví dụ: 0912345678"
-            />
-          </div>
+        <label>
+          Địa chỉ kho
+          <input
+            maxLength="255"
+            name="address"
+            value={form.address}
+            onChange={handleChange}
+            placeholder="Ví dụ: Số 123 Đường Cầu Giấy, Hà Nội"
+          />
+        </label>
 
-          <div className="tz-field">
-            <label>Địa chỉ</label>
-            <textarea
-              name="address"
-              value={form.address}
-              onChange={handleChange}
-              rows="3"
-              placeholder="Nhập địa chỉ chi tiết kho"
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                outline: 'none',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                resize: 'vertical'
-              }}
-            />
-          </div>
+        <label>
+          Trạng thái
+          <select name="status" value={form.status} onChange={handleChange}>
+            <option value="ACTIVE">Hoạt động (ACTIVE)</option>
+            <option value="INACTIVE">Ngừng hoạt động (INACTIVE)</option>
+          </select>
+        </label>
 
-          <div className="tz-field">
-            <label>Trạng thái</label>
-            <select
-              name="status"
-              value={form.status}
-              onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid #ddd',
-                borderRadius: '8px',
-                outline: 'none',
-                fontSize: '14px',
-                background: '#fff'
-              }}
-            >
-              <option value="ACTIVE">Hoạt động (ACTIVE)</option>
-              <option value="INACTIVE">Ngừng hoạt động (INACTIVE)</option>
-            </select>
-          </div>
+        {error && <p className="ad-brand-message" role="alert">{error}</p>}
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
-            <button
-              type="button"
-              className="tz-btn tz-btn-outline"
-              onClick={onClose}
-              disabled={submitting}
-            >
-              Hủy bỏ
-            </button>
-            <button
-              type="submit"
-              className="tz-btn tz-btn-primary"
-              disabled={submitting}
-            >
-              <FontAwesomeIcon icon={faFloppyDisk} />{' '}
-              {submitting ? 'Đang lưu...' : warehouse ? 'Lưu thay đổi' : 'Tạo mới'}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div className="ad-dialog-actions">
+          <button
+            className="ad-button ad-button-quiet"
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            Hủy
+          </button>
+          <button
+            className="ad-button ad-button-primary"
+            type="submit"
+            disabled={submitting}
+          >
+            <FontAwesomeIcon icon={faFloppyDisk} />{' '}
+            {submitting ? 'Đang lưu...' : warehouse ? 'Lưu thay đổi' : 'Thêm kho'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
