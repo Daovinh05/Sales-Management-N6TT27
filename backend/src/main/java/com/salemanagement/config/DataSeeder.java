@@ -2,6 +2,8 @@ package com.salemanagement.config;
 
 import com.salemanagement.entity.Brand;
 import com.salemanagement.entity.Category;
+import com.salemanagement.entity.Order;
+import com.salemanagement.entity.OrderDetail;
 import com.salemanagement.entity.Product;
 import com.salemanagement.entity.ProductVariant;
 import com.salemanagement.entity.Role;
@@ -9,6 +11,7 @@ import com.salemanagement.entity.Supplier;
 import com.salemanagement.entity.User;
 import com.salemanagement.repository.BrandRepository;
 import com.salemanagement.repository.CategoryRepository;
+import com.salemanagement.repository.OrderRepository;
 import com.salemanagement.repository.ProductRepository;
 import com.salemanagement.repository.ProductVariantRepository;
 import com.salemanagement.repository.RoleRepository;
@@ -115,6 +118,56 @@ public class DataSeeder {
                     variant.setStockQuantity(10);
                     variantRepository.save(variant);
                 }
+            }
+        };
+    }
+
+    @Bean
+    CommandLineRunner seedOrders(OrderRepository orderRepository) {
+        return args -> {
+            if (orderRepository.count() > 0) {
+                return;
+            }
+            String[][] samples = {
+                    {"DH08", "Trần Văn Minh", "0902222222", "minh.tran@gmail.com", "Hà Đông", "Giao giờ hành chính",
+                            "27900000", "123000", "27777000", Order.STATUS_PENDING},
+                    {"DH07", "Nguyễn Thị Lan", "0913333333", "lan.nguyen@gmail.com", "Cầu Giấy", "",
+                            "15990000", "500000", "15490000", Order.STATUS_CONFIRMED},
+                    {"DH06", "Lê Hoàng Nam", "0924444444", "nam.le@gmail.com", "Thanh Xuân", "Gọi trước khi giao",
+                            "8990000", "0", "8990000", Order.STATUS_SHIPPING},
+                    {"DH05", "Phạm Thu Hà", "0935555555", "ha.pham@gmail.com", "Hai Bà Trưng", "",
+                            "29990000", "1000000", "28990000", Order.STATUS_COMPLETED},
+                    {"DH04", "Trần Văn Minh", "0902222222", "minh.tran@gmail.com", "Hà Đông", "Không có ghi chú",
+                            "12990000", "0", "12990000", Order.STATUS_PENDING},
+                    {"DH03", "Đỗ Quang Anh", "0946666666", "anh.do@gmail.com", "Hoàng Mai", "",
+                            "21990000", "500000", "21490000", Order.STATUS_CANCELLED},
+                    {"DH02", "Hoàng Văn Thành", "0957777777", "thanh.hoang@gmail.com", "Đống Đa", "",
+                            "18990000", "0", "18990000", Order.STATUS_COMPLETED},
+                    {"DH01", "Đào Văn Vinh", "0968888888", "vinh.dao@gmail.com", "Hà Đông", "Xuất hóa đơn công ty",
+                            "34990000", "2000000", "32990000", Order.STATUS_COMPLETED}
+            };
+            for (String[] sample : samples) {
+                Order order = new Order();
+                order.setCode(sample[0]);
+                order.setCustomerName(sample[1]);
+                order.setCustomerPhone(sample[2]);
+                order.setEmail(sample[3].isEmpty() ? null : sample[3]);
+                order.setShippingAddress(sample[4].isEmpty() ? null : sample[4]);
+                order.setNote(sample[5].isEmpty() ? null : sample[5]);
+                order.setTotalAmount(new BigDecimal(sample[6]));
+                order.setDiscountAmount(new BigDecimal(sample[7]));
+                order.setPaymentAmount(new BigDecimal(sample[8]));
+                order.setStatus(sample[9]);
+
+                OrderDetail detail = new OrderDetail();
+                detail.setOrder(order);
+                detail.setVariantCode("BT01");
+                detail.setProductName("iPhone 17 Pro Max 256GB - Titan Tự Nhiên");
+                detail.setQuantity(1);
+                detail.setUnitPrice(new BigDecimal(sample[6]));
+                order.getDetails().add(detail);
+
+                orderRepository.save(order);
             }
         };
     }
