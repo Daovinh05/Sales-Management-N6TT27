@@ -50,6 +50,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: banhang123
       APP_JWT_SECRET: ${JWT_SECRET}
       APP_CORS_ORIGINS: http://localhost:5173
+    volumes:
+      - uploads-data:/app/uploads
     depends_on:
       mysql:
         condition: service_healthy
@@ -69,3 +71,4 @@ services:
 volumes:
   mysql-data:
   redis-data:
+  uploads-data:
