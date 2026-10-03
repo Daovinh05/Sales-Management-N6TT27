@@ -5,6 +5,7 @@
 
 # Frontend - React Vite
 frontend/node_modules/
+frontend/.vite/
 frontend/dist/
 frontend/dist-ssr/
 frontend/.env
