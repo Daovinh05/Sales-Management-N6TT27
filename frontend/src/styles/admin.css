@@ -138,4 +138,32 @@
 	.ad-filter-actions { grid-column: auto; flex-wrap: wrap; }
 	.ad-table-wrap { max-height: 60vh; }
 	.ad-brand-table { min-width: 680px; }
+	.ad-order-detail-grid { grid-template-columns: 1fr; }
 }
+
+/* Order detail dialog (3 columns like reference) */
+.ad-order-detail-grid { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 14px; margin-top: 14px; }
+.ad-order-detail-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ad-order-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+.ad-order-card-title { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+.ad-order-title-red { color: #dc2626; }
+.ad-order-title-yellow { color: #d97706; }
+.ad-order-avatar { width: 72px; height: 72px; margin: 0 auto 10px; border-radius: 50%; background: #e0e7ff; color: #4f46e5; font-size: 26px; font-weight: 800; display: grid; place-items: center; }
+.ad-order-customer { text-align: center; }
+.ad-order-customer-name { font-weight: 700; font-size: 15px; }
+.ad-order-customer-role { color: #64748b; font-size: 12px; margin-bottom: 12px; }
+.ad-order-contact { text-align: left; margin-top: 10px; }
+.ad-order-contact-label { font-size: 11px; font-weight: 700; color: #64748b; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.ad-order-phone { color: #16a34a; font-weight: 800; }
+.ad-order-email { color: #dc2626; font-weight: 600; font-size: 13px; word-break: break-all; }
+.ad-order-pay-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+.ad-order-pay-total { display: flex; justify-content: space-between; font-weight: 800; border-top: 1px solid #e2e8f0; margin-top: 8px; padding-top: 10px; font-size: 14px; }
+.ad-order-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+.ad-order-item:last-child { border-bottom: none; }
+.ad-order-thumb { position: relative; width: 64px; height: 64px; flex-shrink: 0; border-radius: 8px; background: #f1f5f9; display: grid; place-items: center; overflow: hidden; color: #94a3b8; font-weight: 700; }
+.ad-order-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.ad-order-qty { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; border-radius: 999px; background: #fff; border: 1px solid #cbd5e1; color: #334155; font-size: 11px; font-weight: 800; display: grid; place-items: center; padding: 0 4px; }
+.ad-order-item-name { font-weight: 700; font-size: 13px; }
+.ad-order-item-spec { display: inline-block; font-size: 11px; color: #64748b; border: 1px solid #e2e8f0; border-radius: 4px; padding: 2px 6px; margin-top: 4px; }
+.ad-order-item-price { color: #dc2626; font-weight: 700; font-size: 13px; margin-top: 4px; }
+.ad-order-card textarea { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; font: inherit; font-size: 13px; color: #334155; background: #f8fafc; resize: vertical; }
