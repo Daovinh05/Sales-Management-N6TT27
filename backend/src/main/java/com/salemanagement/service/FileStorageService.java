@@ -7,4 +7,8 @@ public interface FileStorageService {
     String storeVariantImage(MultipartFile file);
 
     void deleteVariantImage(String filename);
+
+    String storeUserAvatar(MultipartFile file);
+
+    void deleteUserAvatar(String filename);
 }
