@@ -14,6 +14,7 @@ import PromotionManagement from '../pages/admin/PromotionManagement.jsx';
 import ProductManagement from '../pages/admin/ProductManagement.jsx';
 import VariantManagement from '../pages/admin/VariantManagement.jsx';
 import ReviewManagement from '../pages/admin/ReviewManagement.jsx';
+import OrderManagement from '../pages/admin/OrderManagement.jsx';
 import SupplierManagement from '../pages/admin/SupplierManagement.jsx';
 import UserManagement from '../pages/admin/UserManagement.jsx';
 
@@ -89,7 +90,8 @@ export default function AdminLayout({ notify, toasts = [] }) {
             : activePage === 'Quản lý người dùng' ? <UserManagement />
             : activePage === 'Quản lý đánh giá' ? <ReviewManagement />
             : activePage === 'Quản lý sản phẩm' ? <ProductManagement />
-            : activePage === 'Quản lý biến thể' ? <VariantManagement /> : <>
+            : activePage === 'Quản lý biến thể' ? <VariantManagement />
+            : activePage === 'Quản lý đơn hàng' ? <OrderManagement /> : <>
           <div className="ad-welcome">
             <div>
               <h2>Xin chào, {user?.username}! 👋</h2>
