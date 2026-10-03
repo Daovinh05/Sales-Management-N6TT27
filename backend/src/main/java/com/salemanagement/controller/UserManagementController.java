@@ -2,9 +2,11 @@ package com.salemanagement.controller;
 
 import com.salemanagement.entity.Role;
 import com.salemanagement.entity.User;
+import com.salemanagement.dto.request.UpdateManagedUserRequest;
 import com.salemanagement.repository.RefreshTokenRepository;
 import com.salemanagement.repository.RoleRepository;
 import com.salemanagement.repository.UserRepository;
+import com.salemanagement.service.UserManagementService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -22,6 +24,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -39,6 +43,7 @@ public class UserManagementController {
     private final RoleRepository roleRepository;
         private final RefreshTokenRepository refreshTokenRepository;
         private final PasswordEncoder passwordEncoder;
+        private final UserManagementService userManagementService;
 
     @GetMapping
     public List<UserResponse> getUsers() {
@@ -46,9 +51,19 @@ public class UserManagementController {
                 .map(user -> new UserResponse(
                         user.getId(), user.getUsername(), user.getFullName(), user.getEmail(),
                         user.getPhone(), user.getStatus(), user.getRoles().stream().map(Role::getName).toList(),
-                        user.getCreatedAt()))
+                        user.getCreatedAt(), user.getAvatarUrl()))
                 .toList();
     }
+
+        @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        @Transactional
+        public UserResponse updateUser(
+                        @PathVariable Long id,
+                        @Valid @org.springframework.web.bind.annotation.RequestPart("data") UpdateManagedUserRequest request,
+                        @org.springframework.web.bind.annotation.RequestPart(value = "avatar", required = false) MultipartFile avatar,
+                        Authentication authentication) {
+                return toResponse(userManagementService.updateUser(id, request, avatar, authentication.getName()));
+        }
 
         @PostMapping
         @Transactional
@@ -98,7 +113,8 @@ public class UserManagementController {
 
         Role role = roleRepository.findByName(request.role())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy vai trò"));
-        user.setRoles(Set.of(role));
+        user.getRoles().clear();
+        user.getRoles().add(role);
         User saved = userRepository.save(user);
                 return toResponse(saved);
         }
@@ -123,7 +139,7 @@ public class UserManagementController {
                 return new UserResponse(
                                 user.getId(), user.getUsername(), user.getFullName(), user.getEmail(),
                                 user.getPhone(), user.getStatus(), user.getRoles().stream().map(Role::getName).toList(),
-                                user.getCreatedAt());
+                                user.getCreatedAt(), user.getAvatarUrl());
     }
 
         public record CreateUserRequest(
@@ -144,5 +160,6 @@ public class UserManagementController {
             String phone,
             String status,
             List<String> roles,
-            LocalDateTime createdAt) {}
+            LocalDateTime createdAt,
+            String avatarUrl) {}
 }

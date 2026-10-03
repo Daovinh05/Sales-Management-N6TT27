@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,12 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     private Path variantDir() throws IOException {
         Path dir = Paths.get(uploadDir, "variants").toAbsolutePath().normalize();
+        Files.createDirectories(dir);
+        return dir;
+    }
+
+    private Path avatarDir() throws IOException {
+        Path dir = Paths.get(uploadDir, "avatars").toAbsolutePath().normalize();
         Files.createDirectories(dir);
         return dir;
     }
@@ -70,6 +77,44 @@ public class FileStorageServiceImpl implements FileStorageService {
             Files.deleteIfExists(variantDir().resolve(filename));
         } catch (IOException ignored) {
             // Không chặn nghiệp vụ xóa khi dọn file thất bại.
+        }
+    }
+
+    @Override
+    public String storeUserAvatar(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return null;
+        }
+        String original = file.getOriginalFilename() == null ? "" : file.getOriginalFilename();
+        String extension = original.contains(".")
+                ? original.substring(original.lastIndexOf('.') + 1).toLowerCase()
+                : "";
+        String contentType = file.getContentType();
+        if (!ALLOWED_EXTENSIONS.contains(extension)
+                || (contentType != null && !contentType.toLowerCase().startsWith("image/"))) {
+            throw new BusinessException("Định dạng hình ảnh không hợp lệ", HttpStatus.BAD_REQUEST);
+        }
+        String filename = UUID.randomUUID() + "." + extension;
+        try {
+            Files.copy(file.getInputStream(), avatarDir().resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            return filename;
+        } catch (IOException ex) {
+            throw new BusinessException("Upload ảnh đại diện thất bại", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public void deleteUserAvatar(String filename) {
+        if (filename == null || filename.isBlank()) {
+            return;
+        }
+        try {
+            Path dir = avatarDir();
+            Path avatar = dir.resolve(filename).normalize();
+            if (avatar.getParent().equals(dir)) {
+                Files.deleteIfExists(avatar);
+            }
+        } catch (IOException ignored) {
         }
     }
 }
