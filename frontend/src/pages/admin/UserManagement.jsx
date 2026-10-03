@@ -3,6 +3,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload, faFileExcel, faMagnifyingGlass, faPen, faPlus, faTrash, faUpload, faUsers, faXmark } from '@fortawesome/free-solid-svg-icons';
 import api from '../../services/api.js';
 import readXlsxFile from 'read-excel-file/browser';
+import { useAuth } from '../../store/auth.jsx';
+
+const apiOrigin = (api.defaults.baseURL || 'http://localhost:8080/api').replace(/\/api\/?$/, '');
+
+const avatarFor = (user) => user.avatarUrl
+  ? `${apiOrigin}/uploads/avatars/${encodeURIComponent(user.avatarUrl)}`
+  : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username)}&background=e8eef9&color=334155&size=64`;
 
 const formatDate = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short' }).format(new Date(value))
@@ -21,6 +28,7 @@ function downloadCsv(users) {
 }
 
 export default function UserManagement() {
+  const { user: currentUser, logout } = useAuth();
   const [users, setUsers] = useState([]);
   const [idQuery, setIdQuery] = useState('');
   const [nameQuery, setNameQuery] = useState('');
@@ -28,12 +36,21 @@ export default function UserManagement() {
   const [editingUser, setEditingUser] = useState(null);
   const [addingUser, setAddingUser] = useState(false);
   const [role, setRole] = useState('ROLE_CUSTOMER');
+  const [editForm, setEditForm] = useState({ username: '', email: '' });
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const [removeAvatar, setRemoveAvatar] = useState(false);
   const [form, setForm] = useState({ username: '', password: '', fullName: '', email: '', phone: '', role: 'ROLE_CUSTOMER' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const fileInput = useRef(null);
+  const avatarInput = useRef(null);
+
+  useEffect(() => () => {
+    if (avatarPreview.startsWith('blob:')) URL.revokeObjectURL(avatarPreview);
+  }, [avatarPreview]);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -66,19 +83,40 @@ export default function UserManagement() {
   const openEdit = (user) => {
     setEditingUser(user);
     setRole(user.roles.includes('ROLE_ADMIN') ? 'ROLE_ADMIN' : 'ROLE_CUSTOMER');
+    setEditForm({ username: user.username, email: user.email || '' });
+    setAvatarFile(null);
+    setAvatarPreview(avatarFor(user));
+    setRemoveAvatar(false);
     setError('');
+    setNotice('');
   };
 
-  const saveRole = async (event) => {
+  const saveUser = async (event) => {
     event.preventDefault();
     setSaving(true);
     setError('');
     try {
-      await api.put(`/users/${editingUser.id}/role`, { role });
+      const data = new FormData();
+      data.append('data', new Blob([JSON.stringify({
+        username: editForm.username.trim(),
+        email: editForm.email.trim() || null,
+        role,
+        removeAvatar
+      })], { type: 'application/json' }));
+      if (avatarFile) data.append('avatar', avatarFile);
+      await api.put(`/users/${editingUser.id}`, data);
+      const usernameChangedForCurrentUser = Number(currentUser?.id) === editingUser.id
+        && currentUser.username !== editForm.username.trim();
       setEditingUser(null);
+      if (usernameChangedForCurrentUser) {
+        window.alert('Tên đăng nhập đã thay đổi. Vui lòng đăng nhập lại bằng tên mới.');
+        logout();
+        return;
+      }
       await loadUsers();
+      setNotice('Đã cập nhật tài khoản.');
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'Không thể cập nhật vai trò. Vui lòng thử lại.');
+      setError(requestError.response?.data?.message || 'Không thể cập nhật tài khoản. Vui lòng thử lại.');
     } finally {
       setSaving(false);
     }
@@ -217,7 +255,9 @@ export default function UserManagement() {
                   const isAdmin = user.roles.includes('ROLE_ADMIN');
                   return <tr key={user.id}>
                     <td className="ad-brand-index">{index + 1}</td>
-                    <td><img className="ad-user-avatar" src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username)}&background=e8eef9&color=334155&size=64`} alt="" /></td>
+                    <td><img className="ad-user-avatar" src={avatarFor(user)} alt="" onError={(event) => {
+                      event.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username)}&background=e8eef9&color=334155&size=64`;
+                    }} /></td>
                     <td>{user.id}</td><td>{user.fullName || '—'}</td><td className="ad-user-name">{user.username}</td>
                     <td>{user.email || '—'}</td>
                     <td><span className={`ad-role-badge ${isAdmin ? 'admin' : ''}`}>{isAdmin ? 'Quản trị viên' : 'Người dùng'}</span></td>
@@ -236,9 +276,9 @@ export default function UserManagement() {
       {(editingUser || addingUser) && <div className="ad-dialog-backdrop" onMouseDown={(event) => {
         if (event.target === event.currentTarget) { setEditingUser(null); setAddingUser(false); }
       }}>
-        <form className="ad-brand-dialog" onSubmit={addingUser ? saveNewUser : saveRole}>
+        <form className="ad-brand-dialog" onSubmit={addingUser ? saveNewUser : saveUser}>
           <div className="ad-dialog-heading">
-            <h2>{addingUser ? 'Thêm người dùng' : 'Sửa vai trò tài khoản'}</h2>
+            <h2>{addingUser ? 'Thêm người dùng' : 'Sửa tài khoản'}</h2>
             <button className="ad-icon-button" type="button" aria-label="Đóng" onClick={() => { setEditingUser(null); setAddingUser(false); }}><FontAwesomeIcon icon={faXmark} /></button>
           </div>
           {addingUser ? <>
@@ -254,7 +294,28 @@ export default function UserManagement() {
               </select></label>
             </div>
           </> : <>
-            <label>Tài khoản<input value={editingUser.username} disabled /></label>
+            <div className="ad-user-avatar-editor">
+              <img className="ad-user-avatar-preview" src={avatarPreview} alt="Ảnh đại diện xem trước" />
+              <div className="ad-user-avatar-controls">
+                <span>Ảnh đại diện</span>
+                <input ref={avatarInput} type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = '';
+                  if (!file) return;
+                  setAvatarFile(file);
+                  setAvatarPreview(URL.createObjectURL(file));
+                  setRemoveAvatar(false);
+                }} />
+                <button className="ad-button ad-button-quiet" type="button" onClick={() => avatarInput.current?.click()}>Chọn ảnh</button>
+                {editingUser.avatarUrl && <button className="ad-button ad-button-quiet" type="button" onClick={() => {
+                  setAvatarFile(null);
+                  setAvatarPreview(`https://ui-avatars.com/api/?name=${encodeURIComponent(editingUser.fullName || editForm.username)}&background=e8eef9&color=334155&size=64`);
+                  setRemoveAvatar(true);
+                }}>Dùng mặc định</button>}
+              </div>
+            </div>
+            <label>Tên đăng nhập<input required minLength="3" maxLength="50" value={editForm.username} onChange={(event) => setEditForm({ ...editForm, username: event.target.value })} /></label>
+            <label>Email<input type="email" maxLength="100" value={editForm.email} onChange={(event) => setEditForm({ ...editForm, email: event.target.value })} /></label>
             <label>Vai trò<select value={role} onChange={(event) => setRole(event.target.value)}>
               <option value="ROLE_CUSTOMER">Người dùng</option>
               <option value="ROLE_ADMIN">Quản trị viên</option>
