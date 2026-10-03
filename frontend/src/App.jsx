@@ -103,7 +103,7 @@ function Shop({ notify, toasts }) {
 function Root({ notify, toasts }) {
   const { user } = useAuth();
   if (!user) return <Landing notify={notify} toasts={toasts} />;
-  if (isAdmin(user)) return <AdminLayout />;
+  if (isAdmin(user)) return <AdminLayout notify={notify} toasts={toasts} />;
   return <Shop notify={notify} toasts={toasts} />;
 }
 

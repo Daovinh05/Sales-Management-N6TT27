@@ -3,9 +3,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMobileScreen, faChartPie, faUsers, faList, faCopyright, faTruck,
   faStar, faSliders, faPercent, faCartShopping, faChartLine, faBolt,
-  faRightFromBracket, faCalendarDay, faMugHot, faGift, faBoxOpen
+  faRightFromBracket, faCalendarDay, faBoxOpen, faWarehouse
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../store/auth.jsx';
+import AppToast from '../components/common/AppToast.jsx';
+import WarehouseList from '../pages/admin/WarehouseList.jsx';
 import BrandManagement from '../pages/admin/BrandManagement.jsx';
 import CategoryManagement from '../pages/admin/CategoryManagement.jsx';
 import PromotionManagement from '../pages/admin/PromotionManagement.jsx';
@@ -21,6 +23,7 @@ const MENU = [
   { icon: faList, label: 'Quản lý danh mục' },
   { icon: faCopyright, label: 'Quản lý thương hiệu' },
   { icon: faTruck, label: 'Quản lý nhà cung cấp' },
+  { icon: faWarehouse, label: 'Quản lý kho hàng' },
   { icon: faStar, label: 'Quản lý đánh giá' },
   { icon: faMobileScreen, label: 'Quản lý sản phẩm' },
   { icon: faSliders, label: 'Quản lý biến thể' },
@@ -30,19 +33,19 @@ const MENU = [
 ];
 
 const ACTIONS = [
-  { icon: faUsers, label: 'Quản lý người dùng', page: 'Quản lý người dùng', desc: 'Thêm, sửa, xóa người dùng', color: '#4361ee' },
+  { icon: faUsers, label: 'Quản lý người dùng', page: 'Quản lý người dùng', desc: 'Thêm, sửa, xóa người dùng', color: '#3a0ca3' },
   { icon: faList, label: 'Danh mục', page: 'Quản lý danh mục', desc: 'Quản lý danh mục', color: '#8b5cf6' },
   { icon: faCopyright, label: 'Thương hiệu', page: 'Quản lý thương hiệu', desc: 'Quản lý thương hiệu', color: '#06b6d4' },
   { icon: faTruck, label: 'Nhà cung cấp', page: 'Quản lý nhà cung cấp', desc: 'Quản lý nhà cung cấp', color: '#f17d63' },
+  { icon: faWarehouse, label: 'Quản lý kho', page: 'Quản lý kho hàng', desc: 'Thêm, sửa, xóa thông tin kho hàng', color: '#4361ee' },
   { icon: faBoxOpen, label: 'Sản phẩm', page: 'Quản lý sản phẩm', desc: 'Quản lý sản phẩm', color: '#10b981' },
   { icon: faSliders, label: 'Biến thể', page: 'Quản lý biến thể', desc: 'Quản lý biến thể sản phẩm', color: '#f59e0b' },
-  { icon: faGift, label: 'Khuyến mãi', page: 'Quản lý khuyến mãi', desc: 'Chương trình ưu đãi', color: '#ec4899' },
-  { icon: faStar, label: 'Đánh giá', page: 'Quản lý đánh giá', desc: 'Quản lý đánh giá', color: '#ec4899' },
+  { icon: faPercent, label: 'Khuyến mãi', page: 'Quản lý khuyến mãi', desc: 'Chương trình ưu đãi', color: '#ec4899' },
   { icon: faCartShopping, label: 'Đơn hàng', page: 'Quản lý đơn hàng', desc: 'Quản lý đơn hàng', color: '#f59e0b' },
   { icon: faChartLine, label: 'Thống kê', page: 'Thống kê', desc: 'Báo cáo doanh thu', color: '#1e4e48' }
 ];
 
-export default function AdminLayout() {
+export default function AdminLayout({ notify, toasts = [] }) {
   const { user, logout } = useAuth();
   const [activePage, setActivePage] = useState('Tổng quan');
   const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -50,15 +53,23 @@ export default function AdminLayout() {
 
   return (
     <div className="ad-wrap">
+      <AppToast toasts={toasts} />
       <aside className="ad-side">
         <div className="ad-brand"><FontAwesomeIcon icon={faMobileScreen} /> Phone Store</div>
         <nav className="ad-menu">
           {MENU.map((m, index) => (
-            <button key={`${m.label}-${index}`} type="button" className={activePage === m.label ? 'active' : ''} onClick={() => setActivePage(m.label)}>
+            <button
+              key={`${m.label}-${index}`}
+              type="button"
+              className={activePage === m.label ? 'active' : ''}
+              onClick={() => setActivePage(m.label)}
+            >
               <FontAwesomeIcon icon={m.icon} className="fa-fw" /> {m.label}
             </button>
           ))}
-          <button type="button" onClick={logout}><FontAwesomeIcon icon={faRightFromBracket} className="fa-fw" /> Đăng xuất</button>
+          <button type="button" onClick={logout}>
+            <FontAwesomeIcon icon={faRightFromBracket} className="fa-fw" /> Đăng xuất
+          </button>
         </nav>
       </aside>
       <div className="ad-main">
@@ -70,21 +81,22 @@ export default function AdminLayout() {
           </div>
         </header>
         <div className="ad-content">
-          {activePage === 'Quản lý danh mục' ? <CategoryManagement />
+          {activePage === 'Quản lý kho hàng' ? <WarehouseList notify={notify} />
+            : activePage === 'Quản lý danh mục' ? <CategoryManagement />
             : activePage === 'Quản lý thương hiệu' ? <BrandManagement />
             : activePage === 'Quản lý khuyến mãi' ? <PromotionManagement />
             : activePage === 'Quản lý nhà cung cấp' ? <SupplierManagement />
             : activePage === 'Quản lý người dùng' ? <UserManagement />
-              : activePage === 'Quản lý đánh giá' ? <ReviewManagement />
-                : activePage === 'Quản lý sản phẩm' ? <ProductManagement />
-                  : activePage === 'Quản lý biến thể' ? <VariantManagement /> : <>
+            : activePage === 'Quản lý đánh giá' ? <ReviewManagement />
+            : activePage === 'Quản lý sản phẩm' ? <ProductManagement />
+            : activePage === 'Quản lý biến thể' ? <VariantManagement /> : <>
           <div className="ad-welcome">
             <div>
               <h2>Xin chào, {user?.username}! 👋</h2>
-              <p>Chào mừng bạn quay trở lại hệ thống quản lý cà phê chuyên nghiệp</p>
+              <p>Chào mừng bạn quay trở lại hệ thống quản lý bán hàng chuyên nghiệp</p>
               <div className="d"><FontAwesomeIcon icon={faCalendarDay} /> {today}</div>
             </div>
-            <FontAwesomeIcon icon={faMugHot} className="big" />
+            <FontAwesomeIcon icon={faWarehouse} className="big" />
           </div>
           <h2 className="ad-sec"><FontAwesomeIcon icon={faBolt} /> Hành động nhanh</h2>
           <div className="ad-grid">
