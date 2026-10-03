@@ -1,4 +1,17 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'primaryColor': '#FFFFFF', 'primaryTextColor': '#111827', 'primaryBorderColor': '#3B82F6', 'lineColor': '#64748B', 'textColor': '#111827', 'fontSize': '14px'}}}%%
 flowchart LR
+
+    %% =========================
+    %% BRIGHT THEME (dễ nhìn cả dark/light)
+    %% =========================
+    classDef actor fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#111827;
+    classDef auth fill:#DBEAFE,stroke:#2563EB,stroke-width:2px,color:#111827;
+    classDef product fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#111827;
+    classDef cart fill:#FFEDD5,stroke:#EA580C,stroke-width:2px,color:#111827;
+    classDef order fill:#EDE9FE,stroke:#7C3AED,stroke-width:2px,color:#111827;
+    classDef payment fill:#CCFBF1,stroke:#0D9488,stroke-width:2px,color:#111827;
+    classDef warehouse fill:#FEF9C3,stroke:#CA8A04,stroke-width:2px,color:#111827;
+    classDef admin fill:#FCE7F3,stroke:#DB2777,stroke-width:2px,color:#111827;
 
     %% =========================
     %% ACTORS
@@ -136,3 +149,26 @@ flowchart LR
     Warehouse --> UC27
 
     Warehouse --> UC19
+
+    %% =========================
+    %% APPLY COLORS
+    %% =========================
+    class Admin,Customer,Warehouse actor;
+    class UC1,UC2,UC3,UC4 auth;
+    class UC5,UC6,UC7,UC8,UC9,UC10 product;
+    class UC11,UC12,UC13,UC14 cart;
+    class UC15,UC16,UC17,UC18,UC19 order;
+    class UC20,UC21,UC22 payment;
+    class UC23,UC24,UC25,UC26,UC27 warehouse;
+    class UC28,UC29,UC30,UC31,UC32 admin;
+
+    style SYSTEM fill:#FFFFFF,stroke:#3B82F6,stroke-width:3px,color:#111827;
+    style AUTH fill:#EFF6FF,stroke:#2563EB,stroke-width:2px,color:#111827;
+    style PRODUCT fill:#F0FDF4,stroke:#16A34A,stroke-width:2px,color:#111827;
+    style CART fill:#FFF7ED,stroke:#EA580C,stroke-width:2px,color:#111827;
+    style ORDER fill:#F5F3FF,stroke:#7C3AED,stroke-width:2px,color:#111827;
+    style PAYMENT fill:#F0FDFA,stroke:#0D9488,stroke-width:2px,color:#111827;
+    style WAREHOUSE_MODULE fill:#FEFCE8,stroke:#CA8A04,stroke-width:2px,color:#111827;
+    style ADMIN_MODULE fill:#FDF2F8,stroke:#DB2777,stroke-width:2px,color:#111827;
+
+    linkStyle default stroke:#64748B,stroke-width:2px;
