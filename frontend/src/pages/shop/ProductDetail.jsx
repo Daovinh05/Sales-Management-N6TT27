@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCartPlus, faChevronLeft, faStar as faStarSolid, faStarHalfStroke } from '@fortawesome/free-solid-svg-icons';
+import { faCartPlus, faChevronLeft, faCircleCheck, faStar as faStarSolid, faStarHalfStroke } from '@fortawesome/free-solid-svg-icons';
 import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons';
 import ShopProductCard from '../../components/shop/ShopProductCard.jsx';
 import { fetchDetail, fetchReviews, postReview } from '../../services/shop.js';
@@ -143,15 +143,17 @@ export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, n
   return (
     <div className="kh-body">
       <div className="tz-container">
-        <div className="kh-crumb">
+        <div className="kh-crumb kh-detail-crumb">
           <a onClick={onBack} style={{ cursor: 'pointer' }}>Trang chủ</a>
           {' / '}{detail.categoryName || 'Danh mục'}{' / '}{detail.name}
         </div>
 
-        <h2 className="kh-detail-title">{detail.name}</h2>
-        <div className="kh-detail-ratingline">
-          <Stars value={reviewData.average || 0} />
-          <span className="kh-count">({totalReviews} Đánh giá)</span>
+        <div className="kh-detail-head">
+          <h2 className="kh-detail-title">{detail.name}</h2>
+          <div className="kh-detail-ratingline">
+            <Stars value={reviewData.average || 0} />
+            <span className="kh-count">({totalReviews} Đánh giá)</span>
+          </div>
         </div>
 
         <div className="kh-detail-layout">
@@ -177,7 +179,7 @@ export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, n
                 ))}
               </div>
             )}
-            <div className="kh-count">Mã sản phẩm: <strong>{detail.code}</strong> | Danh mục: <strong>{detail.categoryName || '—'}</strong></div>
+            <div className="kh-detail-meta">Mã sản phẩm: <strong>{detail.code}</strong> | Danh mục: <strong>{detail.categoryName || '—'}</strong></div>
           </div>
 
           <div>
@@ -261,6 +263,7 @@ export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, n
           </div>
         </div>
 
+        <div className="kh-detail-review-wrap">
         <div className="kh-detail-review-head">
           {totalReviews} đánh giá cho {detail.name}
         </div>
@@ -301,16 +304,17 @@ export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, n
           ))}
           {totalReviews === 0 && <p className="kh-detail-no-review">Chưa có đánh giá nào cho sản phẩm này.</p>}
         </div>
+        </div>
 
         {detail.similar?.length > 0 && (
-          <>
-            <h3 className="kh-detail-similar">Sản phẩm tương tự</h3>
+          <div className="kh-detail-similar-wrap">
+            <h3 className="kh-detail-similar">Sản phẩm tương tự <FontAwesomeIcon icon={faCircleCheck} style={{ color: '#0fb30f', fontSize: 16, marginLeft: 5 }} /></h3>
             <div className="kh-grid">
               {detail.similar.map((p) => (
                 <ShopProductCard key={p.id} p={p} badgeText="-0%" onBuy={(item) => onAdd?.(item, 1)} onView={onView} />
               ))}
             </div>
-          </>
+          </div>
         )}
       </div>
       {reviewModal && (
