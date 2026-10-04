@@ -85,6 +85,16 @@ export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmi
     onSubmitSearch?.(word);
   };
 
+  const clearSearch = () => {
+    setTerm('');
+    termRef.current = '';
+    setSuggests([]);
+    setBusy(false);
+    setDrop(false);
+    onSearch?.('');
+    onSubmitSearch?.('');
+  };
+
   const pickSuggestion = (s) => {
     setTerm(s.name);
     termRef.current = s.name;
@@ -114,6 +124,11 @@ export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmi
             onFocus={() => { setHistory(getHistory(username)); setDrop(true); }}
             onKeyDown={(e) => { if (e.key === 'Escape') setDrop(false); }}
           />
+          {term && (
+            <button type="button" className="kh-sclear" aria-label="Xóa tìm kiếm" onClick={clearSearch}>
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+          )}
           <button type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /><span>Tìm kiếm ngay</span></button>
           {drop && (
             <div className="kh-sdrop">
