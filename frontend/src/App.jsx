@@ -8,7 +8,10 @@ import { TopBanner, CustomerHeader } from './components/shop/CustomerHeader.jsx'
 import CartSidebar from './components/shop/CartSidebar.jsx';
 import Home from './pages/shop/Home.jsx';
 import CustomerHome from './pages/shop/CustomerHome.jsx';
+import CartPage from './pages/shop/CartPage.jsx';
 import ProductDetail from './pages/shop/ProductDetail.jsx';
+import { addToCart, fetchCart, removeCartItem, updateCartQty } from './services/cart.js';
+import { fetchDetail } from './services/shop.js';
 import CustomerProfile from './pages/shop/CustomerProfile.jsx';
 import AdminLayout from './layouts/AdminLayout.jsx';
 import { LoginModal, RegisterModal } from './components/auth/AuthModal.jsx';
@@ -45,15 +48,17 @@ function Landing({ notify, toasts }) {
 
 const parseHash = () => {
   const hash = window.location.hash || '';
-  if (hash === '#/account') return { profile: true, product: null };
+  if (hash === '#/account') return { profile: true, product: null, cart: false };
+  if (hash === '#/cart') return { profile: false, product: null, cart: true };
   const match = hash.match(/^#\/product\/(.+)$/);
-  return { profile: false, product: match ? decodeURIComponent(match[1]) : null };
+  return { profile: false, product: match ? decodeURIComponent(match[1]) : null, cart: false };
 };
 
 function Shop({ notify, toasts }) {
   const [cartOpen, setCartOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(() => parseHash().profile);
   const [productCode, setProductCode] = useState(() => parseHash().product);
+  const [showCart, setShowCart] = useState(() => parseHash().cart);
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState('');
 
@@ -62,10 +67,23 @@ function Shop({ notify, toasts }) {
       const route = parseHash();
       setShowProfile(route.profile);
       setProductCode(route.product);
+      setShowCart(route.cart);
     };
     window.addEventListener('hashchange', syncRoute);
     return () => window.removeEventListener('hashchange', syncRoute);
   }, []);
+
+  const reloadCart = useCallback(async () => {
+    try {
+      setItems((await fetchCart()).items);
+    } catch {
+      // Chưa đăng nhập hoặc mất mạng: giữ giỏ hiện tại.
+    }
+  }, []);
+
+  useEffect(() => { reloadCart(); }, [reloadCart]);
+
+  const apiError = (e, fallback) => notify('error', e.response?.data?.message || fallback);
 
   const openProfile = () => {
     if (window.location.hash === '#/account') setShowProfile(true);
@@ -77,18 +95,48 @@ function Shop({ notify, toasts }) {
     else setShowProfile(false);
   };
 
-  const buy = (p, qty = 1) => {
+  // p từ card chỉ có mã SP -> resolve biến thể đầu tiên; p từ chi tiết đã có variantCode.
+  const buy = async (p, qty = 1) => {
     const want = Math.max(1, qty);
-    if (p.stock <= 0) { notify('error', 'Không đủ tồn kho, còn 0'); return; }
-    setItems((its) => {
-      const ex = its.find((i) => i.id === p.id);
-      const inCart = ex ? ex.qty : 0;
-      if (inCart + want > p.stock) { notify('error', `Không đủ tồn kho, còn ${p.stock}`); return its; }
-      notify('success', `Đã thêm ${p.name} vào giỏ`);
-      if (ex) return its.map((i) => (i.id === p.id ? { ...i, qty: i.qty + want } : i));
-      return [...its, { id: p.id, name: p.name, brandName: p.brandName, img: p.img, price: p.sale ?? p.price, qty: want }];
-    });
-    setCartOpen(true);
+    try {
+      let variantCode = p.variantCode;
+      let name = p.name;
+      if (!variantCode) {
+        const detail = await fetchDetail(p.code || p.id);
+        const first = (detail.variants || [])[0];
+        if (!first) { notify('error', 'Sản phẩm chưa có biến thể'); return; }
+        if ((first.stockQuantity ?? 0) <= 0) { notify('error', 'Không đủ tồn kho, còn 0'); return; }
+        variantCode = first.code;
+        name = detail.name;
+      } else if ((p.stock ?? 0) <= 0) {
+        notify('error', 'Không đủ tồn kho, còn 0');
+        return;
+      }
+      const cart = await addToCart(variantCode, want);
+      setItems(cart.items);
+      notify('success', `Đã thêm ${name} vào giỏ`);
+      setCartOpen(true);
+    } catch (e) {
+      apiError(e, 'Không thêm được vào giỏ');
+    }
+  };
+
+  const changeQty = async (it, qty) => {
+    const want = Math.max(1, qty);
+    if (want > it.stock) { notify('error', `Không đủ tồn kho, còn ${it.stock}`); return; }
+    try {
+      setItems((await updateCartQty(it.variantCode, want)).items);
+    } catch (e) {
+      apiError(e, 'Không cập nhật được số lượng');
+    }
+  };
+
+  const removeItem = async (it) => {
+    try {
+      setItems((await removeCartItem(it.variantCode)).items);
+    } catch (e) {
+      apiError(e, 'Không xóa được sản phẩm');
+    }
   };
 
   const viewProduct = (code) => {
@@ -98,7 +146,13 @@ function Shop({ notify, toasts }) {
 
   const backHome = () => {
     if (window.location.hash) window.location.hash = '';
-    else { setProductCode(null); setShowProfile(false); }
+    else { setProductCode(null); setShowProfile(false); setShowCart(false); }
+  };
+
+  const openCartPage = () => {
+    setCartOpen(false);
+    if (window.location.hash === '#/cart') setShowCart(true);
+    else window.location.hash = '/cart';
   };
 
   return (
@@ -113,14 +167,19 @@ function Shop({ notify, toasts }) {
       />
       {showProfile
         ? <CustomerProfile onBack={closeProfile} notify={notify} />
-        : productCode
-          ? <ProductDetail code={productCode} onAdd={buy} onBuyNow={buy} onBack={backHome} onView={viewProduct} notify={notify} />
-          : <CustomerHome query={query} onBuy={(p) => buy(p, 1)} onView={viewProduct} />}
+        : showCart
+          ? <CartPage notify={notify} onBack={backHome} onChanged={setItems} />
+          : productCode
+            ? <ProductDetail code={productCode} onAdd={buy} onBuyNow={buy} onBack={backHome} onView={viewProduct} notify={notify} />
+            : <CustomerHome query={query} onBuy={(p) => buy(p, 1)} onView={viewProduct} />}
       <Footer />
       <CartSidebar
         open={cartOpen} items={items}
         onClose={() => setCartOpen(false)}
-        onRemove={(i) => setItems((its) => its.filter((_, x) => x !== i))}
+        onQty={changeQty}
+        onRemove={removeItem}
+        onViewCart={openCartPage}
+        onCheckout={() => { setCartOpen(false); notify('warning', 'Thanh toán sẽ làm ở phase đặt hàng'); }}
       />
     </>
   );
