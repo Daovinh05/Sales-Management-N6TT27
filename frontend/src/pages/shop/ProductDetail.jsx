@@ -94,6 +94,7 @@ export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, n
 
   const buildItem = () => ({
     id: variant.code,
+    variantCode: variant.code,
     name: variant.name ? `${detail.name} - ${variant.name}` : detail.name,
     brandName: detail.brandName || '',
     img: variant.img,
