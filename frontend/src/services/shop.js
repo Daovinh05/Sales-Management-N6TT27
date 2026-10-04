@@ -19,8 +19,15 @@ export const toCard = (p) => ({
   brandName: p.brandName || '',
   img: variantImage(p.imageUrl),
   price: Number(p.price ?? 0),
+  minPrice: p.minPrice != null ? Number(p.minPrice) : null,
+  maxPrice: p.maxPrice != null ? Number(p.maxPrice) : null,
   stock: p.stockQuantity ?? 0,
 });
+
+export async function fetchRandom(limit = 7) {
+  const { data } = await api.get('/storefront/random', { params: { limit } });
+  return (Array.isArray(data) ? data : []).map(toCard);
+}
 
 export async function fetchProducts({ cat = '', brand = '', price = 'tat-ca', search = '', page = 0, size = 8 } = {}) {
   const params = { page, size };

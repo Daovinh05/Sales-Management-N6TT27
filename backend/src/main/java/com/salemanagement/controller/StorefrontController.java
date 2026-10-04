@@ -46,6 +46,12 @@ public class StorefrontController {
         return storefrontService.getDetail(code);
     }
 
+    @GetMapping("/random")
+    public List<StorefrontProductResponse> random(
+            @RequestParam(required = false, defaultValue = "7") int limit) {
+        return storefrontService.random(limit);
+    }
+
     @GetMapping("/suggestions")
     public List<SuggestionResponse> suggest(
             @RequestParam(required = false, defaultValue = "") String q,

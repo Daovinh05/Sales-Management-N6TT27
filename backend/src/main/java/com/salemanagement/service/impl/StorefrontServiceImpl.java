@@ -53,6 +53,10 @@ public class StorefrontServiceImpl implements StorefrontService {
 
     private StorefrontProductResponse toCard(Product product) {
         ProductVariant first = variantRepository.findFirstByProductOrderByCodeAsc(product).orElse(null);
+        List<Object[]> rows = variantRepository.findPriceBounds(product.getCode());
+        Object[] bounds = rows == null || rows.isEmpty() ? null : rows.get(0);
+        BigDecimal minPrice = bounds != null && bounds.length > 0 ? (BigDecimal) bounds[0] : null;
+        BigDecimal maxPrice = bounds != null && bounds.length > 1 ? (BigDecimal) bounds[1] : null;
         Category category = product.getCategory();
         Brand brand = product.getBrand();
         return StorefrontProductResponse.of(
@@ -60,6 +64,8 @@ public class StorefrontServiceImpl implements StorefrontService {
                 product.getName(),
                 first == null ? null : first.getImageUrl(),
                 first == null ? null : first.getPrice(),
+                minPrice,
+                maxPrice,
                 first == null ? 0 : first.getStockQuantity(),
                 brand == null ? null : brand.getName(),
                 category == null ? null : category.getName());
@@ -164,6 +170,14 @@ public class StorefrontServiceImpl implements StorefrontService {
         Review saved = reviewRepository.save(review);
         return StorefrontReviewResponse.of(saved.getId(), saved.getCustomerName(), saved.getRating(),
                 saved.getContent(), saved.getReply(), saved.getCreatedAt());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StorefrontProductResponse> random(int limit) {
+        return productRepository.findRandom(PageRequest.of(0, Math.max(1, Math.min(20, limit)))).stream()
+                .map(this::toCard)
+                .toList();
     }
 
     @Override

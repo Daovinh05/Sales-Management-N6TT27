@@ -155,6 +155,17 @@ function Shop({ notify, toasts }) {
     else window.location.hash = '/cart';
   };
 
+  // Submit từ ô search: đang ở trang khác thì về home trước rồi mới lọc (đúng kiểu PHP redirect về ?q=).
+  const submitSearch = (word) => {
+    if (window.location.hash) {
+      window.location.hash = '';
+      setProductCode(null);
+      setShowProfile(false);
+      setShowCart(false);
+    }
+    setQuery(word || '');
+  };
+
   return (
     <>
       <AppToast toasts={toasts} />
@@ -162,6 +173,8 @@ function Shop({ notify, toasts }) {
       <CustomerHeader
         cartCount={items.reduce((s, i) => s + i.qty, 0)}
         onSearch={setQuery}
+        onSubmitSearch={submitSearch}
+        onView={viewProduct}
         onCart={() => setCartOpen(true)}
         onAccount={openProfile}
       />

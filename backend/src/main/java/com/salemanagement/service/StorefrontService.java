@@ -18,6 +18,8 @@ public interface StorefrontService {
 
     List<SuggestionResponse> suggest(String query, int limit);
 
+    List<StorefrontProductResponse> random(int limit);
+
     StorefrontReviewsResponse getReviews(String code);
 
     StorefrontReviewResponse createReview(String code, String customerName, ReviewCreateRequest request);

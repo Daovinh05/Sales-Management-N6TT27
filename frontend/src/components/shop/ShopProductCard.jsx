@@ -23,6 +23,8 @@ export default function ShopProductCard({ p, onBuy, onView, badgeText }) {
           <div className="kh-old">{fmt(p.price)}</div>
           <div className="kh-new">{fmt(p.sale)}</div>
         </>
+      ) : p.minPrice != null && p.maxPrice != null && p.minPrice !== p.maxPrice ? (
+        <div className="kh-new">{fmt(p.minPrice)} - {fmt(p.maxPrice)}</div>
       ) : (
         <div className="kh-new">{fmt(p.price)}</div>
       )}
