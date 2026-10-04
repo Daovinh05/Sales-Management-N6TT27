@@ -18,14 +18,19 @@ import com.salemanagement.repository.CartRepository;
 import com.salemanagement.repository.CategoryRepository;
 import com.salemanagement.repository.ProductRepository;
 import com.salemanagement.repository.ProductVariantRepository;
+import com.salemanagement.repository.SupplierRepository;
 import com.salemanagement.repository.UserRepository;
+import com.salemanagement.service.FileStorageService;
 import com.salemanagement.service.impl.CartServiceImpl;
+import com.salemanagement.service.impl.ProductServiceImpl;
+import com.salemanagement.service.impl.ProductVariantServiceImpl;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.MultipartFile;
 
 @DataJpaTest
 class CartServiceTests {
@@ -44,6 +49,8 @@ class CartServiceTests {
     private BrandRepository brandRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private SupplierRepository supplierRepository;
 
     private CartServiceImpl cartService;
     private User user;
@@ -131,6 +138,54 @@ class CartServiceTests {
         cartService.addItem(user, addRequest("BT01", 1));
         cartService.clear(user);
         assertThat(cartService.getCart(user).getTotalItems()).isZero();
+    }
+
+    @Test
+    void addWithoutQuantityDefaultsToOne() {
+        CartAddRequest request = new CartAddRequest();
+        request.setVariantCode("BT01");
+        request.setQuantity(null);
+        assertThat(cartService.addItem(user, request).getTotalQuantity()).isEqualTo(1);
+    }
+
+    @Test
+    void deleteVariantClearsCartLines() {
+        cartService.addItem(user, addRequest("BT01", 2));
+        FileStorageService files = new FileStorageService() {
+            @Override
+            public String storeVariantImage(MultipartFile file) {
+                return null;
+            }
+
+            @Override
+            public void deleteVariantImage(String filename) {
+            }
+
+            @Override
+            public String storeUserAvatar(MultipartFile file) {
+                return null;
+            }
+
+            @Override
+            public void deleteUserAvatar(String filename) {
+            }
+        };
+        ProductVariantServiceImpl variantService = new ProductVariantServiceImpl(
+                variantRepository, productRepository, files, cartItemRepository);
+        variantService.delete("BT01");
+        assertThat(cartService.getCart(user).getTotalItems()).isZero();
+        assertThat(variantRepository.existsById("BT01")).isFalse();
+    }
+
+    @Test
+    void deleteProductClearsCartLines() {
+        cartService.addItem(user, addRequest("BT01", 2));
+        ProductServiceImpl productService = new ProductServiceImpl(
+                productRepository, variantRepository, categoryRepository,
+                brandRepository, supplierRepository, cartItemRepository);
+        productService.delete("SP01");
+        assertThat(cartService.getCart(user).getTotalItems()).isZero();
+        assertThat(productRepository.existsById("SP01")).isFalse();
     }
 
     @Test

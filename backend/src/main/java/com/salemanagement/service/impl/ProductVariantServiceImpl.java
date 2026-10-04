@@ -8,6 +8,7 @@ import com.salemanagement.dto.response.ProductVariantResponse;
 import com.salemanagement.entity.Product;
 import com.salemanagement.entity.ProductVariant;
 import com.salemanagement.exception.BusinessException;
+import com.salemanagement.repository.CartItemRepository;
 import com.salemanagement.repository.ProductRepository;
 import com.salemanagement.repository.ProductVariantRepository;
 import com.salemanagement.service.FileStorageService;
@@ -29,6 +30,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private final ProductVariantRepository variantRepository;
     private final ProductRepository productRepository;
     private final FileStorageService fileStorageService;
+    private final CartItemRepository cartItemRepository;
 
     private static String normalizeCode(String code) {
         return code == null ? null : code.trim().toUpperCase();
@@ -139,7 +141,9 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 .orElseThrow(() -> new BusinessException(
                         "Không tìm thấy biến thể có mã: " + code, HttpStatus.NOT_FOUND));
         // Port đúng PHP BienThe_delete: xóa file ảnh trước rồi xóa bản ghi.
+        // Dọn dòng giỏ hàng đang giữ biến thể để tránh kẹt khóa ngoại.
         fileStorageService.deleteVariantImage(variant.getImageUrl());
+        cartItemRepository.deleteByVariant(variant);
         variantRepository.delete(variant);
     }
 

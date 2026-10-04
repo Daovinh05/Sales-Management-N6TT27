@@ -176,6 +176,10 @@
 .kh-cart-rm:hover { color: #d70018; }
 .kh-cart-summary { background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 16px; position: sticky; top: 90px; }
 .kh-cart-summary h4 { margin: 0 0 12px; font-size: 15px; }
+.kh-cart-title-row { display: flex; justify-content: space-between; align-items: center; }
+.kh-cart-title-row .kh-detail-title { margin-bottom: 0; }
+.kh-cart-clear { border: 1px solid #f0b6bc; background: #fff; color: #d70018; border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.kh-cart-clear:hover { background: #fff2f2; }
 .kh-cart-summary .row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
 .kh-cart-summary .row.total strong { color: #d70018; font-size: 16px; }
 .kh-cart-coupon { display: flex; gap: 8px; margin: 12px 0; }

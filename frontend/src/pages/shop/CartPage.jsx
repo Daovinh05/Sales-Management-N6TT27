@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { fetchCart, removeCartItem, updateCartQty } from '../../services/cart.js';
+import { clearCart, fetchCart, removeCartItem, updateCartQty } from '../../services/cart.js';
 import { fmt } from '../../services/catalog.js';
 
 export default function CartPage({ notify, onBack, onChanged }) {
@@ -62,7 +62,27 @@ export default function CartPage({ notify, onBack, onChanged }) {
         <button className="kh-detail-back" onClick={onBack}>
           <FontAwesomeIcon icon={faChevronLeft} /> Tiếp tục mua sắm
         </button>
-        <h2 className="kh-detail-title">Giỏ hàng của bạn</h2>
+        <div className="kh-cart-title-row">
+          <h2 className="kh-detail-title">Giỏ hàng của bạn</h2>
+          {!loading && items.length > 0 && (
+            <button
+              type="button" className="kh-cart-clear"
+              onClick={async () => {
+                if (!window.confirm('Xóa tất cả sản phẩm trong giỏ?')) return;
+                try {
+                  await clearCart();
+                  setItems([]);
+                  onChanged?.([]);
+                  setChecked({});
+                } catch {
+                  notify?.('error', 'Không xóa được giỏ hàng');
+                }
+              }}
+            >
+              Xóa tất cả
+            </button>
+          )}
+        </div>
 
         {loading ? (
           <div className="kh-count">Đang tải giỏ hàng...</div>

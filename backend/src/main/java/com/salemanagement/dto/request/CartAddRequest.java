@@ -13,6 +13,7 @@ public class CartAddRequest {
     @Size(max = 20, message = "Mã biến thể tối đa 20 ký tự")
     private String variantCode;
 
+    // Không gửi quantity thì mặc định 1 như PHP.
     @Positive(message = "Số lượng phải lớn hơn 0")
-    private int quantity = 1;
+    private Integer quantity;
 }

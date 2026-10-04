@@ -112,18 +112,19 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public CartResponse addItem(User user, CartAddRequest request) {
         ProductVariant variant = requireVariant(request.getVariantCode());
-        checkStock(variant, request.getQuantity());
+        int quantity = request.getQuantity() == null ? 1 : request.getQuantity();
+        checkStock(variant, quantity);
         Cart cart = getOrCreateCart(user);
         CartItem item = cartItemRepository.findByCartAndVariant(cart, variant).orElse(null);
         int existingQty = item == null ? 0 : item.getQuantity();
-        checkStock(variant, existingQty + request.getQuantity());
+        checkStock(variant, existingQty + quantity);
         if (item == null) {
             item = new CartItem();
             item.setCart(cart);
             item.setVariant(variant);
-            item.setQuantity(request.getQuantity());
+            item.setQuantity(quantity);
         } else {
-            item.setQuantity(existingQty + request.getQuantity());
+            item.setQuantity(existingQty + quantity);
         }
         cartItemRepository.save(item);
         return collect(cart);
