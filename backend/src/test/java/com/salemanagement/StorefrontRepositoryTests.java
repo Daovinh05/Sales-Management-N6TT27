@@ -6,10 +6,12 @@ import com.salemanagement.entity.Brand;
 import com.salemanagement.entity.Category;
 import com.salemanagement.entity.Product;
 import com.salemanagement.entity.ProductVariant;
+import com.salemanagement.entity.Review;
 import com.salemanagement.repository.BrandRepository;
 import com.salemanagement.repository.CategoryRepository;
 import com.salemanagement.repository.ProductRepository;
 import com.salemanagement.repository.ProductVariantRepository;
+import com.salemanagement.repository.ReviewRepository;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,8 @@ class StorefrontRepositoryTests {
     private ProductRepository productRepository;
     @Autowired
     private ProductVariantRepository variantRepository;
+    @Autowired
+    private ReviewRepository reviewRepository;
 
     private Product saveProduct(String code, String name, String categoryCode, String price) {
         Category category = categoryRepository.findById(categoryCode).orElseGet(() -> {
@@ -84,5 +88,27 @@ class StorefrontRepositoryTests {
 
         assertThat(productRepository.findTop4ByCategory_CodeAndCodeNotOrderByCreatedAtDesc("DM01", "SP01")).isEmpty();
         assertThat(productRepository.findTop4ByCodeNotOrderByCreatedAtDesc("SP01")).hasSize(2);
+    }
+
+    @Test
+    void reviewsByProductName() {
+        saveProduct("SP10", "Pin dự phòng", "DM09", "990000");
+
+        Review first = new Review();
+        first.setCustomerName("Khách A");
+        first.setProductName("Pin dự phòng");
+        first.setRating(5);
+        first.setContent("Rất tốt");
+        reviewRepository.save(first);
+
+        Review second = new Review();
+        second.setCustomerName("Khách B");
+        second.setProductName("Pin dự phòng");
+        second.setRating(4);
+        second.setContent("Ổn");
+        reviewRepository.save(second);
+
+        assertThat(reviewRepository.findByProductNameOrderByCreatedAtDesc("Pin dự phòng")).hasSize(2);
+        assertThat(reviewRepository.findByProductNameOrderByCreatedAtDesc("Không tồn tại")).isEmpty();
     }
 }
