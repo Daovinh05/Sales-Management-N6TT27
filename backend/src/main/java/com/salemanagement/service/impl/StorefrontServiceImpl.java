@@ -1,0 +1,139 @@
+package com.salemanagement.service.impl;
+
+import com.salemanagement.dto.response.PageResponse;
+import com.salemanagement.dto.response.ProductVariantResponse;
+import com.salemanagement.dto.response.StorefrontDetailResponse;
+import com.salemanagement.dto.response.StorefrontProductResponse;
+import com.salemanagement.dto.response.SuggestionResponse;
+import com.salemanagement.entity.Brand;
+import com.salemanagement.entity.Category;
+import com.salemanagement.entity.Product;
+import com.salemanagement.entity.ProductVariant;
+import com.salemanagement.exception.BusinessException;
+import com.salemanagement.repository.ProductRepository;
+import com.salemanagement.repository.ProductVariantRepository;
+import com.salemanagement.service.StorefrontService;
+import java.math.BigDecimal;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class StorefrontServiceImpl implements StorefrontService {
+
+    private final ProductRepository productRepository;
+    private final ProductVariantRepository variantRepository;
+
+    private static String normalize(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    /** Ngưỡng giá giữ nguyên 5 mốc của PHP (đơn vị đồng). */
+    private static BigDecimal[] priceBounds(String priceRange) {
+        return switch (normalize(priceRange)) {
+            case "duoi-2-trieu" -> new BigDecimal[]{null, new BigDecimal("2000000")};
+            case "2-4-trieu" -> new BigDecimal[]{new BigDecimal("2000000"), new BigDecimal("4000000")};
+            case "4-7-trieu" -> new BigDecimal[]{new BigDecimal("4000000"), new BigDecimal("7000000")};
+            case "7-13-trieu" -> new BigDecimal[]{new BigDecimal("7000000"), new BigDecimal("13000000")};
+            case "tren-13-trieu" -> new BigDecimal[]{new BigDecimal("13000000"), null};
+            default -> new BigDecimal[]{null, null};
+        };
+    }
+
+    private StorefrontProductResponse toCard(Product product) {
+        ProductVariant first = variantRepository.findFirstByProductOrderByCodeAsc(product).orElse(null);
+        Category category = product.getCategory();
+        Brand brand = product.getBrand();
+        return StorefrontProductResponse.of(
+                product.getCode(),
+                product.getName(),
+                first == null ? null : first.getImageUrl(),
+                first == null ? null : first.getPrice(),
+                first == null ? 0 : first.getStockQuantity(),
+                brand == null ? null : brand.getName(),
+                category == null ? null : category.getName());
+    }
+
+    private ProductVariantResponse toVariant(ProductVariant variant) {
+        Product product = variant.getProduct();
+        return ProductVariantResponse.of(
+                variant.getCode(),
+                product == null ? null : product.getCode(),
+                product == null ? null : product.getName(),
+                variant.getName(),
+                variant.getImageUrl(),
+                variant.getColor(),
+                variant.getRam(),
+                variant.getStorage(),
+                variant.getPrice(),
+                variant.getStockQuantity(),
+                variant.getCreatedAt());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<StorefrontProductResponse> listProducts(String categoryCode, String brandCode,
+                                                                String priceRange, String search,
+                                                                int page, int size) {
+        BigDecimal[] bounds = priceBounds(priceRange);
+        Page<Product> result = productRepository.storefront(
+                normalize(categoryCode), normalize(brandCode), normalize(search),
+                bounds[0], bounds[1], PageRequest.of(Math.max(0, page), Math.max(1, Math.min(48, size))));
+        List<StorefrontProductResponse> content = result.getContent().stream()
+                .map(this::toCard)
+                .toList();
+        return PageResponse.of(content, result.getNumber(), result.getSize(),
+                result.getTotalElements(), result.getTotalPages());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StorefrontDetailResponse getDetail(String code) {
+        String normalized = normalize(code).toUpperCase();
+        Product product = productRepository.findById(normalized)
+                .orElseThrow(() -> new BusinessException(
+                        "Không tìm thấy sản phẩm có mã: " + code, HttpStatus.NOT_FOUND));
+        Category category = product.getCategory();
+        Brand brand = product.getBrand();
+        List<ProductVariantResponse> variants = variantRepository.findByProduct(product).stream()
+                .map(this::toVariant)
+                .toList();
+        List<Product> similar = category == null
+                ? productRepository.findTop4ByCodeNotOrderByCreatedAtDesc(product.getCode())
+                : productRepository.findTop4ByCategory_CodeAndCodeNotOrderByCreatedAtDesc(
+                        category.getCode(), product.getCode());
+        return StorefrontDetailResponse.of(
+                product.getCode(),
+                product.getName(),
+                category == null ? null : category.getCode(),
+                category == null ? null : category.getName(),
+                brand == null ? null : brand.getCode(),
+                brand == null ? null : brand.getName(),
+                product.getSupplier() == null ? null : product.getSupplier().getCode(),
+                product.getSupplier() == null ? null : product.getSupplier().getName(),
+                variants,
+                similar.stream().map(this::toCard).toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SuggestionResponse> suggest(String query, int limit) {
+        String keyword = normalize(query);
+        if (keyword.isEmpty()) {
+            return List.of();
+        }
+        return productRepository.search("", keyword).stream()
+                .limit(Math.max(1, Math.min(20, limit)))
+                .map(product -> {
+                    String image = variantRepository.findFirstByProductOrderByCodeAsc(product)
+                            .map(ProductVariant::getImageUrl).orElse(null);
+                    return SuggestionResponse.of(product.getCode(), product.getName(), image);
+                })
+                .toList();
+    }
+}
