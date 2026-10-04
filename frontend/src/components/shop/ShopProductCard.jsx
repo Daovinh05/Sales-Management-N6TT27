@@ -6,14 +6,15 @@ export function stockOf(p) {
   return { cls: 'ok', text: 'Còn hàng' };
 }
 
-export default function ShopProductCard({ p, onBuy }) {
+export default function ShopProductCard({ p, onBuy, onView }) {
   const st = stockOf(p);
   const pct = p.sale ? Math.round((1 - p.sale / p.price) * 100) : 0;
+  const view = () => onView?.(p.code || p.id);
   return (
     <div className={`kh-card ${st.cls === 'out' ? 'out' : ''}`}>
       {pct > 0 && <span className="kh-sticker">-{pct}%</span>}
-      <img src={p.img} alt={p.name} loading="lazy" />
-      <div className="kh-name">{p.name}</div>
+      <img src={p.img} alt={p.name} loading="lazy" onClick={view} style={onView ? { cursor: 'pointer' } : undefined} />
+      <div className="kh-name" onClick={view} style={onView ? { cursor: 'pointer' } : undefined}>{p.name}</div>
       {p.sale ? (
         <>
           <div className="kh-old">{fmt(p.price)}</div>
