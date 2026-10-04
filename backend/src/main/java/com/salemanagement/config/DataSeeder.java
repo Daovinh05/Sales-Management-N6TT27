@@ -89,6 +89,12 @@ public class DataSeeder {
                 brand.setName("Apple");
                 brandRepository.save(brand);
             }
+            if (!brandRepository.existsById("TH02")) {
+                Brand brand = new Brand();
+                brand.setCode("TH02");
+                brand.setName("Samsung");
+                brandRepository.save(brand);
+            }
             Supplier supplier = supplierRepository.findById("NCC01")
                     .orElseGet(() -> {
                         Supplier created = new Supplier();
@@ -116,10 +122,66 @@ public class DataSeeder {
                     variant.setStorage("256GB");
                     variant.setPrice(new BigDecimal("34990000"));
                     variant.setStockQuantity(10);
+                    variant.setImageUrl("https://picsum.photos/seed/bt01/800/800");
                     variantRepository.save(variant);
                 }
             }
+            // Bù ảnh cho dữ liệu seed cũ chưa có ảnh.
+            variantRepository.findById("BT01").ifPresent(existing -> {
+                if (existing.getImageUrl() == null || existing.getImageUrl().isBlank()) {
+                    existing.setImageUrl("https://picsum.photos/seed/bt01/800/800");
+                    variantRepository.save(existing);
+                }
+            });
+
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP02", "iPhone 16 128GB", "TH01",
+                    "BT02", "128GB - Đen", "Đen", "8GB", "128GB", "21490000", 8, "bt02");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP03", "iPhone 15 128GB", "TH01",
+                    "BT03", "128GB - Xanh", "Xanh", "6GB", "128GB", "18990000", 0, "bt03");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP04", "Samsung Galaxy S25 Ultra", "TH02",
+                    "BT04", "12GB/256GB - Xám", "Xám", "12GB", "256GB", "27490000", 6, "bt04");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP05", "Samsung Galaxy Z Flip 6", "TH02",
+                    "BT05", "8GB/256GB - Bạc", "Bạc", "8GB", "256GB", "26990000", 3, "bt05");
         };
+    }
+
+    private void seedProduct(ProductRepository productRepository,
+                             ProductVariantRepository variantRepository,
+                             BrandRepository brandRepository,
+                             Supplier supplier,
+                             Category category,
+                             String productCode, String productName, String brandCode,
+                             String variantCode, String variantName, String color,
+                             String ram, String storage, String price, int stock,
+                             String imageSeed) {
+        if (productRepository.existsById(productCode)) {
+            return;
+        }
+        Product product = new Product();
+        product.setCode(productCode);
+        product.setName(productName);
+        product.setCategory(category);
+        product.setBrand(brandRepository.findById(brandCode).orElse(null));
+        product.setSupplier(supplier);
+        productRepository.save(product);
+
+        if (!variantRepository.existsById(variantCode)) {
+            ProductVariant variant = new ProductVariant();
+            variant.setCode(variantCode);
+            variant.setProduct(product);
+            variant.setName(variantName);
+            variant.setColor(color);
+            variant.setRam(ram);
+            variant.setStorage(storage);
+            variant.setPrice(new BigDecimal(price));
+            variant.setStockQuantity(stock);
+            variant.setImageUrl("https://picsum.photos/seed/" + imageSeed + "/800/800");
+            variantRepository.save(variant);
+        }
     }
 
     @Bean
