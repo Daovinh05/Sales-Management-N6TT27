@@ -1,4 +1,4 @@
-import { CATEGORIES, PRICES, BRANDS } from '../../services/catalog.js';
+import { PRICES } from '../../services/catalog.js';
 
 function Group({ title, name, options, value, onChange }) {
   return (
@@ -18,13 +18,13 @@ function Group({ title, name, options, value, onChange }) {
   );
 }
 
-export default function FilterSidebar({ f, setF }) {
+export default function FilterSidebar({ f, setF, categories, brands }) {
   return (
     <aside className="kh-filter">
       <h3>Bộ lọc</h3>
-      <Group title="Danh mục" name="category" options={CATEGORIES} value={f.cat} onChange={(v) => setF({ ...f, cat: v })} />
+      <Group title="Danh mục" name="category" options={categories?.length ? categories : [{ id: '', name: 'Tất cả' }]} value={f.cat} onChange={(v) => setF({ ...f, cat: v })} />
       <Group title="Giá" name="price" options={PRICES} value={f.price} onChange={(v) => setF({ ...f, price: v })} />
-      <Group title="Thương hiệu" name="brand" options={BRANDS} value={f.brand} onChange={(v) => setF({ ...f, brand: v })} />
+      <Group title="Thương hiệu" name="brand" options={brands?.length ? brands : [{ id: '', name: 'Tất cả' }]} value={f.brand} onChange={(v) => setF({ ...f, brand: v })} />
     </aside>
   );
 }
