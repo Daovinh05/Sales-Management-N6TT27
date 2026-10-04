@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter } from '@fortawesome/free-solid-svg-icons';
-import FilterSidebar from '../../components/shop/FilterSidebar.jsx';
+import FilterSidebar, { isFilterDefault } from '../../components/shop/FilterSidebar.jsx';
 import ShopProductCard from '../../components/shop/ShopProductCard.jsx';
 import { fetchBrands, fetchCategories, fetchProducts, fetchRandom } from '../../services/shop.js';
 
@@ -87,17 +87,22 @@ export default function CustomerHome({ query, onBuy, onView }) {
               <h2>Tìm sản phẩm theo nhu cầu</h2>
               <button className="kh-fnow" onClick={load}><FontAwesomeIcon icon={faFilter} /> Dùng bộ lọc ngay</button>
             </div>
-            {(query || '').trim() && !loading && !error ? (
-              <div className="kh-search-head">
-                <h2>Kết quả tìm kiếm cho: <span className="kh-search-query">"{query.trim()}"</span></h2>
-                <div className="kh-count">{data.total} sản phẩm được tìm thấy</div>
-              </div>
-            ) : (
-              <div className="kh-count">
-                {loading ? 'Đang tải...' : `Tìm thấy ${data.total} kết quả`}
-                {error && ` — ${error}`}
-              </div>
-            )}
+            {(() => {
+              const keyword = (query || '').trim();
+              const filtering = !isFilterDefault(f);
+              if (loading) return <div className="kh-count">Đang tải...</div>;
+              if (error) return <div className="kh-count">{error}</div>;
+              if (keyword) {
+                return (
+                  <div className="kh-search-head">
+                    <h2>Kết quả tìm kiếm cho: <span className="kh-search-query">"{keyword}"</span></h2>
+                    <div className="kh-count">{data.total} sản phẩm được tìm thấy</div>
+                  </div>
+                );
+              }
+              if (filtering) return <div className="kh-count">Tìm thấy {data.total} kết quả</div>;
+              return null;
+            })()}
             <div className="kh-grid">
               {data.items.map((p) => <ShopProductCard key={p.id} p={p} onBuy={onBuy} onView={onView} />)}
             </div>
