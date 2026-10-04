@@ -41,6 +41,16 @@ export async function fetchDetail(code) {
   };
 }
 
+export async function fetchReviews(code) {
+  const { data } = await api.get(`/storefront/products/${encodeURIComponent(code)}/reviews`);
+  return data;
+}
+
+export async function postReview(code, { rating, content }) {
+  const { data } = await api.post(`/storefront/products/${encodeURIComponent(code)}/reviews`, { rating, content });
+  return data;
+}
+
 const toOption = (rows, allLabel) => [{ id: '', name: allLabel }, ...rows.map((r) => ({ id: r.code, name: r.name }))];
 
 export async function fetchCategories() {
