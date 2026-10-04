@@ -5,7 +5,7 @@ import {
   faTrash, faUpload, faXmark
 } from '@fortawesome/free-solid-svg-icons';
 import api from '../../services/api.js';
-import { imageBaseUrl } from './ProductManagement.jsx';
+import { resolveImage } from '../../services/shop.js';
 
 const formatPrice = (value) => {
   if (value === null || value === undefined || value === '') return '0';
@@ -207,7 +207,7 @@ export default function VariantManagement() {
                     <td>{variant.productName || variant.productCode}</td>
                     <td>{variant.name || '—'}</td>
                     <td>{variant.imageUrl
-                      ? <img src={`${imageBaseUrl()}/uploads/variants/${encodeURIComponent(variant.imageUrl)}`} alt={variant.name || variant.code} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 5 }} />
+                      ? <img src={resolveImage(variant.imageUrl)} alt={variant.name || variant.code} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 5 }} />
                       : <span>Không có hình</span>}</td>
                     <td>{variant.color || '—'}</td>
                     <td>{variant.ram || '—'}</td>
@@ -249,7 +249,7 @@ export default function VariantManagement() {
           {(imageFile || currentImage) && (
             <div>
               <img
-                src={imageFile ? URL.createObjectURL(imageFile) : `${imageBaseUrl()}/uploads/variants/${encodeURIComponent(currentImage)}`}
+                src={imageFile ? URL.createObjectURL(imageFile) : resolveImage(currentImage)}
                 alt="Biến thể"
                 style={{ maxWidth: 100, maxHeight: 100, borderRadius: 4 }}
               />

@@ -8,6 +8,7 @@ import { TopBanner, CustomerHeader } from './components/shop/CustomerHeader.jsx'
 import CartSidebar from './components/shop/CartSidebar.jsx';
 import Home from './pages/shop/Home.jsx';
 import CustomerHome from './pages/shop/CustomerHome.jsx';
+import ProductDetail from './pages/shop/ProductDetail.jsx';
 import CustomerProfile from './pages/shop/CustomerProfile.jsx';
 import AdminLayout from './layouts/AdminLayout.jsx';
 import { LoginModal, RegisterModal } from './components/auth/AuthModal.jsx';
@@ -42,14 +43,26 @@ function Landing({ notify, toasts }) {
   );
 }
 
+const parseHash = () => {
+  const hash = window.location.hash || '';
+  if (hash === '#/account') return { profile: true, product: null };
+  const match = hash.match(/^#\/product\/(.+)$/);
+  return { profile: false, product: match ? decodeURIComponent(match[1]) : null };
+};
+
 function Shop({ notify, toasts }) {
   const [cartOpen, setCartOpen] = useState(false);
-  const [showProfile, setShowProfile] = useState(() => window.location.hash === '#/account');
+  const [showProfile, setShowProfile] = useState(() => parseHash().profile);
+  const [productCode, setProductCode] = useState(() => parseHash().product);
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState('');
 
   useEffect(() => {
-    const syncRoute = () => setShowProfile(window.location.hash === '#/account');
+    const syncRoute = () => {
+      const route = parseHash();
+      setShowProfile(route.profile);
+      setProductCode(route.product);
+    };
     window.addEventListener('hashchange', syncRoute);
     return () => window.removeEventListener('hashchange', syncRoute);
   }, []);
@@ -64,17 +77,28 @@ function Shop({ notify, toasts }) {
     else setShowProfile(false);
   };
 
-  const buy = (p) => {
+  const buy = (p, qty = 1) => {
+    const want = Math.max(1, qty);
     if (p.stock <= 0) { notify('error', 'Không đủ tồn kho, còn 0'); return; }
     setItems((its) => {
       const ex = its.find((i) => i.id === p.id);
       const inCart = ex ? ex.qty : 0;
-      if (inCart + 1 > p.stock) { notify('error', `Không đủ tồn kho, còn ${p.stock}`); return its; }
+      if (inCart + want > p.stock) { notify('error', `Không đủ tồn kho, còn ${p.stock}`); return its; }
       notify('success', `Đã thêm ${p.name} vào giỏ`);
-      if (ex) return its.map((i) => (i.id === p.id ? { ...i, qty: i.qty + 1 } : i));
-      return [...its, { id: p.id, name: p.name, brandName: p.brandName, img: p.img, price: p.sale ?? p.price, qty: 1 }];
+      if (ex) return its.map((i) => (i.id === p.id ? { ...i, qty: i.qty + want } : i));
+      return [...its, { id: p.id, name: p.name, brandName: p.brandName, img: p.img, price: p.sale ?? p.price, qty: want }];
     });
     setCartOpen(true);
+  };
+
+  const viewProduct = (code) => {
+    if (!code) return;
+    window.location.hash = `/product/${encodeURIComponent(code)}`;
+  };
+
+  const backHome = () => {
+    if (window.location.hash) window.location.hash = '';
+    else { setProductCode(null); setShowProfile(false); }
   };
 
   return (
@@ -89,7 +113,9 @@ function Shop({ notify, toasts }) {
       />
       {showProfile
         ? <CustomerProfile onBack={closeProfile} notify={notify} />
-        : <CustomerHome query={query} onBuy={buy} />}
+        : productCode
+          ? <ProductDetail code={productCode} onAdd={buy} onBuyNow={buy} onBack={backHome} onView={viewProduct} notify={notify} />
+          : <CustomerHome query={query} onBuy={(p) => buy(p, 1)} onView={viewProduct} />}
       <Footer />
       <CartSidebar
         open={cartOpen} items={items}
