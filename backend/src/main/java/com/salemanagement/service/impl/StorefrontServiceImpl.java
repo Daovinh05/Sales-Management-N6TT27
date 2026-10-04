@@ -1,17 +1,22 @@
 package com.salemanagement.service.impl;
 
+import com.salemanagement.dto.request.ReviewCreateRequest;
 import com.salemanagement.dto.response.PageResponse;
 import com.salemanagement.dto.response.ProductVariantResponse;
 import com.salemanagement.dto.response.StorefrontDetailResponse;
 import com.salemanagement.dto.response.StorefrontProductResponse;
+import com.salemanagement.dto.response.StorefrontReviewResponse;
+import com.salemanagement.dto.response.StorefrontReviewsResponse;
 import com.salemanagement.dto.response.SuggestionResponse;
 import com.salemanagement.entity.Brand;
 import com.salemanagement.entity.Category;
 import com.salemanagement.entity.Product;
 import com.salemanagement.entity.ProductVariant;
+import com.salemanagement.entity.Review;
 import com.salemanagement.exception.BusinessException;
 import com.salemanagement.repository.ProductRepository;
 import com.salemanagement.repository.ProductVariantRepository;
+import com.salemanagement.repository.ReviewRepository;
 import com.salemanagement.service.StorefrontService;
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,6 +33,7 @@ public class StorefrontServiceImpl implements StorefrontService {
 
     private final ProductRepository productRepository;
     private final ProductVariantRepository variantRepository;
+    private final ReviewRepository reviewRepository;
 
     private static String normalize(String value) {
         return value == null ? "" : value.trim();
@@ -94,10 +100,7 @@ public class StorefrontServiceImpl implements StorefrontService {
     @Override
     @Transactional(readOnly = true)
     public StorefrontDetailResponse getDetail(String code) {
-        String normalized = normalize(code).toUpperCase();
-        Product product = productRepository.findById(normalized)
-                .orElseThrow(() -> new BusinessException(
-                        "Không tìm thấy sản phẩm có mã: " + code, HttpStatus.NOT_FOUND));
+        Product product = requireProduct(code);
         Category category = product.getCategory();
         Brand brand = product.getBrand();
         List<ProductVariantResponse> variants = variantRepository.findByProduct(product).stream()
@@ -118,6 +121,49 @@ public class StorefrontServiceImpl implements StorefrontService {
                 product.getSupplier() == null ? null : product.getSupplier().getName(),
                 variants,
                 similar.stream().map(this::toCard).toList());
+    }
+
+    private Product requireProduct(String code) {
+        String normalized = normalize(code).toUpperCase();
+        return productRepository.findById(normalized)
+                .orElseThrow(() -> new BusinessException(
+                        "Không tìm thấy sản phẩm có mã: " + code, HttpStatus.NOT_FOUND));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StorefrontReviewsResponse getReviews(String code) {
+        Product product = requireProduct(code);
+        List<Review> reviews = reviewRepository.findByProductNameOrderByCreatedAtDesc(product.getName());
+        long total = reviews.size();
+        double average = total == 0 ? 0
+                : Math.round(reviews.stream().mapToInt(Review::getRating).average().orElse(0) * 100) / 100.0;
+        List<StorefrontReviewsResponse.StarBucket> distribution = new java.util.ArrayList<>();
+        for (int stars = 5; stars >= 1; stars--) {
+            final int level = stars;
+            long count = reviews.stream().filter(r -> r.getRating() == level).count();
+            double percent = total == 0 ? 0 : Math.round(count * 1000.0 / total) / 10.0;
+            distribution.add(StorefrontReviewsResponse.StarBucket.of(stars, count, percent));
+        }
+        List<StorefrontReviewResponse> items = reviews.stream()
+                .map(r -> StorefrontReviewResponse.of(r.getId(), r.getCustomerName(), r.getRating(),
+                        r.getContent(), r.getReply(), r.getCreatedAt()))
+                .toList();
+        return StorefrontReviewsResponse.of(average, total, distribution, items);
+    }
+
+    @Override
+    @Transactional
+    public StorefrontReviewResponse createReview(String code, String customerName, ReviewCreateRequest request) {
+        Product product = requireProduct(code);
+        Review review = new Review();
+        review.setCustomerName(customerName);
+        review.setProductName(product.getName());
+        review.setRating(request.getRating());
+        review.setContent(request.getContent().trim());
+        Review saved = reviewRepository.save(review);
+        return StorefrontReviewResponse.of(saved.getId(), saved.getCustomerName(), saved.getRating(),
+                saved.getContent(), saved.getReply(), saved.getCreatedAt());
     }
 
     @Override
