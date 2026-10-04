@@ -91,6 +91,26 @@ class StorefrontRepositoryTests {
     }
 
     @Test
+    void priceBoundsAndRandom() {
+        saveProduct("SP20", "Pin sạc", "DM09", "990000");
+
+        java.util.List<Object[]> rows = variantRepository.findPriceBounds("SP20");
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0)).hasSize(2);
+        assertThat((java.math.BigDecimal) rows.get(0)[0]).isEqualByComparingTo(new java.math.BigDecimal("990000"));
+        assertThat((java.math.BigDecimal) rows.get(0)[1]).isEqualByComparingTo(new java.math.BigDecimal("990000"));
+
+        java.util.List<Object[]> missing = variantRepository.findPriceBounds("SP99");
+        assertThat(missing).hasSize(1);
+        assertThat(missing.get(0)[0]).isNull();
+        assertThat(missing.get(0)[1]).isNull();
+
+        var random = productRepository.findRandom(org.springframework.data.domain.PageRequest.of(0, 7));
+        assertThat(random).hasSize(1);
+        assertThat(random.get(0).getCode()).isEqualTo("SP20");
+    }
+
+    @Test
     void reviewsByProductName() {
         saveProduct("SP10", "Pin dự phòng", "DM09", "990000");
 

@@ -17,6 +17,9 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     List<Product> findTop4ByCodeNotOrderByCreatedAtDesc(String code);
 
+    @Query("select p from Product p order by function('RAND')")
+    List<Product> findRandom(org.springframework.data.domain.Pageable pageable);
+
     @Query("select p from Product p where "
             + "(:category is null or :category = '' or p.category.code = :category) and "
             + "(:brand is null or :brand = '' or p.brand.code = :brand) and "

@@ -11,6 +11,8 @@ public class StorefrontProductResponse {
     private String name;
     private String imageUrl;
     private BigDecimal price;
+    private BigDecimal minPrice;
+    private BigDecimal maxPrice;
     private Integer stockQuantity;
     private String brandName;
     private String categoryName;
