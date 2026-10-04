@@ -2,9 +2,14 @@ import api from './api.js';
 
 const API_ROOT = () => (api.defaults.baseURL || '').replace(/\/api$/, '');
 
-export const variantImage = (filename) => (filename
-  ? `${API_ROOT()}/uploads/variants/${encodeURIComponent(filename)}`
-  : '');
+/** Ảnh upload thì ghép host backend, ảnh URL tuyệt đối (dữ liệu mẫu) giữ nguyên. */
+export const resolveImage = (filename) => {
+  if (!filename) return '';
+  if (/^https?:\/\//i.test(filename)) return filename;
+  return `${API_ROOT()}/uploads/variants/${encodeURIComponent(filename)}`;
+};
+
+export const variantImage = (filename) => resolveImage(filename);
 
 /** Map 1 card API -> đúng shape UI cũ {id, name, brandName, img, price, stock}. */
 export const toCard = (p) => ({

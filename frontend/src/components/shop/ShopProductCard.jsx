@@ -14,7 +14,9 @@ export default function ShopProductCard({ p, onBuy, onView, badgeText }) {
     <div className={`kh-card ${st.cls === 'out' ? 'out' : ''}`}>
       {pct > 0 ? <span className="kh-sticker">-{pct}%</span>
         : badgeText != null ? <span className="kh-sticker">{badgeText}</span> : null}
-      <img src={p.img} alt={p.name} loading="lazy" onClick={view} style={onView ? { cursor: 'pointer' } : undefined} />
+      {p.img
+        ? <img src={p.img} alt={p.name} loading="lazy" onClick={view} style={onView ? { cursor: 'pointer' } : undefined} />
+        : <div className="kh-noimg" onClick={view} style={onView ? { cursor: 'pointer' } : undefined}>Không có hình</div>}
       <div className="kh-name" onClick={view} style={onView ? { cursor: 'pointer' } : undefined}>{p.name}</div>
       {p.sale ? (
         <>

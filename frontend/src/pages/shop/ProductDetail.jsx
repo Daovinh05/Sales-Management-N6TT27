@@ -145,10 +145,6 @@ export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, n
       <div className="tz-container">
         <div className="kh-crumb">
           <a onClick={onBack} style={{ cursor: 'pointer' }}>Trang chủ</a>
-          {' / Chi tiết sản phẩm'}
-        </div>
-        <div className="kh-crumb">
-          <a onClick={onBack} style={{ cursor: 'pointer' }}>Trang chủ</a>
           {' / '}{detail.categoryName || 'Danh mục'}{' / '}{detail.name}
         </div>
 
