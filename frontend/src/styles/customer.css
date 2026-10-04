@@ -93,10 +93,14 @@
 .kh-buy { background: #d70018; color: #fff; padding: 8px; border-radius: 4px; font-weight: 700; font-size: 14px; margin-top: 10px; opacity: 0; transition: opacity .2s; }
 .kh-card:hover .kh-buy { opacity: 1; }
 .kh-buy:disabled { opacity: .4; cursor: not-allowed; }
-.kh-pages { display: inline-flex; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-top: 20px; overflow: hidden; }
-.kh-pages button { min-width: 40px; height: 40px; font-size: 13px; }
+.kh-pages { display: flex; width: fit-content; max-width: 100%; margin: 24px auto 0; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06); overflow-x: auto; }
+.kh-pages button { min-width: 44px; height: 44px; padding: 0 14px; font-size: 14px; font-weight: 600; color: #333; background: #fff; border: 0; border-right: 1px solid #f0f0f0; cursor: pointer; transition: background .15s; flex-shrink: 0; }
+.kh-pages button:last-child { border-right: 0; }
+.kh-pages button:hover:not(:disabled):not(.active) { background: #f4f4f4; }
 .kh-pages button.active { background: #00483d; color: #fff; }
-.kh-pages button:disabled { opacity: .4; }
+.kh-pages button:disabled { opacity: .35; cursor: not-allowed; }
+.kh-pages button.prev, .kh-pages button.next { padding: 0 18px; white-space: nowrap; }
+.kh-pages .dots { display: flex; align-items: center; padding: 0 8px; color: #999; flex-shrink: 0; }
 
 /* Cart sidebar */
 .kh-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 990; }

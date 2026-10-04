@@ -62,6 +62,20 @@ export default function CustomerHome({ query, onBuy, onView }) {
   const pages = Math.max(1, data.pages);
   const cur = Math.min(page, pages - 1);
 
+  // Gọn khi nhiều trang: 1 … (c-1) c (c+1) … N.
+  const pageItems = (() => {
+    const c = cur + 1;
+    const nums = [...new Set([1, pages, c - 1, c, c + 1])]
+      .filter((n) => n >= 1 && n <= pages)
+      .sort((a, b) => a - b);
+    const out = [];
+    nums.forEach((n, i) => {
+      if (i > 0 && n - nums[i - 1] > 1) out.push('…');
+      out.push(n);
+    });
+    return out;
+  })();
+
   return (
     <div className="kh-body">
       <div className="tz-container">
@@ -107,13 +121,16 @@ export default function CustomerHome({ query, onBuy, onView }) {
                 )}
               </div>
             )}
-            <div className="kh-pages">
-              <button disabled={cur <= 0} onClick={() => setPage(cur - 1)}>« Trước</button>
-              {Array.from({ length: pages }, (_, i) => (
-                <button key={i} className={cur === i ? 'active' : ''} onClick={() => setPage(i)}>{i + 1}</button>
-              ))}
-              <button disabled={cur >= pages - 1} onClick={() => setPage(cur + 1)}>Tiếp »</button>
-            </div>
+            {pages > 1 && (
+              <div className="kh-pages">
+                <button className="prev" disabled={cur <= 0} onClick={() => setPage(cur - 1)}>« Trước</button>
+                {pageItems.map((n, i) => (n === '…'
+                  ? <span key={`dots-${i}`} className="dots">…</span>
+                  : <button key={n} className={cur === n - 1 ? 'active' : ''} onClick={() => setPage(n - 1)}>{n}</button>
+                ))}
+                <button className="next" disabled={cur >= pages - 1} onClick={() => setPage(cur + 1)}>Tiếp »</button>
+              </div>
+            )}
           </main>
         </div>
       </div>
