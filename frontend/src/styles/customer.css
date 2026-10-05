@@ -323,3 +323,7 @@
 .co-success p { color: #444; margin-bottom: 6px; }
 .co-success-actions { display: flex; gap: 12px; margin-top: 20px; }
 .co-outline-btn { border: 1px solid #93c5fd; color: #2563eb; background: #fff; border-radius: 6px; padding: 10px 18px; font: inherit; font-size: 13px; font-weight: 600; }
+.co-history { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 40px; }
+.co-history-row { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 16px; }
+.co-history-code { font-weight: 800; }
+.co-history-status { margin-left: auto; font-size: 12px; font-weight: 700; color: #92400e; background: #fef3c7; border-radius: 6px; padding: 4px 10px; }
