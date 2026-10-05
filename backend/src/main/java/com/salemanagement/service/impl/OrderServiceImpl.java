@@ -53,6 +53,7 @@ public class OrderServiceImpl implements OrderService {
         order.setEmail(normalize(request.email()));
         order.setShippingAddress(normalize(request.shippingAddress()));
         order.setNote(normalize(request.note()));
+        order.setPaymentMethod(normalize(request.paymentMethod()));
         order.setDiscountAmount(nonNegative(request.discountAmount()));
         order.setStatus(Order.STATUS_PENDING);
 
