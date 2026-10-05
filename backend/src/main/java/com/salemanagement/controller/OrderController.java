@@ -48,6 +48,13 @@ public class OrderController {
         return orderService.detail(code);
     }
 
+    @GetMapping("/{code}/detail")
+    public OrderResponse ownerDetail(
+            @PathVariable String code,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return orderService.ownerDetail(code, principal == null ? null : principal.getUsername());
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OrderResponse create(

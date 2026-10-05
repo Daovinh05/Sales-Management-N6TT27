@@ -41,7 +41,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public List<OrderResponse> myOrders(String username) {
         return orderRepository.findByUsernameOrderByCreatedAtDesc(username).stream()
-                .map(OrderResponse::summary)
+                .map(OrderResponse::from)
                 .toList();
     }
 
@@ -49,6 +49,16 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public OrderResponse detail(String code) {
         return OrderResponse.from(findOrder(code));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrderResponse ownerDetail(String code, String username) {
+        Order order = findOrder(code);
+        if (username == null || !username.equals(order.getUsername())) {
+            throw new BusinessException("Bạn không có quyền xem đơn hàng này", HttpStatus.FORBIDDEN);
+        }
+        return OrderResponse.from(order);
     }
 
     @Override

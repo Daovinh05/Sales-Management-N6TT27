@@ -12,6 +12,8 @@ public interface OrderService {
 
     OrderResponse detail(String code);
 
+    OrderResponse ownerDetail(String code, String username);
+
     OrderResponse create(OrderRequest request, String username);
 
     OrderResponse updateStatus(String code, String status);
