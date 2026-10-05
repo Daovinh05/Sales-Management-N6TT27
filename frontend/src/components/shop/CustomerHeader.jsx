@@ -23,7 +23,7 @@ export function TopBanner() {
   );
 }
 
-export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmitSearch, onView, onHome }) {
+export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmitSearch, onView, onHome, onOrders }) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState('');
@@ -109,6 +109,11 @@ export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmi
     setOpen(false);
     onAccount?.();
   };
+  const openOrders = () => {
+    setOpen(false);
+    if (window.location.hash !== '#/lich-su-don-hang') window.location.hash = '/lich-su-don-hang';
+    onOrders?.();
+  };
 
   return (
     <header className="kh-header">
@@ -180,7 +185,7 @@ export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmi
             </button>
             <div className={`kh-account-menu ${open ? 'active' : ''}`} onClick={(e) => e.stopPropagation()}>
               <a onClick={openProfile}><FontAwesomeIcon icon={faUserGear} /> Quản lý tài khoản</a>
-              <a><FontAwesomeIcon icon={faBoxOpen} /> Đơn hàng của tôi</a>
+              <a onClick={openOrders}><FontAwesomeIcon icon={faBoxOpen} /> Đơn hàng của tôi</a>
               <div className="divider" />
               <a className="logout" onClick={logout}><FontAwesomeIcon icon={faRightFromBracket} /> Đăng xuất</a>
             </div>
