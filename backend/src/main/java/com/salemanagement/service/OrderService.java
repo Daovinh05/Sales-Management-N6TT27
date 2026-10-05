@@ -8,9 +8,13 @@ public interface OrderService {
 
     List<OrderResponse> list(String code, String customerName);
 
+    List<OrderResponse> myOrders(String username);
+
     OrderResponse detail(String code);
 
-    OrderResponse create(OrderRequest request);
+    OrderResponse ownerDetail(String code, String username);
+
+    OrderResponse create(OrderRequest request, String username);
 
     OrderResponse updateStatus(String code, String status);
 

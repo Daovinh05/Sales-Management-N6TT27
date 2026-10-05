@@ -10,4 +10,6 @@ public interface OrderRepository extends JpaRepository<Order, String> {
 
     List<Order> findByCodeContainingIgnoreCaseAndCustomerNameContainingIgnoreCaseOrderByCreatedAtDesc(
             String code, String customerName);
+
+    List<Order> findByUsernameOrderByCreatedAtDesc(String username);
 }

@@ -9,7 +9,7 @@ import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
 
 const STATUS_LABELS = {
-  CHO_DUYET: 'Chờ duyệt',
+  CHO_DUYET: 'Chờ xác nhận',
   DA_XAC_NHAN: 'Đã xác nhận',
   DANG_GIAO: 'Đang giao',
   HOAN_THANH: 'Hoàn thành',

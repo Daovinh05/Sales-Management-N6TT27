@@ -14,6 +14,8 @@ import { addToCart, fetchCart, removeCartItem, updateCartQty } from './services/
 import { fetchDetail } from './services/shop.js';
 import CustomerProfile from './pages/shop/CustomerProfile.jsx';
 import Checkout from './pages/shop/Checkout.jsx';
+import OrderSuccess from './pages/shop/OrderSuccess.jsx';
+import OrderHistory from './pages/shop/OrderHistory.jsx';
 import AdminLayout from './layouts/AdminLayout.jsx';
 import { LoginModal, RegisterModal } from './components/auth/AuthModal.jsx';
 import AppToast from './components/common/AppToast.jsx';
@@ -49,11 +51,13 @@ function Landing({ notify, toasts }) {
 
 const parseHash = () => {
   const hash = window.location.hash || '';
-  if (hash === '#/account') return { profile: true, product: null, cart: false, checkout: false };
-  if (hash === '#/cart') return { profile: false, product: null, cart: true, checkout: false };
-  if (hash === '#/thanh-toan') return { profile: false, product: null, cart: false, checkout: true };
+  if (hash === '#/account') return { profile: true, product: null, cart: false, checkout: false, success: false, history: false };
+  if (hash === '#/cart') return { profile: false, product: null, cart: true, checkout: false, success: false, history: false };
+  if (hash === '#/thanh-toan') return { profile: false, product: null, cart: false, checkout: true, success: false, history: false };
+  if (hash === '#/dat-hang-thanh-cong') return { profile: false, product: null, cart: false, checkout: false, success: true, history: false };
+  if (hash === '#/lich-su-don-hang') return { profile: false, product: null, cart: false, checkout: false, success: false, history: true };
   const match = hash.match(/^#\/product\/(.+)$/);
-  return { profile: false, product: match ? decodeURIComponent(match[1]) : null, cart: false, checkout: false };
+  return { profile: false, product: match ? decodeURIComponent(match[1]) : null, cart: false, checkout: false, success: false, history: false };
 };
 
 function Shop({ notify, toasts }) {
@@ -62,6 +66,9 @@ function Shop({ notify, toasts }) {
   const [productCode, setProductCode] = useState(() => parseHash().product);
   const [showCart, setShowCart] = useState(() => parseHash().cart);
   const [showCheckout, setShowCheckout] = useState(() => parseHash().checkout);
+  const [showSuccess, setShowSuccess] = useState(() => parseHash().success);
+  const [showHistory, setShowHistory] = useState(() => parseHash().history);
+  const [lastOrderCode, setLastOrderCode] = useState(() => sessionStorage.getItem('last-order') || '');
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState('');
 
@@ -72,6 +79,8 @@ function Shop({ notify, toasts }) {
       setProductCode(route.product);
       setShowCart(route.cart);
       setShowCheckout(route.checkout);
+      setShowSuccess(route.success);
+      setShowHistory(route.history);
     };
     window.addEventListener('hashchange', syncRoute);
     return () => window.removeEventListener('hashchange', syncRoute);
@@ -150,7 +159,7 @@ function Shop({ notify, toasts }) {
 
   const backHome = () => {
     if (window.location.hash) window.location.hash = '';
-    else { setProductCode(null); setShowProfile(false); setShowCart(false); setShowCheckout(false); }
+    else { setProductCode(null); setShowProfile(false); setShowCart(false); setShowCheckout(false); setShowSuccess(false); setShowHistory(false); }
   };
 
   // Logo TECHZONE: luôn về trang chủ, xóa query tìm kiếm.
@@ -173,6 +182,8 @@ function Shop({ notify, toasts }) {
       setShowProfile(false);
       setShowCart(false);
       setShowCheckout(false);
+      setShowSuccess(false);
+      setShowHistory(false);
     }
     setQuery(word || '');
   };
@@ -233,7 +244,7 @@ function Shop({ notify, toasts }) {
     else window.location.hash = '/thanh-toan';
   };
 
-  const handlePlaced = async () => {
+  const handlePlaced = async (order) => {
     try {
       const { clearCart } = await import('./services/cart.js');
       await clearCart();
@@ -241,8 +252,13 @@ function Shop({ notify, toasts }) {
       // Đặt hàng đã thành công, lỗi xóa giỏ không chặn luồng.
     }
     sessionStorage.removeItem('checkout-items');
+    if (order?.code) {
+      sessionStorage.setItem('last-order', order.code);
+      setLastOrderCode(order.code);
+    }
     await reloadCart();
-    window.location.hash = '';
+    if (window.location.hash === '#/dat-hang-thanh-cong') setShowSuccess(true);
+    else window.location.hash = '/dat-hang-thanh-cong';
   };
 
   return (
@@ -264,7 +280,11 @@ function Shop({ notify, toasts }) {
           ? <CartPage notify={notify} onBack={backHome} onChanged={setItems} onCheckout={checkoutItems} />
           : showCheckout
             ? <Checkout items={readCheckoutItems()} notify={notify} onPlaced={handlePlaced} onBack={backHome} />
-            : productCode
+            : showSuccess
+              ? <OrderSuccess code={lastOrderCode} onHome={backHome} onHistory={() => { window.location.hash = '/lich-su-don-hang'; }} />
+              : showHistory
+                ? <OrderHistory notify={notify} onBack={backHome} />
+                : productCode
               ? <ProductDetail code={productCode} onAdd={buy} onBuyNow={buyNow} onBack={backHome} onView={viewProduct} notify={notify} />
               : <CustomerHome query={query} onBuy={(p) => buyNow(p, 1)} onView={viewProduct} />}
       <Footer />

@@ -3,12 +3,14 @@ package com.salemanagement.controller;
 import com.salemanagement.dto.request.OrderRequest;
 import com.salemanagement.dto.request.OrderStatusRequest;
 import com.salemanagement.dto.response.OrderResponse;
+import com.salemanagement.security.CustomUserDetails;
 import com.salemanagement.service.OrderService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -35,16 +37,30 @@ public class OrderController {
         return orderService.list(code, customer);
     }
 
+    @GetMapping("/mine")
+    public List<OrderResponse> myOrders(@AuthenticationPrincipal CustomUserDetails principal) {
+        return orderService.myOrders(principal.getUsername());
+    }
+
     @GetMapping("/{code}")
     @PreAuthorize("hasRole('ADMIN')")
     public OrderResponse detail(@PathVariable String code) {
         return orderService.detail(code);
     }
 
+    @GetMapping("/{code}/detail")
+    public OrderResponse ownerDetail(
+            @PathVariable String code,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return orderService.ownerDetail(code, principal == null ? null : principal.getUsername());
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse create(@Valid @RequestBody OrderRequest request) {
-        return orderService.create(request);
+    public OrderResponse create(
+            @Valid @RequestBody OrderRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return orderService.create(request, principal == null ? null : principal.getUsername());
     }
 
     @PatchMapping("/{code}/status")
