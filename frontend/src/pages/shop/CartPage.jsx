@@ -4,7 +4,7 @@ import { faChevronLeft, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { clearCart, fetchCart, removeCartItem, updateCartQty } from '../../services/cart.js';
 import { fmt } from '../../services/catalog.js';
 
-export default function CartPage({ notify, onBack, onChanged }) {
+export default function CartPage({ notify, onBack, onChanged, onCheckout }) {
   const [items, setItems] = useState([]);
   const [checked, setChecked] = useState({});
   const [loading, setLoading] = useState(true);
@@ -125,7 +125,7 @@ export default function CartPage({ notify, onBack, onChanged }) {
               </div>
               <button
                 type="button" className="kh-detail-buynow" disabled={selected.length === 0}
-                onClick={() => notify?.('warning', 'Thanh toán sẽ làm ở phase đặt hàng')}
+                onClick={() => onCheckout?.(selected)}
               >
                 Tiến hành thanh toán
               </button>
