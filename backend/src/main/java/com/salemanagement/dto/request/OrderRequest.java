@@ -14,6 +14,7 @@ public record OrderRequest(
         @Size(max = 100) String email,
         @Size(max = 255) String shippingAddress,
         String note,
+        @Size(max = 30) String paymentMethod,
         BigDecimal discountAmount,
         @NotEmpty @Valid List<OrderItemRequest> items) {
 

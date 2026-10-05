@@ -23,7 +23,7 @@ export function TopBanner() {
   );
 }
 
-export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmitSearch, onView }) {
+export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmitSearch, onView, onHome }) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState('');
@@ -113,7 +113,7 @@ export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmi
   return (
     <header className="kh-header">
       <div className="tz-container">
-        <a className="kh-logo">TECHZONE</a>
+        <a className="kh-logo" onClick={() => { onHome?.(); if (window.location.hash) window.location.hash = ''; }} style={{ cursor: 'pointer' }}>TECHZONE</a>
         <form
           className="kh-search kh-search-wrap" ref={boxRef}
           onSubmit={(e) => { e.preventDefault(); submit(); }}

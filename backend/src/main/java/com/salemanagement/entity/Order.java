@@ -59,6 +59,9 @@ public class Order {
     @Column(nullable = false, length = 30)
     private String status = STATUS_PENDING;
 
+    @Column(length = 30)
+    private String paymentMethod;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderDetail> details = new ArrayList<>();
 
