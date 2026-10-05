@@ -39,15 +39,24 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<OrderResponse> myOrders(String username) {
+        return orderRepository.findByUsernameOrderByCreatedAtDesc(username).stream()
+                .map(OrderResponse::summary)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public OrderResponse detail(String code) {
         return OrderResponse.from(findOrder(code));
     }
 
     @Override
     @Transactional
-    public OrderResponse create(OrderRequest request) {
+    public OrderResponse create(OrderRequest request, String username) {
         Order order = new Order();
         order.setCode(nextCode());
+        order.setUsername(username);
         order.setCustomerName(request.customerName().trim());
         order.setCustomerPhone(normalize(request.customerPhone()));
         order.setEmail(normalize(request.email()));
