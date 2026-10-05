@@ -222,7 +222,12 @@ function Shop({ notify, toasts }) {
 
   const checkoutCart = () => {
     if (!items.length) return;
-    sessionStorage.setItem('checkout-items', JSON.stringify(items));
+    checkoutItems(items);
+  };
+
+  const checkoutItems = (list) => {
+    if (!list.length) return;
+    sessionStorage.setItem('checkout-items', JSON.stringify(list));
     setCartOpen(false);
     if (window.location.hash === '#/thanh-toan') setShowCheckout(true);
     else window.location.hash = '/thanh-toan';
@@ -256,7 +261,7 @@ function Shop({ notify, toasts }) {
       {showProfile
         ? <CustomerProfile onBack={closeProfile} notify={notify} />
         : showCart
-          ? <CartPage notify={notify} onBack={backHome} onChanged={setItems} />
+          ? <CartPage notify={notify} onBack={backHome} onChanged={setItems} onCheckout={checkoutItems} />
           : showCheckout
             ? <Checkout items={readCheckoutItems()} notify={notify} onPlaced={handlePlaced} onBack={backHome} />
             : productCode
