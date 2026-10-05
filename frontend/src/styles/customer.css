@@ -327,3 +327,51 @@
 .co-history-row { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 16px; }
 .co-history-code { font-weight: 800; }
 .co-history-status { margin-left: auto; font-size: 12px; font-weight: 700; color: #92400e; background: #fef3c7; border-radius: 6px; padding: 4px 10px; }
+
+/* Customer order history cards */
+.oh-title { font-size: 24px; font-weight: 800; margin: 18px 0 8px; }
+.oh-empty { text-align: center; padding: 36px 16px 60px; }
+.oh-empty-title { font-weight: 800; font-size: 15px; }
+.oh-empty-sub { color: #444; font-size: 13px; margin-top: 6px; }
+.oh-shop-btn { background: #c81e1e; color: #fff; border-radius: 999px; padding: 12px 32px; font: inherit; font-size: 14px; font-weight: 800; margin-top: 16px; }
+.oh-tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid #e5e7eb; margin-bottom: 18px; }
+.oh-tab { background: none; border: none; font: inherit; font-size: 13px; color: #666; padding: 12px 16px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.oh-tab.active { color: #2563eb; font-weight: 700; border-bottom-color: #2563eb; }
+.oh-card { background: #fff; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.06); margin-bottom: 16px; overflow: hidden; }
+.oh-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #f1f5f9; }
+.oh-code { font-weight: 800; font-size: 14px; }
+.oh-date { font-size: 12px; color: #888; margin-top: 4px; }
+.oh-badge { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 5px 12px; white-space: nowrap; }
+.oh-item { display: flex; gap: 14px; padding: 16px 20px; border-bottom: 1px solid #f8fafc; }
+.oh-item:last-child { border-bottom: none; }
+.oh-thumb { width: 72px; height: 72px; flex-shrink: 0; border: 1px solid #eee; border-radius: 8px; display: grid; place-items: center; overflow: hidden; color: #94a3b8; font-weight: 700; background: #f8fafc; }
+.oh-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.oh-thumb-sm { width: 48px; height: 48px; }
+.oh-item-info { flex: 1; min-width: 0; }
+.oh-item-name { font-weight: 700; font-size: 14px; }
+.oh-item-sub { font-size: 12px; color: #777; margin-top: 2px; }
+.oh-item-price { color: #2563eb; font-weight: 800; font-size: 13px; margin-top: 4px; }
+.oh-item-right { margin-left: auto; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.oh-pay { color: #2563eb; font-weight: 800; font-size: 17px; }
+.oh-detail-btn { background: #2563eb; color: #fff; border-radius: 999px; padding: 9px 20px; font: inherit; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; }
+
+/* Customer order detail modal */
+.oh-modal { background: #fff; border-radius: 12px; width: 960px; max-width: calc(100vw - 32px); max-height: 90vh; overflow: auto; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.oh-modal-head { background: #1e4e48; color: #fff; font-weight: 800; font-size: 16px; padding: 16px 22px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px 12px 0 0; }
+.oh-modal-head button { color: #fff; font-size: 18px; }
+.oh-modal-body { padding: 20px 24px; }
+.oh-modal-body h4 { color: #1e4e48; font-size: 15px; margin-bottom: 10px; }
+.oh-modal-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px; }
+.oh-kv { display: flex; gap: 10px; font-size: 13px; padding: 5px 0; }
+.oh-kv span:first-child { color: #555; min-width: 110px; }
+.oh-red { color: #d70018; }
+.oh-blue { color: #2563eb; font-weight: 700; }
+.oh-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+.oh-table thead th { background: #f8fafc; text-align: left; padding: 10px 12px; color: #555; }
+.oh-table tbody td { padding: 12px; border-top: 1px solid #f1f5f9; }
+.oh-table tbody td:nth-child(n+2) { white-space: nowrap; }
+.oh-modal-foot { border-top: 1px solid #eee; padding: 14px 24px 20px; display: flex; flex-direction: column; gap: 6px; }
+.oh-sum { display: flex; justify-content: flex-end; gap: 40px; font-size: 13px; color: #555; }
+.oh-sum strong { min-width: 130px; text-align: right; color: #111; }
+.oh-sum-total { font-weight: 800; color: #111; font-size: 14px; }
+.oh-sum-total strong { font-size: 16px; }
