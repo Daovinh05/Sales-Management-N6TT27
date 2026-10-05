@@ -13,6 +13,7 @@ import ProductDetail from './pages/shop/ProductDetail.jsx';
 import { addToCart, fetchCart, removeCartItem, updateCartQty } from './services/cart.js';
 import { fetchDetail } from './services/shop.js';
 import CustomerProfile from './pages/shop/CustomerProfile.jsx';
+import Checkout from './pages/shop/Checkout.jsx';
 import AdminLayout from './layouts/AdminLayout.jsx';
 import { LoginModal, RegisterModal } from './components/auth/AuthModal.jsx';
 import AppToast from './components/common/AppToast.jsx';
@@ -48,10 +49,11 @@ function Landing({ notify, toasts }) {
 
 const parseHash = () => {
   const hash = window.location.hash || '';
-  if (hash === '#/account') return { profile: true, product: null, cart: false };
-  if (hash === '#/cart') return { profile: false, product: null, cart: true };
+  if (hash === '#/account') return { profile: true, product: null, cart: false, checkout: false };
+  if (hash === '#/cart') return { profile: false, product: null, cart: true, checkout: false };
+  if (hash === '#/thanh-toan') return { profile: false, product: null, cart: false, checkout: true };
   const match = hash.match(/^#\/product\/(.+)$/);
-  return { profile: false, product: match ? decodeURIComponent(match[1]) : null, cart: false };
+  return { profile: false, product: match ? decodeURIComponent(match[1]) : null, cart: false, checkout: false };
 };
 
 function Shop({ notify, toasts }) {
@@ -59,6 +61,7 @@ function Shop({ notify, toasts }) {
   const [showProfile, setShowProfile] = useState(() => parseHash().profile);
   const [productCode, setProductCode] = useState(() => parseHash().product);
   const [showCart, setShowCart] = useState(() => parseHash().cart);
+  const [showCheckout, setShowCheckout] = useState(() => parseHash().checkout);
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState('');
 
@@ -68,6 +71,7 @@ function Shop({ notify, toasts }) {
       setShowProfile(route.profile);
       setProductCode(route.product);
       setShowCart(route.cart);
+      setShowCheckout(route.checkout);
     };
     window.addEventListener('hashchange', syncRoute);
     return () => window.removeEventListener('hashchange', syncRoute);
@@ -146,7 +150,13 @@ function Shop({ notify, toasts }) {
 
   const backHome = () => {
     if (window.location.hash) window.location.hash = '';
-    else { setProductCode(null); setShowProfile(false); setShowCart(false); }
+    else { setProductCode(null); setShowProfile(false); setShowCart(false); setShowCheckout(false); }
+  };
+
+  // Logo TECHZONE: luôn về trang chủ, xóa query tìm kiếm.
+  const goHome = () => {
+    setQuery('');
+    backHome();
   };
 
   const openCartPage = () => {
@@ -162,8 +172,72 @@ function Shop({ notify, toasts }) {
       setProductCode(null);
       setShowProfile(false);
       setShowCart(false);
+      setShowCheckout(false);
     }
     setQuery(word || '');
+  };
+
+  const readCheckoutItems = () => {
+    try {
+      const parsed = JSON.parse(sessionStorage.getItem('checkout-items') || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
+  // Mua ngay: resolve biến thể rồi nhảy thẳng sang màn hình thanh toán.
+  const buyNow = async (p, qty = 1) => {
+    const want = Math.max(1, qty);
+    try {
+      let variantCode = p.variantCode;
+      let name = p.name;
+      let price = p.price;
+      let img = p.img;
+      let brandName = p.brandName;
+      if (!variantCode) {
+        const detail = await fetchDetail(p.code || p.id);
+        const first = (detail.variants || [])[0];
+        if (!first) { notify('error', 'Sản phẩm chưa có biến thể'); return; }
+        if ((first.stockQuantity ?? 0) <= 0) { notify('error', 'Không đủ tồn kho, còn 0'); return; }
+        variantCode = first.code;
+        name = `${detail.name} - ${first.name || ''}`.trim();
+        price = Number(first.price ?? detail.price ?? 0);
+        img = first.img;
+        brandName = [first.color, first.storage, first.ram].filter(Boolean).join(' • ');
+      } else if ((p.stock ?? 0) <= 0) {
+        notify('error', 'Không đủ tồn kho, còn 0');
+        return;
+      }
+      sessionStorage.setItem('checkout-items', JSON.stringify([
+        { id: variantCode, variantCode, name, brandName, img, price, qty: want }
+      ]));
+      setCartOpen(false);
+      if (window.location.hash === '#/thanh-toan') setShowCheckout(true);
+      else window.location.hash = '/thanh-toan';
+    } catch (e) {
+      apiError(e, 'Không mở được màn hình thanh toán');
+    }
+  };
+
+  const checkoutCart = () => {
+    if (!items.length) return;
+    sessionStorage.setItem('checkout-items', JSON.stringify(items));
+    setCartOpen(false);
+    if (window.location.hash === '#/thanh-toan') setShowCheckout(true);
+    else window.location.hash = '/thanh-toan';
+  };
+
+  const handlePlaced = async () => {
+    try {
+      const { clearCart } = await import('./services/cart.js');
+      await clearCart();
+    } catch {
+      // Đặt hàng đã thành công, lỗi xóa giỏ không chặn luồng.
+    }
+    sessionStorage.removeItem('checkout-items');
+    await reloadCart();
+    window.location.hash = '';
   };
 
   return (
@@ -177,14 +251,17 @@ function Shop({ notify, toasts }) {
         onView={viewProduct}
         onCart={() => setCartOpen(true)}
         onAccount={openProfile}
+        onHome={goHome}
       />
       {showProfile
         ? <CustomerProfile onBack={closeProfile} notify={notify} />
         : showCart
           ? <CartPage notify={notify} onBack={backHome} onChanged={setItems} />
-          : productCode
-            ? <ProductDetail code={productCode} onAdd={buy} onBuyNow={buy} onBack={backHome} onView={viewProduct} notify={notify} />
-            : <CustomerHome query={query} onBuy={(p) => buy(p, 1)} onView={viewProduct} />}
+          : showCheckout
+            ? <Checkout items={readCheckoutItems()} notify={notify} onPlaced={handlePlaced} onBack={backHome} />
+            : productCode
+              ? <ProductDetail code={productCode} onAdd={buy} onBuyNow={buyNow} onBack={backHome} onView={viewProduct} notify={notify} />
+              : <CustomerHome query={query} onBuy={(p) => buyNow(p, 1)} onView={viewProduct} />}
       <Footer />
       <CartSidebar
         open={cartOpen} items={items}
@@ -192,7 +269,7 @@ function Shop({ notify, toasts }) {
         onQty={changeQty}
         onRemove={removeItem}
         onViewCart={openCartPage}
-        onCheckout={() => { setCartOpen(false); notify('warning', 'Thanh toán sẽ làm ở phase đặt hàng'); }}
+        onCheckout={checkoutCart}
       />
     </>
   );
