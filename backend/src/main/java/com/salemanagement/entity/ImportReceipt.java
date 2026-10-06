@@ -38,6 +38,9 @@ public class ImportReceipt {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(length = 500)
+    private String note;
+
     @OneToMany(mappedBy = "importReceipt", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ImportDetail> details = new ArrayList<>();

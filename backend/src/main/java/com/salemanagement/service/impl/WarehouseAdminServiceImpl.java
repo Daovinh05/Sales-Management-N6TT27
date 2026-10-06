@@ -62,6 +62,7 @@ public class WarehouseAdminServiceImpl implements WarehouseAdminService {
                         .supplierName(receipt.getSupplier() != null ? receipt.getSupplier().getName() : null)
                         .totalAmount(receipt.getTotalAmount())
                         .createdAt(receipt.getCreatedAt())
+                        .note(receipt.getNote())
                         .build())
                 .collect(Collectors.toList());
 
@@ -96,6 +97,7 @@ public class WarehouseAdminServiceImpl implements WarehouseAdminService {
                 .supplierName(receipt.getSupplier() != null ? receipt.getSupplier().getName() : null)
                 .totalAmount(receipt.getTotalAmount())
                 .createdAt(receipt.getCreatedAt())
+                .note(receipt.getNote())
                 .details(items)
                 .build();
     }
