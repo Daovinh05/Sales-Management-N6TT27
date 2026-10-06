@@ -32,7 +32,7 @@ public class ImportReceiptRequest {
         private Integer quantity;
 
         @NotNull(message = "Giá nhập không được để trống")
-        @Min(value = 0, message = "Giá nhập không được âm")
+        @jakarta.validation.constraints.DecimalMin(value = "0.0", inclusive = true, message = "Giá nhập không được âm")
         private BigDecimal importPrice;
     }
 }

@@ -17,10 +17,12 @@ import Checkout from './pages/shop/Checkout.jsx';
 import OrderSuccess from './pages/shop/OrderSuccess.jsx';
 import OrderHistory from './pages/shop/OrderHistory.jsx';
 import AdminLayout from './layouts/AdminLayout.jsx';
+import StaffLayout from './layouts/StaffLayout.jsx';
 import { LoginModal, RegisterModal } from './components/auth/AuthModal.jsx';
 import AppToast from './components/common/AppToast.jsx';
 
 const isAdmin = (u) => u?.roles?.includes('ROLE_ADMIN');
+const isStaff = (u) => u?.roles?.includes('ROLE_WAREHOUSE_STAFF');
 
 function Landing({ notify, toasts }) {
   const [modal, setModal] = useState(null);
@@ -304,6 +306,7 @@ function Root({ notify, toasts }) {
   const { user } = useAuth();
   if (!user) return <Landing notify={notify} toasts={toasts} />;
   if (isAdmin(user)) return <AdminLayout notify={notify} toasts={toasts} />;
+  if (isStaff(user)) return <StaffLayout notify={notify} toasts={toasts} />;
   return <Shop notify={notify} toasts={toasts} />;
 }
 

@@ -134,4 +134,31 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
                 pageResult.getTotalPages()
         );
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ImportReceiptDetailResponse getMyImportDetail(Long id, String username) {
+        ImportReceipt receipt = importReceiptRepository.findByIdAndCreatedByUsernameWithFullDetails(id, username)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu nhập hoặc bạn không có quyền xem"));
+        
+        List<ImportReceiptDetailResponse.Item> items = receipt.getDetails().stream()
+                .map(d -> ImportReceiptDetailResponse.Item.builder()
+                        .variantCode(d.getProductVariant().getCode())
+                        .variantName(d.getProductVariant().getName())
+                        .quantity(d.getQuantity())
+                        .unitPrice(d.getUnitPrice())
+                        .subTotal(d.getUnitPrice().multiply(new BigDecimal(d.getQuantity())))
+                        .build())
+                .collect(Collectors.toList());
+
+        return ImportReceiptDetailResponse.builder()
+                .id(receipt.getId())
+                .createdByName(receipt.getCreatedBy().getFullName())
+                .supplierName(receipt.getSupplier().getName())
+                .totalAmount(receipt.getTotalAmount())
+                .createdAt(receipt.getCreatedAt())
+                .note(receipt.getNote())
+                .details(items)
+                .build();
+    }
 }

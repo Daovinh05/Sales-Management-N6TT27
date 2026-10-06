@@ -34,4 +34,11 @@ public class WarehouseStaffController {
             @Valid @RequestBody ImportReceiptRequest request) {
         return ResponseEntity.ok(warehouseStaffService.createImport(request, authentication.getName()));
     }
+
+    @GetMapping("/imports/{id}")
+    public ResponseEntity<ImportReceiptDetailResponse> getMyImportDetail(
+            @PathVariable Long id,
+            Authentication authentication) {
+        return ResponseEntity.ok(warehouseStaffService.getMyImportDetail(id, authentication.getName()));
+    }
 }

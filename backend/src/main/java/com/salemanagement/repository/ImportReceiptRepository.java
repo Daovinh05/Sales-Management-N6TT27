@@ -20,6 +20,9 @@ public interface ImportReceiptRepository extends JpaRepository<ImportReceipt, Lo
 
     @Query("SELECT ir FROM ImportReceipt ir JOIN FETCH ir.createdBy JOIN FETCH ir.supplier LEFT JOIN FETCH ir.details d LEFT JOIN FETCH d.productVariant WHERE ir.id = :id")
     Optional<ImportReceipt> findByIdWithFullDetails(@Param("id") Long id);
+    @Query("SELECT ir FROM ImportReceipt ir JOIN FETCH ir.createdBy JOIN FETCH ir.supplier LEFT JOIN FETCH ir.details d LEFT JOIN FETCH d.productVariant WHERE ir.id = :id AND ir.createdBy.username = :username")
+    Optional<ImportReceipt> findByIdAndCreatedByUsernameWithFullDetails(@Param("id") Long id, @Param("username") String username);
+
     @Query(value = "SELECT ir FROM ImportReceipt ir JOIN FETCH ir.supplier WHERE ir.createdBy.username = :username",
            countQuery = "SELECT count(ir) FROM ImportReceipt ir WHERE ir.createdBy.username = :username")
     Page<ImportReceipt> findByCreatedByUsernameWithDetails(@Param("username") String username, Pageable pageable);

@@ -8,4 +8,5 @@ import com.salemanagement.dto.response.PageResponse;
 public interface WarehouseStaffService {
     ImportReceiptDetailResponse createImport(ImportReceiptRequest request, String username);
     PageResponse<ImportReceiptSummaryResponse> getMyImports(String username, int page, int size);
+    ImportReceiptDetailResponse getMyImportDetail(Long id, String username);
 }
