@@ -7,6 +7,7 @@ import com.salemanagement.entity.OrderDetail;
 import com.salemanagement.entity.Product;
 import com.salemanagement.entity.ProductVariant;
 import com.salemanagement.entity.Role;
+import com.salemanagement.enums.ERole;
 import com.salemanagement.entity.Supplier;
 import com.salemanagement.entity.User;
 import com.salemanagement.repository.BrandRepository;
@@ -35,15 +36,15 @@ public class DataSeeder {
     @Bean
     CommandLineRunner seedRolesAndAdmin(UserRepository userRepository, RoleRepository roleRepository) {
         return args -> {
-            Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+            Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
                     .orElseGet(() -> roleRepository.save(Role.builder()
-                            .name("ROLE_ADMIN").description("Quản lý toàn hệ thống").build()));
-            Role customerRole = roleRepository.findByName("ROLE_CUSTOMER")
+                            .name(ERole.ROLE_ADMIN).description("Quản lý toàn hệ thống").build()));
+            Role customerRole = roleRepository.findByName(ERole.ROLE_CUSTOMER)
                     .orElseGet(() -> roleRepository.save(Role.builder()
-                            .name("ROLE_CUSTOMER").description("Khách hàng mua hàng").build()));
-            roleRepository.findByName("ROLE_WAREHOUSE_STAFF")
+                            .name(ERole.ROLE_CUSTOMER).description("Khách hàng mua hàng").build()));
+            roleRepository.findByName(ERole.ROLE_WAREHOUSE_STAFF)
                     .orElseGet(() -> roleRepository.save(Role.builder()
-                            .name("ROLE_WAREHOUSE_STAFF").description("Nhân viên kho").build()));
+                            .name(ERole.ROLE_WAREHOUSE_STAFF).description("Nhân viên kho").build()));
 
             if (!userRepository.existsByUsername("admin")) {
                 userRepository.save(User.builder()

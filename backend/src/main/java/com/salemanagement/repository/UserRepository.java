@@ -16,5 +16,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmailAndIdNot(String email, Long id);
 
     @Query("select count(distinct u) from User u join u.roles r where r.name = :roleName")
-    long countByRoleName(@Param("roleName") String roleName);
+    long countByRoleName(@Param("roleName") com.salemanagement.enums.ERole roleName);
 }

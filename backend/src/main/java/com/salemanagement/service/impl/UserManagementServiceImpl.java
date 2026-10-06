@@ -2,6 +2,7 @@ package com.salemanagement.service.impl;
 
 import com.salemanagement.dto.request.UpdateManagedUserRequest;
 import com.salemanagement.entity.Role;
+import com.salemanagement.enums.ERole;
 import com.salemanagement.entity.User;
 import com.salemanagement.exception.BusinessException;
 import com.salemanagement.exception.ResourceNotFoundException;
@@ -33,7 +34,7 @@ public class UserManagementServiceImpl implements UserManagementService {
         String email = request.email() == null || request.email().isBlank() ? null : request.email().trim();
         String roleName = request.role();
 
-        if (!"ROLE_ADMIN".equals(roleName) && !"ROLE_CUSTOMER".equals(roleName)) {
+        if (!"ROLE_ADMIN".equals(roleName) && !"ROLE_CUSTOMER".equals(roleName) && !"ROLE_WAREHOUSE_STAFF".equals(roleName)) {
             throw new BusinessException("Vai trò không hợp lệ", HttpStatus.BAD_REQUEST);
         }
         if (userRepository.existsByUsernameAndIdNot(username, id)) {
@@ -43,16 +44,16 @@ public class UserManagementServiceImpl implements UserManagementService {
             throw new BusinessException("Email đã được sử dụng", HttpStatus.CONFLICT);
         }
 
-        boolean isAdmin = user.getRoles().stream().anyMatch(role -> "ROLE_ADMIN".equals(role.getName()));
+        boolean isAdmin = user.getRoles().stream().anyMatch(role -> ERole.ROLE_ADMIN.equals(role.getName()));
         boolean willBeAdmin = "ROLE_ADMIN".equals(roleName);
         if (user.getUsername().equals(currentUsername) && !willBeAdmin) {
             throw new BusinessException("Không thể tự hạ quyền quản trị viên", HttpStatus.BAD_REQUEST);
         }
-        if (isAdmin && !willBeAdmin && userRepository.countByRoleName("ROLE_ADMIN") <= 1) {
+        if (isAdmin && !willBeAdmin && userRepository.countByRoleName(ERole.ROLE_ADMIN) <= 1) {
             throw new BusinessException("Không thể hạ quyền quản trị viên cuối cùng", HttpStatus.BAD_REQUEST);
         }
 
-        Role role = roleRepository.findByName(roleName)
+        Role role = roleRepository.findByName(ERole.valueOf(roleName))
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy vai trò"));
         String previousAvatar = user.getAvatarUrl();
         String newAvatar = avatar == null || avatar.isEmpty() ? null : fileStorageService.storeUserAvatar(avatar);
