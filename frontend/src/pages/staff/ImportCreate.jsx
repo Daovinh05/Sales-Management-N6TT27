@@ -86,6 +86,14 @@ export default function ImportCreate({ notify, onSuccess }) {
       return;
     }
 
+    for (const item of validItems) {
+      const variant = variants.find(v => v.code === item.variantCode);
+      if (variant && variant.price && Number(item.unitPrice) >= variant.price) {
+        notify?.('error', `Giá nhập của sản phẩm ${variant.name || variant.code} (${formatCurrency(item.unitPrice)}) không được lớn hơn hoặc bằng giá bán hiện tại (${formatCurrency(variant.price)})`);
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       const payload = {
@@ -152,7 +160,7 @@ export default function ImportCreate({ notify, onSuccess }) {
                       <select required value={item.variantCode} onChange={(e) => handleVariantChange(item.id, e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}>
                         <option value="">-- Chọn sản phẩm --</option>
                         {variants.map(v => (
-                          <option key={v.code} value={v.code}>{v.productName || v.productCode} - {v.name || v.code}</option>
+                          <option key={v.code} value={v.code}>{v.productName || v.productCode} - {v.name || v.code} (Giá bán: {formatCurrency(v.price)})</option>
                         ))}
                       </select>
                     </td>
