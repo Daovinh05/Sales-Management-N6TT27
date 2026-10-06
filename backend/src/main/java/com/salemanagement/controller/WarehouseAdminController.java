@@ -50,4 +50,11 @@ public class WarehouseAdminController {
         warehouseAdminService.updateImportStatus(id, request);
         return ResponseEntity.ok().build();
     }
+
+    @PutMapping("/warehouses/{id}")
+    public ResponseEntity<WarehouseResponse> updateWarehouse(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody com.salemanagement.dto.request.UpdateWarehouseInfoRequest request) {
+        return ResponseEntity.ok(warehouseAdminService.updateWarehouse(id, request));
+    }
 }

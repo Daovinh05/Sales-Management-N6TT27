@@ -14,4 +14,5 @@ public interface WarehouseAdminService {
     PageResponse<ImportReceiptSummaryResponse> getImportHistory(int page, int size);
     ImportReceiptDetailResponse getImportDetail(Long id);
     void updateImportStatus(Long id, com.salemanagement.dto.request.UpdateImportStatusRequest request);
+    WarehouseResponse updateWarehouse(Long id, com.salemanagement.dto.request.UpdateWarehouseInfoRequest request);
 }

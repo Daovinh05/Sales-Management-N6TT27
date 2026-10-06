@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWarehouse, faUsers, faFileInvoice, faEye, faXmark, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faWarehouse, faUsers, faFileInvoice, faEye, faXmark, faChevronLeft, faChevronRight, faPen } from '@fortawesome/free-solid-svg-icons';
 import warehouseAdminService from '../../services/warehouseAdminService.js';
 
 const formatDate = (value) => {
@@ -39,6 +39,10 @@ export default function WarehouseDashboard() {
 
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', address: '', phone: '' });
+  const [editLoading, setEditLoading] = useState(false);
 
   useEffect(() => {
     if (activeTab === 'info') loadWarehouseInfo();
@@ -138,18 +142,43 @@ export default function WarehouseDashboard() {
 
       {/* TAB: THÔNG TIN KHO */}
       {activeTab === 'info' && (
-        <section className="ad-brand-panel">
-          <h2><FontAwesomeIcon icon={faWarehouse} /> Cấu hình kho tổng</h2>
-          {loading ? <p>Đang tải...</p> : warehouseInfo ? (
-            <div style={{ marginTop: '20px', lineHeight: '1.8' }}>
-              <p><strong>Mã kho:</strong> {warehouseInfo.id}</p>
-              <p><strong>Tên kho:</strong> {warehouseInfo.name}</p>
-              <p><strong>Địa chỉ:</strong> {warehouseInfo.address}</p>
-              <p><strong>Số điện thoại:</strong> {warehouseInfo.phone}</p>
-              <p><strong>Trạng thái:</strong> {warehouseInfo.status === 'ACTIVE' ? 'Đang hoạt động' : 'Tạm dừng'}</p>
-              <p><strong>Ngày tạo:</strong> {formatDate(warehouseInfo.createdAt)}</p>
-            </div>
-          ) : <p>Không có thông tin kho.</p>}
+        <section className="ad-brand-panel ad-brand-list">
+          <h2><FontAwesomeIcon icon={faWarehouse} /> Thông tin kho</h2>
+          <div className="ad-table-wrap" style={{ marginTop: '15px' }}>
+            <table className="ad-brand-table">
+              <thead>
+                <tr>
+                  <th>MÃ KHO</th>
+                  <th>TÊN KHO</th>
+                  <th>ĐỊA CHỈ</th>
+                  <th>SỐ ĐIỆN THOẠI</th>
+                  <th>TRẠNG THÁI</th>
+                  <th>NGÀY TẠO</th>
+                  <th>THAO TÁC</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? <tr><td colSpan="7" className="ad-table-empty">Đang tải...</td></tr> : warehouseInfo ? (
+                  <tr>
+                    <td>{warehouseInfo.id}</td>
+                    <td>{warehouseInfo.name}</td>
+                    <td>{warehouseInfo.address}</td>
+                    <td>{warehouseInfo.phone}</td>
+                    <td>{warehouseInfo.status === 'ACTIVE' ? <span className="ad-badge ad-badge-success">Đang hoạt động</span> : <span className="ad-badge ad-badge-danger">Tạm dừng</span>}</td>
+                    <td>{formatDate(warehouseInfo.createdAt)}</td>
+                    <td>
+                      <button className="ad-button ad-button-quiet" onClick={() => {
+                        setEditForm({ name: warehouseInfo.name, address: warehouseInfo.address, phone: warehouseInfo.phone });
+                        setIsEditModalOpen(true);
+                      }}>
+                        <FontAwesomeIcon icon={faPen} /> Sửa
+                      </button>
+                    </td>
+                  </tr>
+                ) : <tr><td colSpan="7" className="ad-table-empty">Không có thông tin kho.</td></tr>}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 
@@ -308,6 +337,55 @@ export default function WarehouseDashboard() {
                 Đóng
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SỬA KHO */}
+      {isEditModalOpen && (
+        <div className="ad-dialog-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsEditModalOpen(false); }}>
+          <div className="ad-brand-dialog">
+            <div className="ad-dialog-heading">
+              <h2>Sửa thông tin kho</h2>
+              <button className="ad-icon-button" type="button" onClick={() => setIsEditModalOpen(false)}>
+                <FontAwesomeIcon icon={faXmark} />
+              </button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setEditLoading(true);
+              try {
+                await warehouseAdminService.updateWarehouse(warehouseInfo.id, editForm);
+                alert('Cập nhật thông tin kho thành công!');
+                setIsEditModalOpen(false);
+                loadWarehouseInfo();
+              } catch (err) {
+                alert(err?.response?.data?.message || 'Lỗi cập nhật thông tin kho');
+              } finally {
+                setEditLoading(false);
+              }
+            }}>
+              <div className="ad-dialog-content">
+                <div className="ad-form-group">
+                  <label>Tên kho <span style={{color: 'red'}}>*</span></label>
+                  <input type="text" className="ad-input" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} required />
+                </div>
+                <div className="ad-form-group">
+                  <label>Địa chỉ</label>
+                  <input type="text" className="ad-input" value={editForm.address} onChange={e => setEditForm({...editForm, address: e.target.value})} />
+                </div>
+                <div className="ad-form-group">
+                  <label>Số điện thoại <span style={{color: 'red'}}>*</span></label>
+                  <input type="text" className="ad-input" value={editForm.phone} onChange={e => setEditForm({...editForm, phone: e.target.value})} required pattern="^(0|\\+84)[0-9]{9,10}$" title="Số điện thoại không hợp lệ" />
+                </div>
+              </div>
+              <div className="ad-dialog-actions">
+                <button className="ad-button ad-button-quiet" type="button" onClick={() => setIsEditModalOpen(false)} disabled={editLoading}>Hủy</button>
+                <button className="ad-button ad-button-primary" type="submit" disabled={editLoading}>
+                  {editLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

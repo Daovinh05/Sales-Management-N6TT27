@@ -24,6 +24,11 @@ export const warehouseAdminService = {
   updateImportStatus: async (id, status) => {
     const res = await api.put(`/admin/imports/${id}/status`, { status });
     return res.data;
+  },
+
+  updateWarehouse: async (id, payload) => {
+    const res = await api.put(`/admin/warehouses/${id}`, payload);
+    return res.data;
   }
 };
 

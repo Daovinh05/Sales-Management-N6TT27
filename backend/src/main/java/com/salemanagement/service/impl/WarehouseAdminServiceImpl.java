@@ -145,4 +145,18 @@ public class WarehouseAdminServiceImpl implements WarehouseAdminService {
         }
         importReceiptRepository.save(receipt);
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public WarehouseResponse updateWarehouse(Long id, com.salemanagement.dto.request.UpdateWarehouseInfoRequest request) {
+        Warehouse warehouse = warehouseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy kho"));
+        
+        warehouse.setName(request.getName());
+        warehouse.setAddress(request.getAddress());
+        warehouse.setPhone(request.getPhone());
+        
+        warehouseRepository.save(warehouse);
+        return WarehouseResponse.from(warehouse);
+    }
 }
