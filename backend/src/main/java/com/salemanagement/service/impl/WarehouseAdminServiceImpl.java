@@ -32,6 +32,7 @@ public class WarehouseAdminServiceImpl implements WarehouseAdminService {
     private final WarehouseRepository warehouseRepository;
     private final UserRepository userRepository;
     private final ImportReceiptRepository importReceiptRepository;
+    private final com.salemanagement.repository.InventoryRepository inventoryRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -63,6 +64,7 @@ public class WarehouseAdminServiceImpl implements WarehouseAdminService {
                         .totalAmount(receipt.getTotalAmount())
                         .createdAt(receipt.getCreatedAt())
                         .note(receipt.getNote())
+                        .status(receipt.getStatus().name())
                         .build())
                 .collect(Collectors.toList());
 
@@ -98,7 +100,49 @@ public class WarehouseAdminServiceImpl implements WarehouseAdminService {
                 .totalAmount(receipt.getTotalAmount())
                 .createdAt(receipt.getCreatedAt())
                 .note(receipt.getNote())
+                .status(receipt.getStatus().name())
                 .details(items)
                 .build();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateImportStatus(Long id, com.salemanagement.dto.request.UpdateImportStatusRequest request) {
+        ImportReceipt receipt = importReceiptRepository.findByIdWithFullDetails(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu nhập"));
+
+        if (receipt.getStatus() != com.salemanagement.enums.EImportStatus.PENDING) {
+            throw new IllegalArgumentException("Phiếu nhập đã được xử lý (Duyệt hoặc Từ chối) trước đó");
+        }
+
+        com.salemanagement.enums.EImportStatus newStatus = com.salemanagement.enums.EImportStatus.valueOf(request.getStatus().toUpperCase());
+        receipt.setStatus(newStatus);
+
+        if (newStatus == com.salemanagement.enums.EImportStatus.APPROVED) {
+            // Update inventory
+            // Fixed Warehouse ID = 1 for now
+            Warehouse warehouse = warehouseRepository.findById(1L)
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy kho"));
+
+            for (ImportDetail detail : receipt.getDetails()) {
+                com.salemanagement.entity.ProductVariant variant = detail.getProductVariant();
+                com.salemanagement.entity.Inventory inventory = inventoryRepository.findByWarehouseIdAndProductVariant_Code(warehouse.getId(), variant.getCode())
+                        .orElse(null);
+
+                if (inventory != null) {
+                    inventory.setQuantity(inventory.getQuantity() + detail.getQuantity());
+                    inventoryRepository.save(inventory);
+                } else {
+                    inventory = com.salemanagement.entity.Inventory.builder()
+                            .warehouse(warehouse)
+                            .productVariant(variant)
+                            .quantity(detail.getQuantity())
+                            .reservedQuantity(0)
+                            .build();
+                    inventoryRepository.save(inventory);
+                }
+            }
+        }
+        importReceiptRepository.save(receipt);
     }
 }

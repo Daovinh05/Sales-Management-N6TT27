@@ -14,4 +14,5 @@ public class ImportReceiptSummaryResponse {
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;
     private String note;
+    private String status;
 }

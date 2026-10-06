@@ -47,6 +47,7 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
                 .createdBy(user)
                 .supplier(supplier)
                 .note(request.getNote())
+                .status(com.salemanagement.enums.EImportStatus.PENDING)
                 .build();
 
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -67,22 +68,7 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
             BigDecimal subTotal = itemReq.getImportPrice().multiply(new BigDecimal(itemReq.getQuantity()));
             totalAmount = totalAmount.add(subTotal);
 
-            // Cập nhật Inventory
-            Inventory inventory = inventoryRepository.findByWarehouseIdAndProductVariant_Code(warehouse.getId(), variant.getCode())
-                    .orElse(null);
-
-            if (inventory != null) {
-                inventory.setQuantity(inventory.getQuantity() + itemReq.getQuantity());
-                inventoryRepository.save(inventory);
-            } else {
-                inventory = Inventory.builder()
-                        .warehouse(warehouse)
-                        .productVariant(variant)
-                        .quantity(itemReq.getQuantity())
-                        .reservedQuantity(0)
-                        .build();
-                inventoryRepository.save(inventory);
-            }
+            // Cập nhật Inventory đã chuyển sang luồng Duyệt (AdminWarehouseService)
         }
 
         receipt.setTotalAmount(totalAmount);
@@ -105,6 +91,7 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
                 .totalAmount(saved.getTotalAmount())
                 .createdAt(saved.getCreatedAt())
                 .note(saved.getNote())
+                .status(saved.getStatus().name())
                 .details(items)
                 .build();
     }
@@ -123,6 +110,7 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
                         .totalAmount(receipt.getTotalAmount())
                         .createdAt(receipt.getCreatedAt())
                         .note(receipt.getNote())
+                        .status(receipt.getStatus().name())
                         .build())
                 .collect(Collectors.toList());
 
@@ -158,6 +146,7 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
                 .totalAmount(receipt.getTotalAmount())
                 .createdAt(receipt.getCreatedAt())
                 .note(receipt.getNote())
+                .status(receipt.getStatus().name())
                 .details(items)
                 .build();
     }

@@ -17,6 +17,14 @@ const formatCurrency = (amount) => {
   }).format(amount);
 };
 
+const getStatusBadge = (status) => {
+  const styles = { padding: '4px 8px', borderRadius: '4px', fontSize: '0.85em', fontWeight: 'bold', display: 'inline-block' };
+  if (status === 'PENDING') return <span style={{ ...styles, backgroundColor: '#fff3cd', color: '#856404' }}>Chờ duyệt</span>;
+  if (status === 'APPROVED') return <span style={{ ...styles, backgroundColor: '#d4edda', color: '#155724' }}>Đã duyệt</span>;
+  if (status === 'REJECTED') return <span style={{ ...styles, backgroundColor: '#f8d7da', color: '#721c24' }}>Từ chối</span>;
+  return <span>{status}</span>;
+};
+
 export default function WarehouseDashboard() {
   const [activeTab, setActiveTab] = useState('info');
   const [loading, setLoading] = useState(false);
@@ -87,6 +95,17 @@ export default function WarehouseDashboard() {
       setSelectedReceipt(null);
     } finally {
       setDetailLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (status) => {
+    try {
+      await warehouseAdminService.updateImportStatus(selectedReceipt.id, status);
+      alert(`Đã ${status === 'APPROVED' ? 'duyệt' : 'từ chối'} phiếu nhập thành công!`);
+      loadHistory(page);
+      setSelectedReceipt(null);
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Lỗi cập nhật trạng thái phiếu nhập');
     }
   };
 
@@ -180,19 +199,21 @@ export default function WarehouseDashboard() {
                   <th>NGƯỜI TẠO</th>
                   <th>NHÀ CUNG CẤP</th>
                   <th>TỔNG TIỀN</th>
+                  <th>TRẠNG THÁI</th>
                   <th>NGÀY TẠO</th>
                   <th>THAO TÁC</th>
                 </tr>
               </thead>
               <tbody>
-                {loading ? <tr><td colSpan="6" className="ad-table-empty">Đang tải...</td></tr> :
-                 history.length === 0 ? <tr><td colSpan="6" className="ad-table-empty">Chưa có phiếu nhập nào.</td></tr> :
+                {loading ? <tr><td colSpan="7" className="ad-table-empty">Đang tải...</td></tr> :
+                 history.length === 0 ? <tr><td colSpan="7" className="ad-table-empty">Chưa có phiếu nhập nào.</td></tr> :
                  history.map(receipt => (
                    <tr key={receipt.id}>
                      <td>#{receipt.id}</td>
                      <td>{receipt.createdByName}</td>
                      <td>{receipt.supplierName}</td>
                      <td style={{ color: '#d32f2f', fontWeight: 'bold' }}>{formatCurrency(receipt.totalAmount)}</td>
+                     <td>{getStatusBadge(receipt.status)}</td>
                      <td>{formatDate(receipt.createdAt)}</td>
                      <td>
                        <button className="ad-button ad-button-quiet" onClick={() => viewDetail(receipt.id)}>
@@ -240,6 +261,7 @@ export default function WarehouseDashboard() {
                       <p><strong>Ngày nhập:</strong> {formatDate(selectedReceipt.createdAt)}</p>
                     </div>
                     <div style={{ textAlign: 'right' }}>
+                      <p><strong>Trạng thái:</strong> {getStatusBadge(selectedReceipt.status)}</p>
                       <p><strong>Nhà cung cấp:</strong> {selectedReceipt.supplierName}</p>
                       <p><strong>Tổng tiền:</strong> <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>{formatCurrency(selectedReceipt.totalAmount)}</span></p>
                     </div>
@@ -271,8 +293,18 @@ export default function WarehouseDashboard() {
               )}
             </div>
 
-            <div className="ad-dialog-actions" style={{ padding: '15px 20px', borderTop: '1px solid #e9ecef', display: 'flex', justifyContent: 'flex-end' }}>
-              <button className="ad-button ad-button-primary" type="button" onClick={() => setSelectedReceipt(null)}>
+            <div className="ad-dialog-actions" style={{ padding: '15px 20px', borderTop: '1px solid #e9ecef', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              {selectedReceipt && !selectedReceipt.loading && selectedReceipt.status === 'PENDING' && (
+                <>
+                  <button className="ad-button ad-button-primary" style={{ backgroundColor: '#28a745', borderColor: '#28a745' }} type="button" onClick={() => handleUpdateStatus('APPROVED')}>
+                    Duyệt phiếu
+                  </button>
+                  <button className="ad-button ad-button-primary" style={{ backgroundColor: '#dc3545', borderColor: '#dc3545' }} type="button" onClick={() => handleUpdateStatus('REJECTED')}>
+                    Từ chối
+                  </button>
+                </>
+              )}
+              <button className="ad-button ad-button-quiet" type="button" onClick={() => setSelectedReceipt(null)}>
                 Đóng
               </button>
             </div>

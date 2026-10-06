@@ -17,6 +17,14 @@ const formatCurrency = (amount) => {
   }).format(amount);
 };
 
+const getStatusBadge = (status) => {
+  const styles = { padding: '4px 8px', borderRadius: '4px', fontSize: '0.85em', fontWeight: 'bold', display: 'inline-block' };
+  if (status === 'PENDING') return <span style={{ ...styles, backgroundColor: '#fff3cd', color: '#856404' }}>Chờ duyệt</span>;
+  if (status === 'APPROVED') return <span style={{ ...styles, backgroundColor: '#d4edda', color: '#155724' }}>Đã duyệt</span>;
+  if (status === 'REJECTED') return <span style={{ ...styles, backgroundColor: '#f8d7da', color: '#721c24' }}>Từ chối</span>;
+  return <span>{status}</span>;
+};
+
 export default function ImportHistory({ notify }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -62,19 +70,21 @@ export default function ImportHistory({ notify }) {
                 <th>MÃ PHIẾU</th>
                 <th>NHÀ CUNG CẤP</th>
                 <th>TỔNG TIỀN</th>
+                <th>TRẠNG THÁI</th>
                 <th>NGÀY TẠO</th>
                 <th>GHI CHÚ</th>
                 <th>THAO TÁC</th>
               </tr>
             </thead>
             <tbody>
-              {loading ? <tr><td colSpan="6" className="ad-table-empty">Đang tải...</td></tr> :
-               history.length === 0 ? <tr><td colSpan="6" className="ad-table-empty">Bạn chưa có phiếu nhập nào.</td></tr> :
+              {loading ? <tr><td colSpan="7" className="ad-table-empty">Đang tải...</td></tr> :
+               history.length === 0 ? <tr><td colSpan="7" className="ad-table-empty">Bạn chưa có phiếu nhập nào.</td></tr> :
                history.map(receipt => (
                  <tr key={receipt.id}>
                    <td>#{receipt.id}</td>
                    <td>{receipt.supplierName}</td>
                    <td style={{ color: '#d32f2f', fontWeight: 'bold' }}>{formatCurrency(receipt.totalAmount)}</td>
+                   <td>{getStatusBadge(receipt.status)}</td>
                    <td>{formatDate(receipt.createdAt)}</td>
                    <td>{receipt.note || '—'}</td>
                    <td>
@@ -108,6 +118,7 @@ export default function ImportHistory({ notify }) {
                   <p><strong>Ghi chú:</strong> {selectedReceipt.note || 'Không có'}</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
+                  <p><strong>Trạng thái:</strong> {getStatusBadge(selectedReceipt.status)}</p>
                   <p><strong>Nhà cung cấp:</strong> {selectedReceipt.supplierName}</p>
                   <p><strong>Tổng tiền:</strong> <span style={{ color: '#d32f2f', fontWeight: 'bold', fontSize: '1.2em' }}>{formatCurrency(selectedReceipt.totalAmount)}</span></p>
                 </div>

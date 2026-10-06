@@ -42,4 +42,12 @@ public class WarehouseAdminController {
     public ResponseEntity<ImportReceiptDetailResponse> getImportDetail(@PathVariable Long id) {
         return ResponseEntity.ok(warehouseAdminService.getImportDetail(id));
     }
+
+    @PutMapping("/imports/{id}/status")
+    public ResponseEntity<Void> updateImportStatus(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody com.salemanagement.dto.request.UpdateImportStatusRequest request) {
+        warehouseAdminService.updateImportStatus(id, request);
+        return ResponseEntity.ok().build();
+    }
 }

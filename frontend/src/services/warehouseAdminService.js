@@ -19,6 +19,11 @@ export const warehouseAdminService = {
   getImportDetail: async (id) => {
     const res = await api.get(`/admin/imports/${id}`);
     return res.data;
+  },
+
+  updateImportStatus: async (id, status) => {
+    const res = await api.put(`/admin/imports/${id}/status`, { status });
+    return res.data;
   }
 };
 

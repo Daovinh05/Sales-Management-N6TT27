@@ -15,6 +15,7 @@ public class ImportReceiptDetailResponse {
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;
     private String note;
+    private String status;
     private List<Item> details;
 
     @Data

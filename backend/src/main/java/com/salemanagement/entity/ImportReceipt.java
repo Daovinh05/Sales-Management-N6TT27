@@ -1,3 +1,4 @@
+
 package com.salemanagement.entity;
 
 import jakarta.persistence.*;
@@ -44,4 +45,9 @@ public class ImportReceipt {
     @OneToMany(mappedBy = "importReceipt", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ImportDetail> details = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    @Builder.Default
+    private com.salemanagement.enums.EImportStatus status = com.salemanagement.enums.EImportStatus.PENDING;
 }
