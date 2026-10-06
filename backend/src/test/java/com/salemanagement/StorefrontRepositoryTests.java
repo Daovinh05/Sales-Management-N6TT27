@@ -58,7 +58,6 @@ class StorefrontRepositoryTests {
         variant.setProduct(product);
         variant.setName("Mặc định");
         variant.setPrice(new BigDecimal(price));
-        variant.setStockQuantity(5);
         variantRepository.save(variant);
         return product;
     }

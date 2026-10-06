@@ -29,6 +29,7 @@ public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductVariantRepository variantRepository;
+    private final com.salemanagement.repository.InventoryRepository inventoryRepository;
 
     private static String normalizeCode(String code) {
         return code == null ? "" : code.trim().toUpperCase();
@@ -54,7 +55,7 @@ public class CartServiceImpl implements CartService {
     }
 
     private void checkStock(ProductVariant variant, int quantity) {
-        int stock = variant.getStockQuantity() == null ? 0 : variant.getStockQuantity();
+        int stock = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode()).map(com.salemanagement.entity.Inventory::getQuantity).orElse(0);
         if (quantity > stock) {
             throw new BusinessException(
                     "Số lượng vượt quá tồn kho (còn " + stock + ")", HttpStatus.UNPROCESSABLE_ENTITY);
@@ -64,6 +65,7 @@ public class CartServiceImpl implements CartService {
     private CartItemResponse toItemResponse(CartItem item) {
         ProductVariant variant = item.getVariant();
         Product product = variant.getProduct();
+        int stock = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode()).map(com.salemanagement.entity.Inventory::getQuantity).orElse(0);
         BigDecimal price = variant.getPrice() == null ? BigDecimal.ZERO : variant.getPrice();
         BigDecimal lineTotal = price.multiply(BigDecimal.valueOf(item.getQuantity()));
         return CartItemResponse.of(
@@ -76,7 +78,7 @@ public class CartServiceImpl implements CartService {
                 variant.getRam(),
                 variant.getStorage(),
                 variant.getPrice(),
-                variant.getStockQuantity(),
+                stock,
                 item.getQuantity(),
                 lineTotal);
     }

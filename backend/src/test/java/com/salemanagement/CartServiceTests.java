@@ -27,6 +27,10 @@ import com.salemanagement.service.impl.ProductVariantServiceImpl;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import com.salemanagement.repository.InventoryRepository;
+import com.salemanagement.repository.WarehouseRepository;
+import com.salemanagement.entity.Inventory;
+import com.salemanagement.entity.Warehouse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.http.HttpStatus;
@@ -51,13 +55,17 @@ class CartServiceTests {
     private UserRepository userRepository;
     @Autowired
     private SupplierRepository supplierRepository;
+    @Autowired
+    private InventoryRepository inventoryRepository;
+    @Autowired
+    private WarehouseRepository warehouseRepository;
 
     private CartServiceImpl cartService;
     private User user;
 
     @BeforeEach
     void setUp() {
-        cartService = new CartServiceImpl(cartRepository, cartItemRepository, variantRepository);
+        cartService = new CartServiceImpl(cartRepository, cartItemRepository, variantRepository, inventoryRepository);
 
         Category category = new Category();
         category.setCode("DM01");
@@ -76,13 +84,23 @@ class CartServiceTests {
         product.setBrand(brand);
         productRepository.save(product);
 
+        Warehouse warehouse = new Warehouse();
+        warehouse.setName("Kho Tong");
+        warehouse = warehouseRepository.save(warehouse);
+
         ProductVariant variant = new ProductVariant();
         variant.setCode("BT01");
         variant.setProduct(product);
         variant.setName("256GB");
         variant.setPrice(new BigDecimal("1000000"));
-        variant.setStockQuantity(5);
         variantRepository.save(variant);
+
+        Inventory inventory = new Inventory();
+        inventory.setWarehouse(warehouse);
+        inventory.setProductVariant(variant);
+        inventory.setQuantity(5);
+        inventory.setReservedQuantity(0);
+        inventoryRepository.save(inventory);
 
         user = new User();
         user.setUsername("cartuser");
@@ -171,7 +189,7 @@ class CartServiceTests {
             }
         };
         ProductVariantServiceImpl variantService = new ProductVariantServiceImpl(
-                variantRepository, productRepository, files, cartItemRepository);
+                variantRepository, productRepository, files, cartItemRepository, inventoryRepository);
         variantService.delete("BT01");
         assertThat(cartService.getCart(user).getTotalItems()).isZero();
         assertThat(variantRepository.existsById("BT01")).isFalse();
@@ -182,7 +200,7 @@ class CartServiceTests {
         cartService.addItem(user, addRequest("BT01", 2));
         ProductServiceImpl productService = new ProductServiceImpl(
                 productRepository, variantRepository, categoryRepository,
-                brandRepository, supplierRepository, cartItemRepository);
+                brandRepository, supplierRepository, cartItemRepository, inventoryRepository);
         productService.delete("SP01");
         assertThat(cartService.getCart(user).getTotalItems()).isZero();
         assertThat(productRepository.existsById("SP01")).isFalse();

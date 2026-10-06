@@ -34,6 +34,7 @@ public class StorefrontServiceImpl implements StorefrontService {
     private final ProductRepository productRepository;
     private final ProductVariantRepository variantRepository;
     private final ReviewRepository reviewRepository;
+    private final com.salemanagement.repository.InventoryRepository inventoryRepository;
 
     private static String normalize(String value) {
         return value == null ? "" : value.trim();
@@ -59,6 +60,8 @@ public class StorefrontServiceImpl implements StorefrontService {
         BigDecimal maxPrice = bounds != null && bounds.length > 1 ? (BigDecimal) bounds[1] : null;
         Category category = product.getCategory();
         Brand brand = product.getBrand();
+        int quantity = first == null ? 0 : inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, first.getCode())
+                .map(com.salemanagement.entity.Inventory::getQuantity).orElse(0);
         return StorefrontProductResponse.of(
                 product.getCode(),
                 product.getName(),
@@ -66,13 +69,15 @@ public class StorefrontServiceImpl implements StorefrontService {
                 first == null ? null : first.getPrice(),
                 minPrice,
                 maxPrice,
-                first == null ? 0 : first.getStockQuantity(),
+                quantity,
                 brand == null ? null : brand.getName(),
                 category == null ? null : category.getName());
     }
 
     private ProductVariantResponse toVariant(ProductVariant variant) {
         Product product = variant.getProduct();
+        int quantity = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode())
+                .map(com.salemanagement.entity.Inventory::getQuantity).orElse(0);
         return ProductVariantResponse.of(
                 variant.getCode(),
                 product == null ? null : product.getCode(),
@@ -83,7 +88,7 @@ public class StorefrontServiceImpl implements StorefrontService {
                 variant.getRam(),
                 variant.getStorage(),
                 variant.getPrice(),
-                variant.getStockQuantity(),
+                quantity,
                 variant.getCreatedAt());
     }
 

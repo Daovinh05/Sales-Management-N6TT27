@@ -121,7 +121,7 @@ public class DataSeeder {
                     variant.setRam("8GB");
                     variant.setStorage("256GB");
                     variant.setPrice(new BigDecimal("34990000"));
-                    variant.setStockQuantity(10);
+                    /* variant.setStockQuantity(10); */
                     variant.setImageUrl("https://picsum.photos/seed/bt01/800/800");
                     variantRepository.save(variant);
                 }
@@ -176,7 +176,7 @@ public class DataSeeder {
         variant.setRam(ram);
         variant.setStorage(storage);
         variant.setPrice(new BigDecimal(price));
-        variant.setStockQuantity(stock);
+        /* variant.setStockQuantity(stock); */
         variant.setImageUrl("https://picsum.photos/seed/" + imageSeed + "/800/800");
         variantRepository.save(variant);
     }
