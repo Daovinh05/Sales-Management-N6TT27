@@ -17,4 +17,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("select count(distinct u) from User u join u.roles r where r.name = :roleName")
     long countByRoleName(@Param("roleName") com.salemanagement.enums.ERole roleName);
+
+    @Query("select distinct u from User u join u.roles r where r.name = :roleName")
+    java.util.List<User> findByRoleName(@Param("roleName") com.salemanagement.enums.ERole roleName);
 }
