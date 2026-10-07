@@ -78,7 +78,7 @@ public class ProductServiceImpl implements ProductService {
         Supplier supplier = product.getSupplier();
         ProductVariant firstVariant = variantRepository.findFirstByProductOrderByCodeAsc(product).orElse(null);
         int quantity = firstVariant == null ? 0 : inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, firstVariant.getCode())
-                .map(com.salemanagement.entity.Inventory::getQuantity).orElse(0);
+                .map(inv -> Math.max(0, inv.getQuantity() - inv.getReservedQuantity())).orElse(0);
         return ProductResponse.of(
                 product.getCode(),
                 product.getName(),

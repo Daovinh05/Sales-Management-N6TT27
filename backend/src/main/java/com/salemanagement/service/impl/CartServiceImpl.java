@@ -55,7 +55,7 @@ public class CartServiceImpl implements CartService {
     }
 
     private void checkStock(ProductVariant variant, int quantity) {
-        int stock = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode()).map(com.salemanagement.entity.Inventory::getQuantity).orElse(0);
+        int stock = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode()).map(inv -> Math.max(0, inv.getQuantity() - inv.getReservedQuantity())).orElse(0);
         if (quantity > stock) {
             throw new BusinessException(
                     "Số lượng vượt quá tồn kho (còn " + stock + ")", HttpStatus.UNPROCESSABLE_ENTITY);
@@ -65,7 +65,7 @@ public class CartServiceImpl implements CartService {
     private CartItemResponse toItemResponse(CartItem item) {
         ProductVariant variant = item.getVariant();
         Product product = variant.getProduct();
-        int stock = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode()).map(com.salemanagement.entity.Inventory::getQuantity).orElse(0);
+        int stock = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode()).map(inv -> Math.max(0, inv.getQuantity() - inv.getReservedQuantity())).orElse(0);
         BigDecimal price = variant.getPrice() == null ? BigDecimal.ZERO : variant.getPrice();
         BigDecimal lineTotal = price.multiply(BigDecimal.valueOf(item.getQuantity()));
         return CartItemResponse.of(

@@ -62,6 +62,9 @@ public class Order {
     @Column(length = 30)
     private String paymentMethod;
 
+    @Column(name = "stock_deducted", nullable = false, columnDefinition = "bit default 0")
+    private boolean stockDeducted = false;
+
     @Column(length = 100)
     private String username;
 

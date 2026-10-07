@@ -357,6 +357,10 @@
 .oh-item-sub { font-size: 12px; color: #777; margin-top: 2px; }
 .oh-item-price { color: #2563eb; font-weight: 800; font-size: 13px; margin-top: 4px; }
 .oh-item-right { margin-left: auto; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.oh-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.oh-detail-btn.oh-btn-green { background: #dcfce7; color: #15803d; }
+.oh-detail-btn.oh-btn-red { background: #fee2e2; color: #b91c1c; }
+.oh-detail-btn.oh-btn-blue { background: #dbeafe; color: #1d4ed8; }
 .oh-pay { color: #2563eb; font-weight: 800; font-size: 17px; }
 .oh-detail-btn { background: #2563eb; color: #fff; border-radius: 999px; padding: 9px 20px; font: inherit; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; }
 
@@ -380,3 +384,23 @@
 .oh-sum strong { min-width: 130px; text-align: right; color: #111; }
 .oh-sum-total { font-weight: 800; color: #111; font-size: 14px; }
 .oh-sum-total strong { font-size: 16px; }
+
+/* Payment modal: tóm tắt đơn + QR VietQR */
+.pm-summary { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 16px; }
+.pm-summary-item .pm-label { font-size: 12px; color: #777; }
+.pm-summary-item .pm-value { font-weight: 800; font-size: 16px; margin-top: 2px; }
+.pm-paybox { border: 1px solid #2563eb; border-radius: 12px; padding: 20px 24px; }
+.pm-paybox-title { text-align: center; font-weight: 800; font-size: 17px; padding-bottom: 14px; border-bottom: 1px solid #eee; margin-bottom: 16px; }
+.pm-paycols { display: grid; grid-template-columns: 1fr 1.2fr; gap: 28px; }
+.pm-way { font-size: 14px; color: #555; margin-bottom: 12px; }
+.pm-qr { width: 220px; max-width: 100%; display: block; margin: 0 auto; border: 1px solid #eee; border-radius: 8px; }
+.pm-center { text-align: center; margin-top: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.pm-bank { width: 100%; border-collapse: collapse; font-size: 14px; }
+.pm-bank td { padding: 10px 4px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.pm-bank td:first-child { color: #555; }
+.pm-bank td:last-child { font-weight: 700; text-align: right; white-space: nowrap; }
+.pm-copy { background: none; border: none; color: #2563eb; cursor: pointer; font-size: 14px; margin-left: 6px; padding: 2px; }
+.pm-copied { font-size: 11px; color: #2e7d32; margin-left: 6px; font-weight: 700; }
+.pm-note { background: #fef9e7; border: 1px solid #f0d955; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-top: 12px; color: #555; }
+.pm-status { margin-top: 14px; color: #555; font-size: 14px; }
+@media (max-width: 700px) { .pm-paycols { grid-template-columns: 1fr; } }

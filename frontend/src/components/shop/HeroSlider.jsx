@@ -7,7 +7,7 @@ const SLIDES = [
     cls: 'tz-s1', theme: 'tz-light', watermark: 'TITAN', tag: 'PRE-ORDER NOW', tagCls: 'tz-tag-light',
     title: 'IPHONE 17 PRO MAX', desc: 'Thiết kế Titan Ultra hoàn toàn mới. Chip A19 Bionic đỉnh cao. Camera AI 100MP thế hệ mới.',
     cta: 'ĐẶT TRƯỚC NGAY', btn: 'tz-btn-primary',
-    img: 'https://tse2.mm.bing.net/th/id/OIP.pEZyO8D2oWi6Jft18J2wHAHaJQ?rs=1&pid=ImgDetMain&o=7&rm=3'
+    img: 'https://picsum.photos/seed/iphone17-pro/800/800'
   },
   {
     cls: 'tz-s2', theme: 'tz-dark', watermark: 'MACBOOK', tag: 'BACK TO SCHOOL', tagCls: 'tz-tag-dark',

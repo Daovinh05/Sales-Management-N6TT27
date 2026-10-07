@@ -83,7 +83,7 @@ export function Footer() {
           <h4 style={{ marginTop: 16 }}>Fanpage</h4>
           <div className="tz-fpbox">
             <img
-              src="https://tse3.mm.bing.net/th/id/OIP.YxmH1xNVNfvD5MlgINYERgHaEB?rs=1&pid=ImgDetMain&o=7&rm=3"
+              src="https://picsum.photos/seed/techzone-fanpage/200/200"
               alt="TechZone"
             />
             <div>

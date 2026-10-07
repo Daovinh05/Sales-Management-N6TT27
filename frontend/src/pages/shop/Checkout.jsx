@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../../services/api.js';
 import { useAuth } from '../../store/auth.jsx';
-
-const PAYMENTS = [
-  { value: 'VNPAY_QR', label: 'VNPAY QR - Thanh toán qua mã QR' },
-  { value: 'COD', label: 'Trả tiền mặt khi nhận hàng (COD)' }
-];
+import PaymentModal from './PaymentModal.jsx';
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString('vi-VN')}₫`;
 
@@ -14,10 +10,10 @@ export default function Checkout({ items, notify, onPlaced, onBack }) {
   const [form, setForm] = useState({ name: '', address: '', phone: '', email: '', note: '' });
   const [promotions, setPromotions] = useState([]);
   const [voucher, setVoucher] = useState('');
-  const [payment, setPayment] = useState('VNPAY_QR');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [variantMap, setVariantMap] = useState({});
+  const [createdOrder, setCreatedOrder] = useState(null);
 
   useEffect(() => {
     api.get('/users/me').then(({ data }) => {
@@ -70,7 +66,6 @@ export default function Checkout({ items, notify, onPlaced, onBack }) {
         email: form.email.trim(),
         shippingAddress: form.address.trim(),
         note: form.note.trim() || null,
-        paymentMethod: payment,
         discountAmount: discount,
         items: items.map((it) => ({
           variantCode: it.variantCode || null,
@@ -79,8 +74,8 @@ export default function Checkout({ items, notify, onPlaced, onBack }) {
           unitPrice: Number(it.price || 0)
         }))
       });
-      notify?.('success', `Đặt hàng thành công: ${data.code}`);
-      onPlaced?.(data);
+      // Đơn ở CHO_DUYET + giữ chỗ kho, mở modal để khách chọn COD / VietQR.
+      setCreatedOrder(data);
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể đặt hàng. Vui lòng thử lại.');
     } finally {
@@ -172,14 +167,6 @@ export default function Checkout({ items, notify, onPlaced, onBack }) {
               {!promotions.length && <div className="co-item-sub">Không có voucher nào</div>}
               <div className="co-row co-discount"><span><em>Giảm giá</em></span><span><em>-{formatMoney(discount)}</em></span></div>
               <div className="co-row co-total"><span>Tổng</span><span>{formatMoney(total)}</span></div>
-              <div className="co-payments">
-                {PAYMENTS.map((p) => (
-                  <label key={p.value} className="co-pay">
-                    <input type="radio" name="payment" checked={payment === p.value} onChange={() => setPayment(p.value)} />
-                    {p.label}
-                  </label>
-                ))}
-              </div>
               <button className="co-submit" type="button" disabled={saving} onClick={submit}>
                 {saving ? 'ĐANG ĐẶT...' : 'ĐẶT HÀNG'}
               </button>
@@ -187,6 +174,15 @@ export default function Checkout({ items, notify, onPlaced, onBack }) {
           </aside>
         </div>
       </div>
+      {createdOrder && (
+        <PaymentModal
+          order={createdOrder}
+          notify={notify}
+          onPaid={(paid) => { setCreatedOrder(null); onPlaced?.(paid); }}
+          onCancelled={() => { setCreatedOrder(null); onBack?.(); }}
+          onClose={() => setCreatedOrder(null)}
+        />
+      )}
     </div>
   );
 }
