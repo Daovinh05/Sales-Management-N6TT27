@@ -1,10 +1,10 @@
-package com.salemanagement.controller;
+package com.salemanagement.controller.warehouse;
 
 import com.salemanagement.dto.request.ImportReceiptRequest;
 import com.salemanagement.dto.response.ImportReceiptDetailResponse;
 import com.salemanagement.dto.response.ImportReceiptSummaryResponse;
 import com.salemanagement.dto.response.PageResponse;
-import com.salemanagement.service.WarehouseStaffService;
+import com.salemanagement.service.warehouse.WarehouseStaffService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

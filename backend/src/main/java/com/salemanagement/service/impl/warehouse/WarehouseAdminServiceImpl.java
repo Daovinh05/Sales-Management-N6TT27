@@ -1,4 +1,4 @@
-package com.salemanagement.service.impl;
+package com.salemanagement.service.impl.warehouse;
 
 import com.salemanagement.dto.response.ImportReceiptDetailResponse;
 import com.salemanagement.dto.response.ImportReceiptSummaryResponse;
@@ -13,7 +13,7 @@ import com.salemanagement.exception.ResourceNotFoundException;
 import com.salemanagement.repository.ImportReceiptRepository;
 import com.salemanagement.repository.UserRepository;
 import com.salemanagement.repository.WarehouseRepository;
-import com.salemanagement.service.WarehouseAdminService;
+import com.salemanagement.service.warehouse.WarehouseAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

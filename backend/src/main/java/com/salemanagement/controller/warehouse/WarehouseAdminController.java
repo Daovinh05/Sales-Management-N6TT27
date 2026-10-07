@@ -1,11 +1,11 @@
-package com.salemanagement.controller;
+package com.salemanagement.controller.warehouse;
 
 import com.salemanagement.dto.response.ImportReceiptDetailResponse;
 import com.salemanagement.dto.response.ImportReceiptSummaryResponse;
 import com.salemanagement.dto.response.PageResponse;
 import com.salemanagement.dto.response.StaffResponse;
 import com.salemanagement.dto.response.WarehouseResponse;
-import com.salemanagement.service.WarehouseAdminService;
+import com.salemanagement.service.warehouse.WarehouseAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

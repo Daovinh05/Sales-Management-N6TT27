@@ -1,4 +1,4 @@
-package com.salemanagement.service;
+package com.salemanagement.service.warehouse;
 
 import com.salemanagement.dto.request.WarehouseRequest;
 import com.salemanagement.dto.response.InventoryResponse;

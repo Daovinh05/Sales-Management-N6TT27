@@ -1,4 +1,4 @@
-package com.salemanagement.service;
+package com.salemanagement.service.warehouse;
 
 import com.salemanagement.dto.response.ImportReceiptDetailResponse;
 import com.salemanagement.dto.response.ImportReceiptSummaryResponse;

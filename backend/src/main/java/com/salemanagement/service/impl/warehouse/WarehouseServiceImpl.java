@@ -1,4 +1,4 @@
-package com.salemanagement.service.impl;
+package com.salemanagement.service.impl.warehouse;
 
 import com.salemanagement.dto.request.WarehouseRequest;
 import com.salemanagement.dto.response.InventoryResponse;
@@ -8,7 +8,7 @@ import com.salemanagement.entity.Warehouse;
 import com.salemanagement.exception.ResourceNotFoundException;
 import com.salemanagement.repository.InventoryRepository;
 import com.salemanagement.repository.WarehouseRepository;
-import com.salemanagement.service.WarehouseService;
+import com.salemanagement.service.warehouse.WarehouseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
