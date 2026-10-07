@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     List<Review> findAllByOrderByCreatedAtDesc();
+
+    List<Review> findByProductNameOrderByCreatedAtDesc(String productName);
 }

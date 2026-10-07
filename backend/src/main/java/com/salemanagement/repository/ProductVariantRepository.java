@@ -23,4 +23,7 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     List<ProductVariant> search(@Param("code") String code, @Param("name") String name);
 
     boolean existsByProduct(Product product);
+
+    @Query("select min(v.price), max(v.price) from ProductVariant v where v.product.code = :code")
+    java.util.List<Object[]> findPriceBounds(@Param("code") String productCode);
 }

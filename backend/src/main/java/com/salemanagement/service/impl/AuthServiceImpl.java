@@ -6,6 +6,7 @@ import com.salemanagement.dto.request.RegisterRequest;
 import com.salemanagement.dto.response.JwtResponse;
 import com.salemanagement.entity.RefreshToken;
 import com.salemanagement.entity.Role;
+import com.salemanagement.enums.ERole;
 import com.salemanagement.entity.User;
 import com.salemanagement.repository.RoleRepository;
 import com.salemanagement.repository.UserRepository;
@@ -46,7 +47,7 @@ public class AuthServiceImpl implements AuthService {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         User user = userDetails.getUser();
         String refreshToken = refreshTokenService.create(user).getToken();
-        List<String> roles = user.getRoles().stream().map(Role::getName).toList();
+        List<String> roles = user.getRoles().stream().map(r -> r.getName().name()).toList();
         return new JwtResponse(token, refreshToken, user.getId(), user.getUsername(), user.getEmail(), roles);
     }
 
@@ -58,9 +59,9 @@ public class AuthServiceImpl implements AuthService {
         if (request.getEmail() != null && userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email đã tồn tại");
         }
-        Role customerRole = roleRepository.findByName("ROLE_CUSTOMER")
+        Role customerRole = roleRepository.findByName(ERole.ROLE_CUSTOMER)
                 .orElseGet(() -> roleRepository.save(Role.builder()
-                        .name("ROLE_CUSTOMER")
+                        .name(ERole.ROLE_CUSTOMER)
                         .description("Khách hàng mua hàng")
                         .build()));
         User user = User.builder()
@@ -85,7 +86,7 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenService.revoke(oldToken.getToken());
         String newAccessToken = jwtProvider.generateTokenFromUsername(user.getUsername());
         String newRefreshToken = refreshTokenService.create(user).getToken();
-        List<String> roles = user.getRoles().stream().map(Role::getName).toList();
+        List<String> roles = user.getRoles().stream().map(r -> r.getName().name()).toList();
         return new JwtResponse(newAccessToken, newRefreshToken, user.getId(),
                 user.getUsername(), user.getEmail(), roles);
     }

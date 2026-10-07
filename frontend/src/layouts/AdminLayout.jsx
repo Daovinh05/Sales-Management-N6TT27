@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMobileScreen, faChartPie, faUsers, faList, faCopyright, faTruck,
@@ -7,30 +7,39 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../store/auth.jsx';
 import AppToast from '../components/common/AppToast.jsx';
-import WarehouseList from '../pages/admin/WarehouseList.jsx';
+import WarehouseDashboard from '../pages/admin/WarehouseDashboard.jsx';
 import BrandManagement from '../pages/admin/BrandManagement.jsx';
 import CategoryManagement from '../pages/admin/CategoryManagement.jsx';
 import PromotionManagement from '../pages/admin/PromotionManagement.jsx';
 import ProductManagement from '../pages/admin/ProductManagement.jsx';
 import VariantManagement from '../pages/admin/VariantManagement.jsx';
 import ReviewManagement from '../pages/admin/ReviewManagement.jsx';
+import OrderManagement from '../pages/admin/OrderManagement.jsx';
 import SupplierManagement from '../pages/admin/SupplierManagement.jsx';
 import UserManagement from '../pages/admin/UserManagement.jsx';
 
 const MENU = [
-  { icon: faChartPie, label: 'Tổng quan', active: true },
-  { icon: faUsers, label: 'Quản lý người dùng' },
-  { icon: faList, label: 'Quản lý danh mục' },
-  { icon: faCopyright, label: 'Quản lý thương hiệu' },
-  { icon: faTruck, label: 'Quản lý nhà cung cấp' },
-  { icon: faWarehouse, label: 'Quản lý kho hàng' },
-  { icon: faStar, label: 'Quản lý đánh giá' },
-  { icon: faMobileScreen, label: 'Quản lý sản phẩm' },
-  { icon: faSliders, label: 'Quản lý biến thể' },
-  { icon: faPercent, label: 'Quản lý khuyến mãi' },
-  { icon: faCartShopping, label: 'Quản lý đơn hàng' },
-  { icon: faChartLine, label: 'Thống kê' }
+  { icon: faChartPie, label: 'Tổng quan', path: '/' },
+  { icon: faUsers, label: 'Quản lý người dùng', path: '/nguoi-dung/danh-sach' },
+  { icon: faList, label: 'Quản lý danh mục', path: '/danh-muc/danh-sach' },
+  { icon: faCopyright, label: 'Quản lý thương hiệu', path: '/thuong-hieu/danh-sach' },
+  { icon: faTruck, label: 'Quản lý nhà cung cấp', path: '/nha-cung-cap/danh-sach' },
+  { icon: faWarehouse, label: 'Quản lý kho hàng', path: '/kho-hang/danh-sach' },
+  { icon: faStar, label: 'Quản lý đánh giá', path: '/danh-gia/danh-sach' },
+  { icon: faMobileScreen, label: 'Quản lý sản phẩm', path: '/san-pham/danh-sach' },
+  { icon: faSliders, label: 'Quản lý biến thể', path: '/bien-the/danh-sach' },
+  { icon: faPercent, label: 'Quản lý khuyến mãi', path: '/khuyen-mai/danh-sach' },
+  { icon: faCartShopping, label: 'Quản lý đơn hàng', path: '/don-hang/danh-sach' },
+  { icon: faChartLine, label: 'Thống kê', path: '/thong-ke' }
 ];
+
+const PATH_TO_PAGE = Object.fromEntries(MENU.map((m) => [m.path, m.label]));
+const PAGE_TO_PATH = Object.fromEntries(MENU.map((m) => [m.label, m.path]));
+
+const pageFromHash = () => {
+  const path = window.location.hash.replace(/^#/, '') || '/';
+  return PATH_TO_PAGE[path] || 'Tổng quan';
+};
 
 const ACTIONS = [
   { icon: faUsers, label: 'Quản lý người dùng', page: 'Quản lý người dùng', desc: 'Thêm, sửa, xóa người dùng', color: '#3a0ca3' },
@@ -47,7 +56,16 @@ const ACTIONS = [
 
 export default function AdminLayout({ notify, toasts = [] }) {
   const { user, logout } = useAuth();
-  const [activePage, setActivePage] = useState('Tổng quan');
+  const [activePage, setActivePage] = useState(pageFromHash);
+  const go = (page) => {
+    window.location.hash = PAGE_TO_PATH[page] || '/';
+  };
+
+  useEffect(() => {
+    const syncRoute = () => setActivePage(pageFromHash());
+    window.addEventListener('hashchange', syncRoute);
+    return () => window.removeEventListener('hashchange', syncRoute);
+  }, []);
   const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
   const avatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user?.username || 'A') + '&background=4361ee&color=fff';
 
@@ -62,7 +80,7 @@ export default function AdminLayout({ notify, toasts = [] }) {
               key={`${m.label}-${index}`}
               type="button"
               className={activePage === m.label ? 'active' : ''}
-              onClick={() => setActivePage(m.label)}
+              onClick={() => go(m.label)}
             >
               <FontAwesomeIcon icon={m.icon} className="fa-fw" /> {m.label}
             </button>
@@ -81,7 +99,7 @@ export default function AdminLayout({ notify, toasts = [] }) {
           </div>
         </header>
         <div className="ad-content">
-          {activePage === 'Quản lý kho hàng' ? <WarehouseList notify={notify} />
+          {activePage === 'Quản lý kho hàng' ? <WarehouseDashboard notify={notify} />
             : activePage === 'Quản lý danh mục' ? <CategoryManagement />
             : activePage === 'Quản lý thương hiệu' ? <BrandManagement />
             : activePage === 'Quản lý khuyến mãi' ? <PromotionManagement />
@@ -89,7 +107,8 @@ export default function AdminLayout({ notify, toasts = [] }) {
             : activePage === 'Quản lý người dùng' ? <UserManagement />
             : activePage === 'Quản lý đánh giá' ? <ReviewManagement />
             : activePage === 'Quản lý sản phẩm' ? <ProductManagement />
-            : activePage === 'Quản lý biến thể' ? <VariantManagement /> : <>
+            : activePage === 'Quản lý biến thể' ? <VariantManagement />
+            : activePage === 'Quản lý đơn hàng' ? <OrderManagement /> : <>
           <div className="ad-welcome">
             <div>
               <h2>Xin chào, {user?.username}! 👋</h2>
@@ -101,7 +120,7 @@ export default function AdminLayout({ notify, toasts = [] }) {
           <h2 className="ad-sec"><FontAwesomeIcon icon={faBolt} /> Hành động nhanh</h2>
           <div className="ad-grid">
             {ACTIONS.map((a) => (
-              <button key={a.label} type="button" className="ad-card" onClick={() => setActivePage(a.page)}>
+              <button key={a.label} type="button" className="ad-card" onClick={() => go(a.page)}>
                 <div className="ad-ic" style={{ background: a.color }}>
                   <FontAwesomeIcon icon={a.icon} />
                 </div>

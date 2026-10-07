@@ -5,6 +5,7 @@ import {
   faTrash, faUpload, faXmark
 } from '@fortawesome/free-solid-svg-icons';
 import api from '../../services/api.js';
+import { resolveImage } from '../../services/shop.js';
 
 const formatCurrency = (value) => {
   if (value === null || value === undefined || value === '') return 'N/A';
@@ -199,7 +200,7 @@ export default function ProductManagement() {
                     <td>{product.name}</td>
                     <td>{product.variantName || '—'}</td>
                     <td>{product.imageUrl
-                      ? <img src={`${imageBaseUrl()}/uploads/variants/${encodeURIComponent(product.imageUrl)}`} alt={product.name} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 5 }} />
+                      ? <img src={resolveImage(product.imageUrl)} alt={product.name} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 5 }} />
                       : <span>Không có hình</span>}</td>
                     <td>{formatCurrency(product.price)}</td>
                     <td>{Number(product.stockQuantity || 0) > 0

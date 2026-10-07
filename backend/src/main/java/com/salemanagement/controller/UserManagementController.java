@@ -1,6 +1,7 @@
 package com.salemanagement.controller;
 
 import com.salemanagement.entity.Role;
+import com.salemanagement.enums.ERole;
 import com.salemanagement.entity.User;
 import com.salemanagement.dto.request.UpdateManagedUserRequest;
 import com.salemanagement.repository.RefreshTokenRepository;
@@ -50,7 +51,7 @@ public class UserManagementController {
         return userRepository.findAll().stream()
                 .map(user -> new UserResponse(
                         user.getId(), user.getUsername(), user.getFullName(), user.getEmail(),
-                        user.getPhone(), user.getStatus(), user.getRoles().stream().map(Role::getName).toList(),
+                        user.getPhone(), user.getStatus(), user.getRoles().stream().map(r -> r.getName().name()).toList(),
                         user.getCreatedAt(), user.getAvatarUrl()))
                 .toList();
     }
@@ -81,7 +82,7 @@ public class UserManagementController {
                 if (!"ROLE_ADMIN".equals(roleName) && !"ROLE_CUSTOMER".equals(roleName)) {
                         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vai trò không hợp lệ");
                 }
-                Role role = roleRepository.findByName(roleName)
+                Role role = roleRepository.findByName(ERole.valueOf(roleName))
                                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy vai trò"));
                 User user = User.builder()
                                 .username(username)
@@ -111,7 +112,7 @@ public class UserManagementController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể tự hạ quyền quản trị viên");
         }
 
-        Role role = roleRepository.findByName(request.role())
+        Role role = roleRepository.findByName(ERole.valueOf(request.role()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy vai trò"));
         user.getRoles().clear();
         user.getRoles().add(role);
@@ -127,8 +128,8 @@ public class UserManagementController {
                 if (user.getUsername().equals(authentication.getName())) {
                         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể tự xóa tài khoản đang đăng nhập");
                 }
-                boolean isAdmin = user.getRoles().stream().anyMatch(role -> "ROLE_ADMIN".equals(role.getName()));
-                if (isAdmin && userRepository.countByRoleName("ROLE_ADMIN") <= 1) {
+                boolean isAdmin = user.getRoles().stream().anyMatch(role -> ERole.ROLE_ADMIN.equals(role.getName()));
+                if (isAdmin && userRepository.countByRoleName(ERole.ROLE_ADMIN) <= 1) {
                         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể xóa quản trị viên cuối cùng");
                 }
                 refreshTokenRepository.deleteAllByUser(user);
@@ -138,7 +139,7 @@ public class UserManagementController {
         private UserResponse toResponse(User user) {
                 return new UserResponse(
                                 user.getId(), user.getUsername(), user.getFullName(), user.getEmail(),
-                                user.getPhone(), user.getStatus(), user.getRoles().stream().map(Role::getName).toList(),
+                                user.getPhone(), user.getStatus(), user.getRoles().stream().map(r -> r.getName().name()).toList(),
                                 user.getCreatedAt(), user.getAvatarUrl());
     }
 

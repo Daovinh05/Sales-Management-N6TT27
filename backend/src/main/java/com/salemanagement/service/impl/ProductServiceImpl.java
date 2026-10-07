@@ -12,6 +12,7 @@ import com.salemanagement.entity.ProductVariant;
 import com.salemanagement.entity.Supplier;
 import com.salemanagement.exception.BusinessException;
 import com.salemanagement.repository.BrandRepository;
+import com.salemanagement.repository.CartItemRepository;
 import com.salemanagement.repository.CategoryRepository;
 import com.salemanagement.repository.ProductRepository;
 import com.salemanagement.repository.ProductVariantRepository;
@@ -34,6 +35,8 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
     private final SupplierRepository supplierRepository;
+    private final CartItemRepository cartItemRepository;
+    private final com.salemanagement.repository.InventoryRepository inventoryRepository;
 
     private static String normalizeCode(String code) {
         return code == null ? null : code.trim().toUpperCase();
@@ -74,6 +77,8 @@ public class ProductServiceImpl implements ProductService {
         Brand brand = product.getBrand();
         Supplier supplier = product.getSupplier();
         ProductVariant firstVariant = variantRepository.findFirstByProductOrderByCodeAsc(product).orElse(null);
+        int quantity = firstVariant == null ? 0 : inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, firstVariant.getCode())
+                .map(com.salemanagement.entity.Inventory::getQuantity).orElse(0);
         return ProductResponse.of(
                 product.getCode(),
                 product.getName(),
@@ -86,7 +91,7 @@ public class ProductServiceImpl implements ProductService {
                 firstVariant == null ? null : firstVariant.getName(),
                 firstVariant == null ? null : firstVariant.getImageUrl(),
                 firstVariant == null ? null : firstVariant.getPrice(),
-                firstVariant == null ? null : firstVariant.getStockQuantity(),
+                quantity,
                 product.getCreatedAt());
     }
 
@@ -144,7 +149,11 @@ public class ProductServiceImpl implements ProductService {
                         "Không tìm thấy sản phẩm có mã: " + code, HttpStatus.NOT_FOUND));
         // Port đúng PHP SanPham_delete: xóa biến thể liên quan trước rồi mới xóa sản phẩm.
         // (Khi có module đơn hàng sẽ bổ sung chặn 409 nếu biến thể đã phát sinh chi tiết đơn.)
-        variantRepository.findByProduct(product).forEach(variantRepository::delete);
+        // Dọn dòng giỏ hàng đang giữ các biến thể để tránh kẹt khóa ngoại.
+        variantRepository.findByProduct(product).forEach(variant -> {
+            cartItemRepository.deleteByVariant(variant);
+            variantRepository.delete(variant);
+        });
         productRepository.delete(product);
     }
 

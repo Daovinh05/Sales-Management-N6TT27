@@ -86,17 +86,7 @@ public final class ExcelHelper {
                 request.setRam(cellString(row.getCell(4)));
                 request.setStorage(cellString(row.getCell(5)));
                 String price = cellString(row.getCell(6));
-                String stock = cellString(row.getCell(7));
-                try {
-                    request.setPrice(price.isEmpty() ? null : new BigDecimal(price));
-                } catch (NumberFormatException ex) {
-                    request.setPrice(null);
-                }
-                try {
-                    request.setStockQuantity(stock.isEmpty() ? null : Integer.valueOf(new BigDecimal(stock).intValue()));
-                } catch (NumberFormatException ex) {
-                    request.setStockQuantity(null);
-                }
+                
                 rows.add(new ParsedVariantRow(i + 1, request));
             }
         }

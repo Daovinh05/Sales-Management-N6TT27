@@ -1,0 +1,35 @@
+import api from './api.js';
+
+export const warehouseAdminService = {
+  getWarehouseConfig: async (id = 1) => {
+    const res = await api.get(`/admin/warehouses/${id}`);
+    return res.data;
+  },
+  
+  getWarehouseStaffs: async () => {
+    const res = await api.get('/admin/warehouses/staff');
+    return res.data;
+  },
+
+  getImportHistory: async (page = 0, size = 10) => {
+    const res = await api.get(`/admin/imports?page=${page}&size=${size}`);
+    return res.data;
+  },
+
+  getImportDetail: async (id) => {
+    const res = await api.get(`/admin/imports/${id}`);
+    return res.data;
+  },
+
+  updateImportStatus: async (id, status) => {
+    const res = await api.put(`/admin/imports/${id}/status`, { status });
+    return res.data;
+  },
+
+  updateWarehouse: async (id, payload) => {
+    const res = await api.put(`/admin/warehouses/${id}`, payload);
+    return res.data;
+  }
+};
+
+export default warehouseAdminService;
