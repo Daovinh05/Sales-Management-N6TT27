@@ -6,6 +6,8 @@ import {
 import readXlsxFile from 'read-excel-file/browser';
 import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
+import Pagination from '../../components/admin/Pagination.jsx';
+import EmptyState from '../../components/admin/EmptyState.jsx';
 
 const formatDate = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value))
@@ -18,6 +20,8 @@ export default function SupplierManagement() {
   const [suppliers, setSuppliers] = useState([]);
   const [queries, setQueries] = useState({ code: '', name: '' });
   const [filters, setFilters] = useState({ code: '', name: '' });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState({ code: '', name: '', address: '', phone: '' });
   const [loading, setLoading] = useState(true);
@@ -45,6 +49,10 @@ export default function SupplierManagement() {
     supplier.code.toLocaleLowerCase('vi').includes(filters.code.toLocaleLowerCase('vi'))
     && supplier.name.toLocaleLowerCase('vi').includes(filters.name.toLocaleLowerCase('vi'))
   ), [suppliers, filters]);
+
+  const supplierPageCount = Math.max(1, Math.ceil(filteredSuppliers.length / pageSize));
+  const supplierSafePage = Math.min(Math.max(1, page), supplierPageCount);
+  const pageSuppliers = filteredSuppliers.slice((supplierSafePage - 1) * pageSize, supplierSafePage * pageSize);
 
   const openCreate = () => {
     setForm({ code: '', name: '', address: '', phone: '' });
@@ -178,6 +186,7 @@ export default function SupplierManagement() {
 
         <form className="ad-supplier-filter" onSubmit={(event) => {
           event.preventDefault();
+          setPage(1);
           setFilters({ code: queries.code.trim(), name: queries.name.trim() });
         }}>
           <label>MÃ NHÀ CUNG CẤP
@@ -191,6 +200,7 @@ export default function SupplierManagement() {
             <button className="ad-button ad-button-quiet" type="button" onClick={() => {
               setQueries({ code: '', name: '' });
               setFilters({ code: '', name: '' });
+              setPage(1);
             }}>Làm mới</button>
             <button className="ad-button ad-button-pink" type="button" onClick={exportExcel} disabled={!filteredSuppliers.length}>
               <FontAwesomeIcon icon={faDownload} /> Xuất Excel
@@ -209,9 +219,9 @@ export default function SupplierManagement() {
             <thead><tr><th>STT</th><th>MÃ NHÀ CUNG CẤP</th><th>TÊN NHÀ CUNG CẤP</th><th>ĐỊA CHỈ</th><th>ĐIỆN THOẠI</th><th>THAO TÁC</th></tr></thead>
             <tbody>
               {loading ? <tr><td colSpan="6" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
-                : filteredSuppliers.length ? filteredSuppliers.map((supplier, index) => (
+                : pageSuppliers.length ? pageSuppliers.map((supplier, index) => (
                   <tr key={supplier.code}>
-                    <td className="ad-brand-index">{index + 1}</td>
+                    <td className="ad-brand-index">{(supplierSafePage - 1) * pageSize + index + 1}</td>
                     <td className="ad-brand-code">{supplier.code}</td>
                     <td>{supplier.name}</td>
                     <td>{supplier.address || '—'}</td>
@@ -224,7 +234,21 @@ export default function SupplierManagement() {
                 )) : <tr><td colSpan="6" className="ad-table-empty">Chưa có nhà cung cấp phù hợp.</td></tr>}
             </tbody>
           </table>
+          {!loading && !filteredSuppliers.length && (
+            <EmptyState
+              title="Chưa có nhà cung cấp nào"
+              hint="Bấm Thêm mới để tạo nhà cung cấp đầu tiên"
+              actionLabel="Thêm mới"
+              onAction={openCreate}
+            />
+          )}
         </div>
+        <Pagination
+          page={supplierSafePage} pageSize={pageSize} total={filteredSuppliers.length}
+          onPage={setPage}
+          onPageSize={(size) => { setPageSize(size); setPage(1); }}
+          onRefresh={loadSuppliers}
+        />
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {

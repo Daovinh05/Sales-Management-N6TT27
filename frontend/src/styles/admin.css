@@ -71,6 +71,11 @@
 .ad-filter-actions { align-self: end; }
 .ad-brand-message { margin: 12px 0 0; color: #b45309; font-size: 13px; }
 .ad-brand-list { min-width: 0; }
+.ad-list-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ad-list-filters { display: flex; gap: 16px; flex-wrap: wrap; }
+.ad-list-filter { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #94a3b8; }
+.ad-list-filters select { height: 36px; border: 1px solid #dfe6ef; border-radius: 8px; outline: none; padding: 0 10px; background: #fff; color: #1e293b; font: inherit; font-size: 13px; cursor: pointer; }
+.ad-list-filters select:focus { border-color: #3b72ef; box-shadow: 0 0 0 3px rgba(59, 114, 239, .12); }
 .ad-brand-count { margin: 16px 0 12px; color: #64748b; font-size: 13px; }
 .ad-brand-count strong { color: #1e293b; }
 .ad-table-wrap { max-height: min(58vh, 620px); overflow: auto; border: 1px solid #e1e7ef; border-radius: 9px; }
@@ -167,3 +172,20 @@
 .ad-order-item-spec { display: inline-block; font-size: 11px; color: #64748b; border: 1px solid #e2e8f0; border-radius: 4px; padding: 2px 6px; margin-top: 4px; }
 .ad-order-item-price { color: #dc2626; font-weight: 700; font-size: 13px; margin-top: 4px; }
 .ad-order-card textarea { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; font: inherit; font-size: 13px; color: #334155; background: #f8fafc; resize: vertical; }
+
+/* Phân trang dùng chung */
+.ad-pagination { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 4px 0; font-size: 13px; color: #475569; }
+.ad-pagination-left, .ad-pagination-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ad-pagination select, .ad-pagination input { height: 32px; border: 1px solid #dfe6ef; border-radius: 6px; outline: none; padding: 0 8px; background: #fff; color: #1e293b; font: inherit; font-size: 13px; }
+.ad-pagination input { width: 56px; text-align: center; }
+.ad-pagination form { display: flex; align-items: center; gap: 8px; }
+.ad-pagination button { min-width: 32px; height: 32px; border: 1px solid #dfe6ef; border-radius: 6px; background: #fff; color: #475569; cursor: pointer; display: inline-grid; place-items: center; padding: 0 8px; font: inherit; }
+.ad-pagination button:disabled { opacity: .4; cursor: not-allowed; }
+.ad-pagination-page { min-width: 32px; height: 32px; border: 1px solid #2563eb; border-radius: 6px; background: #2563eb; color: #fff; font-weight: 700; display: inline-grid; place-items: center; padding: 0 8px; }
+
+/* Trống dữ liệu: icon + nút CTA giữa trang */
+.ad-empty { text-align: center; padding: 56px 20px; }
+.ad-empty-icon { width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 50%; background: #eef2ff; color: #3b5bdb; font-size: 24px; display: grid; place-items: center; }
+.ad-empty-title { font-weight: 800; font-size: 16px; color: #1e293b; }
+.ad-empty-hint { color: #94a3b8; font-size: 13px; margin-top: 8px; }
+.ad-empty-btn { margin-top: 16px; background: #2f55d4; color: #fff; border: none; border-radius: 8px; padding: 10px 22px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
