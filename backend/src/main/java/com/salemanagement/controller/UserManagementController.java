@@ -79,7 +79,9 @@ public class UserManagementController {
                 }
 
                 String roleName = request.role() == null || request.role().isBlank() ? "ROLE_CUSTOMER" : request.role();
-                if (!"ROLE_ADMIN".equals(roleName) && !"ROLE_CUSTOMER".equals(roleName)) {
+                if (!"ROLE_ADMIN".equals(roleName)
+                                && !"ROLE_CUSTOMER".equals(roleName)
+                                && !"ROLE_WAREHOUSE_STAFF".equals(roleName)) {
                         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vai trò không hợp lệ");
                 }
                 Role role = roleRepository.findByName(ERole.valueOf(roleName))
@@ -102,7 +104,9 @@ public class UserManagementController {
             @PathVariable Long id,
             @RequestBody RoleUpdateRequest request,
             Authentication authentication) {
-        if (request == null || (!"ROLE_ADMIN".equals(request.role()) && !"ROLE_CUSTOMER".equals(request.role()))) {
+        if (request == null || (!"ROLE_ADMIN".equals(request.role())
+                && !"ROLE_CUSTOMER".equals(request.role())
+                && !"ROLE_WAREHOUSE_STAFF".equals(request.role()))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vai trò không hợp lệ");
         }
 
