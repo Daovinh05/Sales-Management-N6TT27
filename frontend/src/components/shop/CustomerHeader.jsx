@@ -7,6 +7,9 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { clearHistory, fetchSuggestions, getHistory, removeKeyword, saveKeyword } from '../../services/search.js';
 import { useAuth } from '../../store/auth.jsx';
+import api from '../../services/api.js';
+
+const apiOrigin = (api.defaults.baseURL || 'http://localhost:8080/api').replace(/\/api\/?$/, '');
 
 export function TopBanner() {
   return (
@@ -26,84 +29,9 @@ export function TopBanner() {
 export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmitSearch, onView, onHome, onOrders }) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
-  const [term, setTerm] = useState('');
-  const [suggests, setSuggests] = useState([]);
-  const [history, setHistory] = useState([]);
-  const [drop, setDrop] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const boxRef = useRef(null);
-  const timer = useRef(null);
-  const termRef = useRef('');
-  const username = user?.username;
-
-  useEffect(() => {
-    const close = (e) => {
-      if (boxRef.current && !boxRef.current.contains(e.target)) setDrop(false);
-    };
-    document.addEventListener('mousedown', close);
-    return () => {
-      document.removeEventListener('mousedown', close);
-      clearTimeout(timer.current);
-    };
-  }, []);
-
-  const handleChange = (v) => {
-    setTerm(v);
-    termRef.current = v;
-    onSearch?.(v);
-    setDrop(true);
-    clearTimeout(timer.current);
-    if (!v.trim()) {
-      setSuggests([]);
-      setBusy(false);
-      setHistory(getHistory(username));
-      return;
-    }
-    setBusy(true);
-    timer.current = setTimeout(async () => {
-      const q = termRef.current.trim();
-      if (!q) { setSuggests([]); setBusy(false); return; }
-      try {
-        const list = await fetchSuggestions(q);
-        if (termRef.current.trim() === q) setSuggests(list);
-      } catch {
-        setSuggests([]);
-      } finally {
-        setBusy(false);
-      }
-    }, 300);
-  };
-
-  const submit = (keyword) => {
-    const word = (keyword ?? term).trim();
-    if (word) {
-      setTerm(word);
-      termRef.current = word;
-      setHistory(saveKeyword(username, word));
-    }
-    setDrop(false);
-    onSubmitSearch?.(word);
-  };
-
-  const clearSearch = () => {
-    setTerm('');
-    termRef.current = '';
-    setSuggests([]);
-    setBusy(false);
-    setDrop(false);
-    onSearch?.('');
-    onSubmitSearch?.('');
-  };
-
-  const pickSuggestion = (s) => {
-    setTerm(s.name);
-    termRef.current = s.name;
-    onSearch?.(s.name);
-    setHistory(saveKeyword(username, s.name));
-    setDrop(false);
-    onView?.(s.code);
-  };
-  const avatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user?.username || 'K') + '&background=006a5b&color=fff';
+  const avatar = user?.avatarUrl
+    ? `${apiOrigin}/uploads/avatars/${encodeURIComponent(user.avatarUrl)}`
+    : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user?.username || 'K') + '&background=006a5b&color=fff';
   const toggleAccountMenu = () => setOpen((current) => !current);
   const openProfile = () => {
     setOpen(false);

@@ -21,4 +21,6 @@ public class UpdateProfileRequest {
 
     @Size(max = 255)
     private String address;
+
+    private boolean removeAvatar;
 }

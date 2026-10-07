@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faFloppyDisk, faRotateLeft, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faCamera, faFloppyDisk, faRotateLeft, faUser } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../store/auth.jsx';
 import api from '../../services/api.js';
 
 const emptyProfile = { username: '', fullName: '', email: '', phone: '', address: '', createdAt: null };
+const apiOrigin = (api.defaults.baseURL || 'http://localhost:8080/api').replace(/\/api\/?$/, '');
 
 export default function CustomerProfile({ onBack, notify }) {
   const { user, updateProfile } = useAuth();
@@ -15,6 +16,15 @@ export default function CustomerProfile({ onBack, notify }) {
   const [error, setError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const [removeAvatar, setRemoveAvatar] = useState(false);
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
+  const avatarInput = useRef(null);
+
+  useEffect(() => () => {
+    if (avatarPreview.startsWith('blob:')) URL.revokeObjectURL(avatarPreview);
+  }, [avatarPreview]);
 
   useEffect(() => {
     let active = true;
@@ -25,6 +35,10 @@ export default function CustomerProfile({ onBack, notify }) {
         if (!active) return;
         setProfile(data);
         setSavedProfile(data);
+        setAvatarFile(null);
+        setAvatarPreview('');
+        setRemoveAvatar(false);
+        setAvatarLoadError(false);
       })
       .catch((requestError) => {
         if (active) {
@@ -54,9 +68,14 @@ export default function CustomerProfile({ onBack, notify }) {
         email: profile.email.trim() || null,
         phone: profile.phone,
         address: profile.address,
-      });
+        removeAvatar
+      }, avatarFile);
       setProfile(updated);
       setSavedProfile(updated);
+      setAvatarFile(null);
+      setAvatarPreview('');
+      setRemoveAvatar(false);
+      setAvatarLoadError(false);
       notify('success', 'Đã cập nhật thông tin tài khoản');
     } catch (requestError) {
       setError(requestError?.response?.data?.message || 'Cập nhật thất bại. Vui lòng kiểm tra lại thông tin.');
@@ -67,12 +86,20 @@ export default function CustomerProfile({ onBack, notify }) {
 
   const reset = () => {
     setProfile(savedProfile);
+    setAvatarFile(null);
+    setAvatarPreview('');
+    setRemoveAvatar(false);
+    setAvatarLoadError(false);
     setError('');
   };
 
   const joined = profile.createdAt
     ? new Date(profile.createdAt).toLocaleDateString('vi-VN')
     : 'Thành viên TechZone';
+  const savedAvatarUrl = profile.avatarUrl && !removeAvatar
+    ? `${apiOrigin}/uploads/avatars/${encodeURIComponent(profile.avatarUrl)}`
+    : '';
+  const displayedAvatarUrl = avatarPreview || savedAvatarUrl;
 
   return (
     <main className="kh-body kh-profile-page">
@@ -83,7 +110,11 @@ export default function CustomerProfile({ onBack, notify }) {
         </button>
         <div className="kh-profile-layout">
           <aside className="kh-profile-aside">
-            <div className="kh-profile-avatar"><FontAwesomeIcon icon={faUser} /></div>
+            <div className="kh-profile-avatar">
+              {displayedAvatarUrl && !avatarLoadError
+                ? <img src={displayedAvatarUrl} alt="Ảnh đại diện" onError={() => setAvatarLoadError(true)} />
+                : <FontAwesomeIcon icon={faUser} />}
+            </div>
             <h2>{profile.fullName || profile.username}</h2>
             <p>@{profile.username}</p>
             <span className="kh-profile-role">Khách hàng</span>
@@ -111,6 +142,26 @@ export default function CustomerProfile({ onBack, notify }) {
               </div>
             ) : (
               <form className="kh-profile-form" onSubmit={save}>
+                <div className="kh-profile-avatar-edit">
+                  <input ref={avatarInput} type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = '';
+                    if (!file) return;
+                    setAvatarFile(file);
+                    setAvatarPreview(URL.createObjectURL(file));
+                    setRemoveAvatar(false);
+                    setAvatarLoadError(false);
+                  }} />
+                  <button type="button" className="kh-profile-avatar-button" onClick={() => avatarInput.current?.click()} disabled={saving}>
+                    <FontAwesomeIcon icon={faCamera} /> {avatarPreview ? 'Đổi ảnh đại diện' : 'Chọn ảnh đại diện'}
+                  </button>
+                  {(profile.avatarUrl || avatarFile) && <button type="button" className="kh-profile-avatar-reset" onClick={() => {
+                    setAvatarFile(null);
+                    setAvatarPreview('');
+                    setRemoveAvatar(Boolean(profile.avatarUrl));
+                    setAvatarLoadError(false);
+                  }} disabled={saving}>Dùng ảnh mặc định</button>}
+                </div>
                 <label className="kh-profile-field">
                   <span>Tên đăng nhập</span>
                   <input value={profile.username || ''} disabled />
