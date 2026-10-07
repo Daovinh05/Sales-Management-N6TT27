@@ -7,6 +7,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
+import Pagination from '../../components/admin/Pagination.jsx';
+import EmptyState from '../../components/admin/EmptyState.jsx';
 
 const STATUS_LABELS = {
   CHO_DUYET: 'Chờ xác nhận',
@@ -48,7 +50,7 @@ const formatDateTime = (value) => value
 
 export default function OrderManagement() {
   const [orders, setOrders] = useState([]);
-  const [queries, setQueries] = useState({ code: '', customer: '' });
+  const [queries, setQueries] = useState({ code: '', customer: '', status: '', payment: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -57,6 +59,12 @@ export default function OrderManagement() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [pendingStatus, setPendingStatus] = useState('');
   const [variantMap, setVariantMap] = useState({});
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const pageCount = Math.max(1, Math.ceil(orders.length / pageSize));
+  const safePage = Math.min(Math.max(1, page), pageCount);
+  const pageOrders = orders.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const loadOrders = async (params = queries) => {
     setLoading(true);
@@ -65,7 +73,9 @@ export default function OrderManagement() {
       const { data } = await api.get('/orders', {
         params: {
           code: params.code.trim(),
-          customer: params.customer.trim()
+          customer: params.customer.trim(),
+          status: params.status || '',
+          payment: params.payment || ''
         }
       });
       setOrders(data);
@@ -76,7 +86,7 @@ export default function OrderManagement() {
     }
   };
 
-  useEffect(() => { loadOrders({ code: '', customer: '' }); }, []);
+  useEffect(() => { loadOrders({ code: '', customer: '', status: '', payment: '' }); }, []);
 
   useEffect(() => {
     api.get('/variants').then(({ data }) => {
@@ -153,6 +163,7 @@ export default function OrderManagement() {
 
         <form className="ad-supplier-filter" onSubmit={(event) => {
           event.preventDefault();
+          setPage(1);
           loadOrders();
         }}>
           <label>MÃ ĐƠN HÀNG
@@ -164,8 +175,9 @@ export default function OrderManagement() {
           <div className="ad-filter-actions">
             <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
             <button className="ad-button ad-button-quiet" type="button" onClick={() => {
-              const cleared = { code: '', customer: '' };
+              const cleared = { code: '', customer: '', status: '', payment: '' };
               setQueries(cleared);
+              setPage(1);
               loadOrders(cleared);
             }}>Làm mới</button>
             <button className="ad-button ad-button-pink" type="button" onClick={exportExcel} disabled={!orders.length}>
@@ -178,7 +190,43 @@ export default function OrderManagement() {
       </section>
 
       <section className="ad-brand-panel ad-brand-list">
-        <h2><FontAwesomeIcon icon={faListUl} /> Danh sách hiện tại</h2>
+        <div className="ad-list-head">
+          <h2><FontAwesomeIcon icon={faListUl} /> Danh sách hiện tại</h2>
+          <div className="ad-list-filters">
+            <label className="ad-list-filter">Trạng thái đơn hàng:
+              <select
+                value={queries.status} aria-label="Lọc theo trạng thái"
+                onChange={(event) => {
+                  const next = { ...queries, status: event.target.value };
+                  setQueries(next);
+                  setPage(1);
+                  loadOrders(next);
+                }}
+              >
+                <option value="">Tất cả</option>
+                {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="ad-list-filter">Phương thức thanh toán:
+              <select
+                value={queries.payment} aria-label="Lọc theo phương thức"
+                onChange={(event) => {
+                  const next = { ...queries, payment: event.target.value };
+                  setQueries(next);
+                  setPage(1);
+                  loadOrders(next);
+                }}
+              >
+                <option value="">Tất cả</option>
+                <option value="COD">Tiền mặt (COD)</option>
+                <option value="VIETQR">VietQR</option>
+                <option value="EMPTY">Chưa chọn</option>
+              </select>
+            </label>
+          </div>
+        </div>
         <p className="ad-brand-count"><strong>Kết quả:</strong> <em>{loading ? 'Đang tải...' : `${orders.length} bản ghi`}</em></p>
         <div className="ad-table-wrap">
           <table className="ad-brand-table ad-order-table">
@@ -191,11 +239,11 @@ export default function OrderManagement() {
             </thead>
             <tbody>
               {loading ? <tr><td colSpan="11" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
-                : orders.length ? orders.map((order, index) => {
+                : pageOrders.length ? pageOrders.map((order, index) => {
                   const badge = STATUS_COLORS[order.status] || STATUS_COLORS.CHO_DUYET;
                   return (
                     <tr key={order.code}>
-                      <td className="ad-brand-index">{index + 1}</td>
+                      <td className="ad-brand-index">{(safePage - 1) * pageSize + index + 1}</td>
                       <td className="ad-brand-code">{order.code}</td>
                       <td>
                         <div style={{ fontWeight: 600 }}>{order.customerName}</div>
@@ -233,7 +281,19 @@ export default function OrderManagement() {
                 }) : <tr><td colSpan="11" className="ad-table-empty">Chưa có đơn hàng phù hợp.</td></tr>}
             </tbody>
           </table>
+          {!loading && !orders.length && (
+            <EmptyState
+              title="Chưa có đơn hàng nào"
+              hint="Đơn hàng mới của khách sẽ hiện ở đây"
+            />
+          )}
         </div>
+        <Pagination
+          page={safePage} pageSize={pageSize} total={orders.length}
+          onPage={setPage}
+          onPageSize={(size) => { setPageSize(size); setPage(1); }}
+          onRefresh={() => loadOrders()}
+        />
       </section>
 
       {detail && (

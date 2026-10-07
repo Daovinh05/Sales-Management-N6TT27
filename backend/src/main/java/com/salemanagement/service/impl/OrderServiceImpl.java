@@ -46,10 +46,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OrderResponse> list(String code, String customerName) {
+    public List<OrderResponse> list(String code, String customerName, String status, String paymentMethod) {
         return orderRepository
-                .findByCodeContainingIgnoreCaseAndCustomerNameContainingIgnoreCaseOrderByCreatedAtDesc(
-                        code == null ? "" : code.trim(), customerName == null ? "" : customerName.trim())
+                .filter(code == null ? "" : code.trim(),
+                        customerName == null ? "" : customerName.trim(),
+                        status == null ? "" : status.trim().toUpperCase(),
+                        paymentMethod == null ? "" : paymentMethod.trim().toUpperCase())
                 .stream()
                 .map(OrderResponse::summary)
                 .toList();
