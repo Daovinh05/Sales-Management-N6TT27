@@ -32,7 +32,4 @@ public class ProductVariantRequest {
 
     @PositiveOrZero(message = "Giá phải >= 0")
     private BigDecimal price;
-
-    @PositiveOrZero(message = "Số lượng kho phải >= 0")
-    private Integer stockQuantity;
 }

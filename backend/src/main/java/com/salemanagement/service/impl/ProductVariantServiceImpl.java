@@ -31,6 +31,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private final ProductRepository productRepository;
     private final FileStorageService fileStorageService;
     private final CartItemRepository cartItemRepository;
+    private final com.salemanagement.repository.InventoryRepository inventoryRepository;
 
     private static String normalizeCode(String code) {
         return code == null ? null : code.trim().toUpperCase();
@@ -47,6 +48,8 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     private ProductVariantResponse toResponse(ProductVariant variant) {
         Product product = variant.getProduct();
+        int quantity = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode())
+                .map(com.salemanagement.entity.Inventory::getQuantity).orElse(0);
         return ProductVariantResponse.of(
                 variant.getCode(),
                 product == null ? null : product.getCode(),
@@ -57,18 +60,17 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 variant.getRam(),
                 variant.getStorage(),
                 variant.getPrice(),
-                variant.getStockQuantity(),
+                quantity,
                 variant.getCreatedAt());
     }
 
     private void apply(ProductVariant variant, String name, String color, String ram,
-                       String storage, BigDecimal price, Integer stockQuantity) {
+                       String storage, BigDecimal price) {
         variant.setName(name == null || name.isBlank() ? null : name.trim());
         variant.setColor(color == null || color.isBlank() ? null : color.trim());
         variant.setRam(ram == null || ram.isBlank() ? null : ram.trim());
         variant.setStorage(storage == null || storage.isBlank() ? null : storage.trim());
         variant.setPrice(price);
-        variant.setStockQuantity(stockQuantity == null ? 0 : stockQuantity);
     }
 
     @Override
@@ -111,7 +113,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         variant.setCode(code);
         variant.setProduct(product);
         apply(variant, request.getName(), request.getColor(), request.getRam(),
-                request.getStorage(), request.getPrice(), request.getStockQuantity());
+                request.getStorage(), request.getPrice());
         variant.setImageUrl(fileStorageService.storeVariantImage(image));
         return toResponse(variantRepository.save(variant));
     }
@@ -124,7 +126,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                         "Không tìm thấy biến thể có mã: " + code, HttpStatus.NOT_FOUND));
         variant.setProduct(resolveProduct(request.getProductCode()));
         apply(variant, request.getName(), request.getColor(), request.getRam(),
-                request.getStorage(), request.getPrice(), request.getStockQuantity());
+                request.getStorage(), request.getPrice());
         // Giữ ảnh cũ nếu không upload mới — đúng behavior PHP bienthe_sua.
         if (image != null && !image.isEmpty()) {
             String oldImage = variant.getImageUrl();

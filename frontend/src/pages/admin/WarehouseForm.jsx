@@ -40,13 +40,8 @@ export default function WarehouseForm({ warehouse, onClose, onSuccess, notify })
 
     setSubmitting(true);
     try {
-      if (warehouse?.id) {
-        await warehouseService.update(warehouse.id, form);
-        notify?.('success', 'Cập nhật kho hàng thành công.');
-      } else {
-        await warehouseService.create(form);
-        notify?.('success', 'Thêm mới kho hàng thành công.');
-      }
+      await warehouseService.updateCentralWarehouse(form);
+      notify?.('success', 'Cập nhật thông tin kho tổng thành công.');
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -71,7 +66,7 @@ export default function WarehouseForm({ warehouse, onClose, onSuccess, notify })
         style={{ width: 'min(500px, 100%)' }}
       >
         <div className="ad-dialog-heading">
-          <h2>{warehouse ? 'Cập nhật kho hàng' : 'Thêm mới kho hàng'}</h2>
+          <h2>Cập nhật thông tin kho tổng</h2>
           <button
             className="ad-icon-button"
             type="button"
@@ -143,7 +138,7 @@ export default function WarehouseForm({ warehouse, onClose, onSuccess, notify })
             disabled={submitting}
           >
             <FontAwesomeIcon icon={faFloppyDisk} />{' '}
-            {submitting ? 'Đang lưu...' : warehouse ? 'Lưu thay đổi' : 'Thêm kho'}
+            {submitting ? 'Đang lưu...' : 'Lưu thay đổi'}
           </button>
         </div>
       </form>

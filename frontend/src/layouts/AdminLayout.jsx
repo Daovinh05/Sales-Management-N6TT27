@@ -7,7 +7,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../store/auth.jsx';
 import AppToast from '../components/common/AppToast.jsx';
-import WarehouseList from '../pages/admin/WarehouseList.jsx';
+import WarehouseDashboard from '../pages/admin/WarehouseDashboard.jsx';
 import BrandManagement from '../pages/admin/BrandManagement.jsx';
 import CategoryManagement from '../pages/admin/CategoryManagement.jsx';
 import PromotionManagement from '../pages/admin/PromotionManagement.jsx';
@@ -99,7 +99,7 @@ export default function AdminLayout({ notify, toasts = [] }) {
           </div>
         </header>
         <div className="ad-content">
-          {activePage === 'Quản lý kho hàng' ? <WarehouseList notify={notify} />
+          {activePage === 'Quản lý kho hàng' ? <WarehouseDashboard notify={notify} />
             : activePage === 'Quản lý danh mục' ? <CategoryManagement />
             : activePage === 'Quản lý thương hiệu' ? <BrandManagement />
             : activePage === 'Quản lý khuyến mãi' ? <PromotionManagement />

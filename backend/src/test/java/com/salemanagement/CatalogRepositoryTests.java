@@ -64,7 +64,6 @@ class CatalogRepositoryTests {
         variant.setRam("8GB");
         variant.setStorage("256GB");
         variant.setPrice(new BigDecimal("34990000"));
-        variant.setStockQuantity(10);
         variantRepository.save(variant);
 
         assertThat(productRepository.search("sp01", "").size()).isEqualTo(1);

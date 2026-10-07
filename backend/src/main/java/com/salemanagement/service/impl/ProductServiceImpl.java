@@ -36,6 +36,7 @@ public class ProductServiceImpl implements ProductService {
     private final BrandRepository brandRepository;
     private final SupplierRepository supplierRepository;
     private final CartItemRepository cartItemRepository;
+    private final com.salemanagement.repository.InventoryRepository inventoryRepository;
 
     private static String normalizeCode(String code) {
         return code == null ? null : code.trim().toUpperCase();
@@ -76,6 +77,8 @@ public class ProductServiceImpl implements ProductService {
         Brand brand = product.getBrand();
         Supplier supplier = product.getSupplier();
         ProductVariant firstVariant = variantRepository.findFirstByProductOrderByCodeAsc(product).orElse(null);
+        int quantity = firstVariant == null ? 0 : inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, firstVariant.getCode())
+                .map(com.salemanagement.entity.Inventory::getQuantity).orElse(0);
         return ProductResponse.of(
                 product.getCode(),
                 product.getName(),
@@ -88,7 +91,7 @@ public class ProductServiceImpl implements ProductService {
                 firstVariant == null ? null : firstVariant.getName(),
                 firstVariant == null ? null : firstVariant.getImageUrl(),
                 firstVariant == null ? null : firstVariant.getPrice(),
-                firstVariant == null ? null : firstVariant.getStockQuantity(),
+                quantity,
                 product.getCreatedAt());
     }
 
