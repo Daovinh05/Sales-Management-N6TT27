@@ -10,6 +10,7 @@ import com.salemanagement.entity.Role;
 import com.salemanagement.enums.ERole;
 import com.salemanagement.entity.Supplier;
 import com.salemanagement.entity.User;
+import com.salemanagement.entity.Warehouse;
 import com.salemanagement.repository.BrandRepository;
 import com.salemanagement.repository.CategoryRepository;
 import com.salemanagement.repository.OrderRepository;
@@ -18,6 +19,7 @@ import com.salemanagement.repository.ProductVariantRepository;
 import com.salemanagement.repository.RoleRepository;
 import com.salemanagement.repository.SupplierRepository;
 import com.salemanagement.repository.UserRepository;
+import com.salemanagement.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -45,6 +47,7 @@ public class DataSeeder {
             roleRepository.findByName(ERole.ROLE_WAREHOUSE_STAFF)
                     .orElseGet(() -> roleRepository.save(Role.builder()
                             .name(ERole.ROLE_WAREHOUSE_STAFF).description("Nhân viên kho").build()));
+            Role warehouseStaffRole = roleRepository.findByName(ERole.ROLE_WAREHOUSE_STAFF).orElseThrow();
 
             if (!userRepository.existsByUsername("admin")) {
                 userRepository.save(User.builder()
@@ -68,15 +71,30 @@ public class DataSeeder {
                         .build());
             }
 
-            if (!userRepository.existsByUsername("warehouse")) {
+            // Nhân viên quản lý kho mẫu
+            if (!userRepository.existsByUsername("kho1")) {
                 userRepository.save(User.builder()
-                        .username("warehouse")
+                        .username("kho1")
                         .password(passwordEncoder.encode("123456"))
-                        .fullName("Nhân viên kho mẫu")
-                        .email("warehouse@shop.com")
+                        .fullName("Nhân viên Kho 1")
+                        .email("kho1@shop.com")
+                        .phone("0901111111")
+                        .address("Kho trung tâm - Hà Nội")
                         .status("ACTIVE")
-                        .roles(Set.of(roleRepository.findByName(ERole.ROLE_WAREHOUSE_STAFF)
-                                .orElseThrow(() -> new IllegalStateException("Role WAREHOUSE_STAFF not found"))))
+                        .roles(Set.of(warehouseStaffRole))
+                        .build());
+            }
+
+            if (!userRepository.existsByUsername("kho2")) {
+                userRepository.save(User.builder()
+                        .username("kho2")
+                        .password(passwordEncoder.encode("123456"))
+                        .fullName("Nhân viên Kho 2")
+                        .email("kho2@shop.com")
+                        .phone("0902222222")
+                        .address("Kho trung tâm - Hà Nội")
+                        .status("ACTIVE")
+                        .roles(Set.of(warehouseStaffRole))
                         .build());
             }
         };
@@ -216,6 +234,22 @@ public class DataSeeder {
 
         seedVariant(variantRepository, product, variantCode, variantName, color,
                 ram, storage, price, stock, imageSeed);
+    }
+
+    @Bean
+    CommandLineRunner seedWarehouse(WarehouseRepository warehouseRepository) {
+        return args -> {
+            // Code nghiệp vụ đang cứng warehouse id = 1 (WarehouseStaffServiceImpl, WarehouseAdminServiceImpl).
+            // Nếu bảng warehouse trống thì mọi API nhập kho đều 404 "Không tìm thấy kho".
+            if (warehouseRepository.count() == 0) {
+                warehouseRepository.save(Warehouse.builder()
+                        .name("Kho trung tâm")
+                        .address("Hà Nội")
+                        .phone("0900000000")
+                        .status("ACTIVE")
+                        .build());
+            }
+        };
     }
 
     @Bean
