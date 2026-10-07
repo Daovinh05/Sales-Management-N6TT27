@@ -34,8 +34,10 @@ public class OrderController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<OrderResponse> list(
             @RequestParam(required = false, defaultValue = "") String code,
-            @RequestParam(required = false, defaultValue = "") String customer) {
-        return orderService.list(code, customer);
+            @RequestParam(required = false, defaultValue = "") String customer,
+            @RequestParam(required = false, defaultValue = "") String status,
+            @RequestParam(required = false, defaultValue = "") String payment) {
+        return orderService.list(code, customer, status, payment);
     }
 
     @GetMapping("/mine")

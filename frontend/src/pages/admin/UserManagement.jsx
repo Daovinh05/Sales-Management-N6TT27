@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload, faFileExcel, faMagnifyingGlass, faPen, faPlus, faTrash, faUpload, faUsers, faXmark } from '@fortawesome/free-solid-svg-icons';
 import api from '../../services/api.js';
+import Pagination from '../../components/admin/Pagination.jsx';
+import EmptyState from '../../components/admin/EmptyState.jsx';
 import readXlsxFile from 'read-excel-file/browser';
 import { useAuth } from '../../store/auth.jsx';
 
@@ -33,6 +35,8 @@ export default function UserManagement() {
   const [idQuery, setIdQuery] = useState('');
   const [nameQuery, setNameQuery] = useState('');
   const [filters, setFilters] = useState({ id: '', name: '' });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [editingUser, setEditingUser] = useState(null);
   const [addingUser, setAddingUser] = useState(false);
   const [role, setRole] = useState('ROLE_CUSTOMER');
@@ -72,6 +76,10 @@ export default function UserManagement() {
     return users.filter((user) => String(user.id).includes(filters.id)
       && `${user.username} ${user.fullName || ''}`.toLocaleLowerCase('vi').includes(name));
   }, [users, filters]);
+
+  const userPageCount = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const userSafePage = Math.min(Math.max(1, page), userPageCount);
+  const pageUsers = filteredUsers.slice((userSafePage - 1) * pageSize, userSafePage * pageSize);
 
   const openCreate = () => {
     setForm({ username: '', password: '', fullName: '', email: '', phone: '', role: 'ROLE_CUSTOMER' });
@@ -224,6 +232,7 @@ export default function UserManagement() {
 
         <form className="ad-user-filter" onSubmit={(event) => {
           event.preventDefault();
+          setPage(1);
           setFilters({ id: idQuery.trim(), name: nameQuery.trim() });
         }}>
           <label>MÃ USER
@@ -235,7 +244,7 @@ export default function UserManagement() {
           <div className="ad-filter-actions">
             <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
             <button className="ad-button ad-button-quiet" type="button" onClick={() => {
-              setIdQuery(''); setNameQuery(''); setFilters({ id: '', name: '' });
+              setIdQuery(''); setNameQuery(''); setFilters({ id: '', name: '' }); setPage(1);
             }}>Làm mới</button>
           </div>
         </form>
@@ -251,10 +260,10 @@ export default function UserManagement() {
             <thead><tr><th>STT</th><th>AVATAR</th><th>MÃ USER</th><th>HỌ TÊN</th><th>ACCOUNT</th><th>EMAIL</th><th>QUYỀN</th><th>NGÀY TẠO</th><th>THAO TÁC</th></tr></thead>
             <tbody>
               {loading ? <tr><td colSpan="9" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
-                : filteredUsers.length ? filteredUsers.map((user, index) => {
+                : pageUsers.length ? pageUsers.map((user, index) => {
                   const isAdmin = user.roles.includes('ROLE_ADMIN');
                   return <tr key={user.id}>
-                    <td className="ad-brand-index">{index + 1}</td>
+                    <td className="ad-brand-index">{(userSafePage - 1) * pageSize + index + 1}</td>
                     <td><img className="ad-user-avatar" src={avatarFor(user)} alt="" onError={(event) => {
                       event.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username)}&background=e8eef9&color=334155&size=64`;
                     }} /></td>
@@ -270,7 +279,21 @@ export default function UserManagement() {
                 }) : <tr><td colSpan="9" className="ad-table-empty">Không tìm thấy tài khoản phù hợp.</td></tr>}
             </tbody>
           </table>
+          {!loading && !filteredUsers.length && (
+            <EmptyState
+              title="Chưa có tài khoản nào"
+              hint="Bấm Thêm mới để tạo tài khoản đầu tiên"
+              actionLabel="Thêm mới"
+              onAction={openCreate}
+            />
+          )}
         </div>
+        <Pagination
+          page={userSafePage} pageSize={pageSize} total={filteredUsers.length}
+          onPage={setPage}
+          onPageSize={(size) => { setPageSize(size); setPage(1); }}
+          onRefresh={loadUsers}
+        />
       </section>
 
       {(editingUser || addingUser) && <div className="ad-dialog-backdrop" onMouseDown={(event) => {

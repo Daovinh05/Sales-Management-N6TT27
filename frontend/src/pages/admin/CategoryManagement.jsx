@@ -6,6 +6,8 @@ import {
 import readXlsxFile from 'read-excel-file/browser';
 import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
+import Pagination from '../../components/admin/Pagination.jsx';
+import EmptyState from '../../components/admin/EmptyState.jsx';
 
 const formatDate = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value))
@@ -18,6 +20,8 @@ export default function CategoryManagement() {
   const [categories, setCategories] = useState([]);
   const [queries, setQueries] = useState({ code: '', name: '' });
   const [filters, setFilters] = useState({ code: '', name: '' });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState({ code: '', name: '' });
   const [loading, setLoading] = useState(true);
@@ -45,6 +49,10 @@ export default function CategoryManagement() {
     category.code.toLocaleLowerCase('vi').includes(filters.code.toLocaleLowerCase('vi'))
     && category.name.toLocaleLowerCase('vi').includes(filters.name.toLocaleLowerCase('vi'))
   ), [categories, filters]);
+
+  const categoryPageCount = Math.max(1, Math.ceil(filteredCategories.length / pageSize));
+  const categorySafePage = Math.min(Math.max(1, page), categoryPageCount);
+  const pageCategories = filteredCategories.slice((categorySafePage - 1) * pageSize, categorySafePage * pageSize);
 
   const openCreate = () => {
     setForm({ code: '', name: '' });
@@ -164,6 +172,7 @@ export default function CategoryManagement() {
 
         <form className="ad-category-filter" onSubmit={(event) => {
           event.preventDefault();
+          setPage(1);
           setFilters({ code: queries.code.trim(), name: queries.name.trim() });
         }}>
           <label>MÃ DANH MỤC
@@ -177,6 +186,7 @@ export default function CategoryManagement() {
             <button className="ad-button ad-button-quiet" type="button" onClick={() => {
               setQueries({ code: '', name: '' });
               setFilters({ code: '', name: '' });
+              setPage(1);
             }}>Làm mới</button>
             <button className="ad-button ad-button-pink" type="button" onClick={exportExcel} disabled={!filteredCategories.length}>
               <FontAwesomeIcon icon={faDownload} /> Xuất Excel
@@ -195,9 +205,9 @@ export default function CategoryManagement() {
             <thead><tr><th>STT</th><th>MÃ DANH MỤC</th><th>TÊN DANH MỤC</th><th>NGÀY TẠO</th><th>THAO TÁC</th></tr></thead>
             <tbody>
               {loading ? <tr><td colSpan="5" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
-                : filteredCategories.length ? filteredCategories.map((category, index) => (
+                : pageCategories.length ? pageCategories.map((category, index) => (
                   <tr key={category.code}>
-                    <td className="ad-brand-index">{index + 1}</td>
+                    <td className="ad-brand-index">{(categorySafePage - 1) * pageSize + index + 1}</td>
                     <td className="ad-brand-code">{category.code}</td>
                     <td>{category.name}</td>
                     <td>{formatDate(category.createdAt)}</td>
@@ -209,7 +219,21 @@ export default function CategoryManagement() {
                 )) : <tr><td colSpan="5" className="ad-table-empty">Chưa có danh mục phù hợp.</td></tr>}
             </tbody>
           </table>
+          {!loading && !filteredCategories.length && (
+            <EmptyState
+              title="Chưa có danh mục nào"
+              hint="Bấm Thêm mới để tạo danh mục đầu tiên"
+              actionLabel="Thêm mới"
+              onAction={openCreate}
+            />
+          )}
         </div>
+        <Pagination
+          page={categorySafePage} pageSize={pageSize} total={filteredCategories.length}
+          onPage={setPage}
+          onPageSize={(size) => { setPageSize(size); setPage(1); }}
+          onRefresh={loadCategories}
+        />
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {
