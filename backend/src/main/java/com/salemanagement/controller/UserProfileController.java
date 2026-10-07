@@ -6,12 +6,14 @@ import com.salemanagement.security.CustomUserDetails;
 import com.salemanagement.service.UserProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/users/me")
@@ -25,10 +27,11 @@ public class UserProfileController {
         return userProfileService.getProfile(principal.getUsername());
     }
 
-    @PutMapping
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public UserProfileResponse updateProfile(
             @AuthenticationPrincipal CustomUserDetails principal,
-            @Valid @RequestBody UpdateProfileRequest request) {
-        return userProfileService.updateProfile(principal.getUsername(), request);
+            @Valid @RequestPart("data") UpdateProfileRequest request,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
+        return userProfileService.updateProfile(principal.getUsername(), request, avatar);
     }
 }

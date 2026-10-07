@@ -6,17 +6,20 @@ import com.salemanagement.entity.User;
 import com.salemanagement.exception.BusinessException;
 import com.salemanagement.exception.ResourceNotFoundException;
 import com.salemanagement.repository.UserRepository;
+import com.salemanagement.service.FileStorageService;
 import com.salemanagement.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
 public class UserProfileServiceImpl implements UserProfileService {
 
     private final UserRepository userRepository;
+    private final FileStorageService fileStorageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -26,7 +29,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     @Transactional
-    public UserProfileResponse updateProfile(String username, UpdateProfileRequest request) {
+    public UserProfileResponse updateProfile(String username, UpdateProfileRequest request, MultipartFile avatar) {
         User user = findUser(username);
         String email = normalize(request.getEmail());
 
@@ -38,11 +41,28 @@ public class UserProfileServiceImpl implements UserProfileService {
                     });
         }
 
+        String previousAvatar = user.getAvatarUrl();
+        String newAvatar = avatar == null || avatar.isEmpty() ? null : fileStorageService.storeUserAvatar(avatar);
         user.setFullName(normalize(request.getFullName()));
         user.setEmail(email);
         user.setPhone(normalize(request.getPhone()));
         user.setAddress(normalize(request.getAddress()));
-        return UserProfileResponse.from(userRepository.save(user));
+        if (newAvatar != null) {
+            user.setAvatarUrl(newAvatar);
+        } else if (request.isRemoveAvatar()) {
+            user.setAvatarUrl(null);
+        }
+
+        try {
+            User saved = userRepository.saveAndFlush(user);
+            if (newAvatar != null || request.isRemoveAvatar()) {
+                fileStorageService.deleteUserAvatar(previousAvatar);
+            }
+            return UserProfileResponse.from(saved);
+        } catch (RuntimeException exception) {
+            fileStorageService.deleteUserAvatar(newAvatar);
+            throw exception;
+        }
     }
 
     private User findUser(String username) {

@@ -11,6 +11,7 @@ public record UserProfileResponse(
         String email,
         String phone,
         String address,
+        String avatarUrl,
         LocalDateTime createdAt) {
     public static UserProfileResponse from(User user) {
         return new UserProfileResponse(
@@ -20,6 +21,7 @@ public record UserProfileResponse(
                 user.getEmail(),
                 user.getPhone(),
                 user.getAddress(),
+                user.getAvatarUrl(),
                 user.getCreatedAt());
     }
 }
