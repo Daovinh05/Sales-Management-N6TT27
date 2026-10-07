@@ -19,4 +19,10 @@ public interface OrderService {
     OrderResponse updateStatus(String code, String status);
 
     void delete(String code);
+
+    /** Khách xác nhận phương thức thanh toán cho đơn CHO_DUYET của mình. */
+    OrderResponse confirmPayment(String code, String paymentMethod, String username);
+
+    /** Khách hủy đơn CHO_DUYET của mình (nhả chỗ giữ kho). */
+    OrderResponse cancelByOwner(String code, String username);
 }

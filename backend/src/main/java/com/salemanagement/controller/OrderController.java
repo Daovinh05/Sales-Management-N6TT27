@@ -2,6 +2,7 @@ package com.salemanagement.controller;
 
 import com.salemanagement.dto.request.OrderRequest;
 import com.salemanagement.dto.request.OrderStatusRequest;
+import com.salemanagement.dto.request.PaymentConfirmRequest;
 import com.salemanagement.dto.response.OrderResponse;
 import com.salemanagement.security.CustomUserDetails;
 import com.salemanagement.service.OrderService;
@@ -69,6 +70,23 @@ public class OrderController {
             @PathVariable String code,
             @Valid @RequestBody OrderStatusRequest request) {
         return orderService.updateStatus(code, request.status());
+    }
+
+    @PostMapping("/{code}/payment")
+    public OrderResponse confirmPayment(
+            @PathVariable String code,
+            @Valid @RequestBody PaymentConfirmRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return orderService.confirmPayment(code, request.paymentMethod(),
+                principal == null ? null : principal.getUsername());
+    }
+
+    @PostMapping("/{code}/cancel")
+    public OrderResponse cancelByOwner(
+            @PathVariable String code,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return orderService.cancelByOwner(code,
+                principal == null ? null : principal.getUsername());
     }
 
     @DeleteMapping("/{code}")
