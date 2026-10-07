@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faBagShopping, faDownload, faEye, faListUl, faLock,
+  faBagShopping, faDownload, faEye, faListUl, faCheck,
   faMagnifyingGlass, faMoneyBillWave, faPen, faPhone, faEnvelope,
   faLocationDot, faReceipt, faTrash, faXmark
 } from '@fortawesome/free-solid-svg-icons';
@@ -20,7 +20,7 @@ const STATUS_COLORS = {
   CHO_DUYET: { background: '#fef3c7', color: '#92400e' },
   DA_XAC_NHAN: { background: '#dbeafe', color: '#1d4ed8' },
   DANG_GIAO: { background: '#e0f2fe', color: '#0369a1' },
-  HOAN_THANH: { background: '#dcfce7', color: '#15803d' },
+  HOAN_THANH: { background: '#f1f5f9', color: '#475569' },
   DA_HUY: { background: '#fee2e2', color: '#b91c1c' }
 };
 
@@ -29,6 +29,15 @@ const formatMoney = (value) => `${Number(value || 0).toLocaleString('vi-VN')} �
 const paymentLabel = (method) => method === 'COD'
   ? 'Tiền mặt (COD)'
   : method === 'VIETQR' ? 'VietQR' : 'Chưa chọn';
+
+// Trạng thái chỉ đi tiến, khớp NEXT_STATUSES ở OrderServiceImpl.
+const NEXT_STATUSES = {
+  CHO_DUYET: ['DA_XAC_NHAN', 'DA_HUY'],
+  DA_XAC_NHAN: ['DANG_GIAO', 'DA_HUY'],
+  DANG_GIAO: ['HOAN_THANH', 'DA_HUY'],
+  HOAN_THANH: [],
+  DA_HUY: []
+};
 
 const formatDateTime = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', {
@@ -294,20 +303,25 @@ export default function OrderManagement() {
                         font: 'inherit', fontSize: 13, fontWeight: 600, color: '#15803d', background: '#fff'
                       }}
                     >
-                      {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                      {[{ value: detail.status, label: STATUS_LABELS[detail.status] || detail.status },
+                        ...(NEXT_STATUSES[detail.status] || []).map((value) => ({ value, label: STATUS_LABELS[value] || value }))
+                      ].map(({ value, label }) => (
                         <option key={value} value={value}>{label}</option>
                       ))}
                     </select>
                     <button
-                      type="button" title="Áp dụng trạng thái" disabled={saving || pendingStatus === detail.status}
+                      type="button" title="Áp dụng trạng thái mới" disabled={saving || pendingStatus === detail.status}
                       onClick={() => updateStatus(detail.code, pendingStatus)}
                       style={{
                         width: 44, borderRadius: '0 6px 6px 0', background: '#2563eb',
                         color: '#fff', display: 'grid', placeItems: 'center'
                       }}
                     >
-                      <FontAwesomeIcon icon={faLock} />
+                      <FontAwesomeIcon icon={faCheck} />
                     </button>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>
+                    Chọn trạng thái mới rồi bấm nút ✓ để áp dụng. Đơn chỉ đi tiếp, không lùi lại được.
                   </div>
                 </div>
               </div>
