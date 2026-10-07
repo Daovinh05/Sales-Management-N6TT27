@@ -45,6 +45,7 @@ public class DataSeeder {
             roleRepository.findByName(ERole.ROLE_WAREHOUSE_STAFF)
                     .orElseGet(() -> roleRepository.save(Role.builder()
                             .name(ERole.ROLE_WAREHOUSE_STAFF).description("Nhân viên kho").build()));
+            Role warehouseStaffRole = roleRepository.findByName(ERole.ROLE_WAREHOUSE_STAFF).orElseThrow();
 
             if (!userRepository.existsByUsername("admin")) {
                 userRepository.save(User.builder()
@@ -65,6 +66,33 @@ public class DataSeeder {
                         .email("customer@shop.com")
                         .status("ACTIVE")
                         .roles(Set.of(customerRole))
+                        .build());
+            }
+
+            // Nhân viên quản lý kho mẫu
+            if (!userRepository.existsByUsername("kho1")) {
+                userRepository.save(User.builder()
+                        .username("kho1")
+                        .password(passwordEncoder.encode("123456"))
+                        .fullName("Nhân viên Kho 1")
+                        .email("kho1@shop.com")
+                        .phone("0901111111")
+                        .address("Kho trung tâm - Hà Nội")
+                        .status("ACTIVE")
+                        .roles(Set.of(warehouseStaffRole))
+                        .build());
+            }
+
+            if (!userRepository.existsByUsername("kho2")) {
+                userRepository.save(User.builder()
+                        .username("kho2")
+                        .password(passwordEncoder.encode("123456"))
+                        .fullName("Nhân viên Kho 2")
+                        .email("kho2@shop.com")
+                        .phone("0902222222")
+                        .address("Kho trung tâm - Hà Nội")
+                        .status("ACTIVE")
+                        .roles(Set.of(warehouseStaffRole))
                         .build());
             }
         };
