@@ -47,6 +47,8 @@ public class ProductVariant {
     @Column(precision = 15, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "stock_quantity", nullable = false)
+    private Integer stockQuantity = 0;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
