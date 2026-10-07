@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faBagShopping, faDownload, faEye, faListUl, faLock,
+  faBagShopping, faDownload, faEye, faListUl, faCheck,
   faMagnifyingGlass, faMoneyBillWave, faPen, faPhone, faEnvelope,
   faLocationDot, faReceipt, faTrash, faXmark
 } from '@fortawesome/free-solid-svg-icons';
 import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
+import Pagination from '../../components/admin/Pagination.jsx';
+import EmptyState from '../../components/admin/EmptyState.jsx';
 
 const STATUS_LABELS = {
   CHO_DUYET: 'Chờ xác nhận',
@@ -20,7 +22,7 @@ const STATUS_COLORS = {
   CHO_DUYET: { background: '#fef3c7', color: '#92400e' },
   DA_XAC_NHAN: { background: '#dbeafe', color: '#1d4ed8' },
   DANG_GIAO: { background: '#e0f2fe', color: '#0369a1' },
-  HOAN_THANH: { background: '#dcfce7', color: '#15803d' },
+  HOAN_THANH: { background: '#f1f5f9', color: '#475569' },
   DA_HUY: { background: '#fee2e2', color: '#b91c1c' }
 };
 
@@ -29,6 +31,15 @@ const formatMoney = (value) => `${Number(value || 0).toLocaleString('vi-VN')} �
 const paymentLabel = (method) => method === 'COD'
   ? 'Tiền mặt (COD)'
   : method === 'VIETQR' ? 'VietQR' : 'Chưa chọn';
+
+// Trạng thái chỉ đi tiến, khớp NEXT_STATUSES ở OrderServiceImpl.
+const NEXT_STATUSES = {
+  CHO_DUYET: ['DA_XAC_NHAN', 'DA_HUY'],
+  DA_XAC_NHAN: ['DANG_GIAO', 'DA_HUY'],
+  DANG_GIAO: ['HOAN_THANH', 'DA_HUY'],
+  HOAN_THANH: [],
+  DA_HUY: []
+};
 
 const formatDateTime = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', {
@@ -39,7 +50,7 @@ const formatDateTime = (value) => value
 
 export default function OrderManagement() {
   const [orders, setOrders] = useState([]);
-  const [queries, setQueries] = useState({ code: '', customer: '' });
+  const [queries, setQueries] = useState({ code: '', customer: '', status: '', payment: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -48,6 +59,12 @@ export default function OrderManagement() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [pendingStatus, setPendingStatus] = useState('');
   const [variantMap, setVariantMap] = useState({});
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const pageCount = Math.max(1, Math.ceil(orders.length / pageSize));
+  const safePage = Math.min(Math.max(1, page), pageCount);
+  const pageOrders = orders.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const loadOrders = async (params = queries) => {
     setLoading(true);
@@ -56,7 +73,9 @@ export default function OrderManagement() {
       const { data } = await api.get('/orders', {
         params: {
           code: params.code.trim(),
-          customer: params.customer.trim()
+          customer: params.customer.trim(),
+          status: params.status || '',
+          payment: params.payment || ''
         }
       });
       setOrders(data);
@@ -67,7 +86,7 @@ export default function OrderManagement() {
     }
   };
 
-  useEffect(() => { loadOrders({ code: '', customer: '' }); }, []);
+  useEffect(() => { loadOrders({ code: '', customer: '', status: '', payment: '' }); }, []);
 
   useEffect(() => {
     api.get('/variants').then(({ data }) => {
@@ -144,6 +163,7 @@ export default function OrderManagement() {
 
         <form className="ad-supplier-filter" onSubmit={(event) => {
           event.preventDefault();
+          setPage(1);
           loadOrders();
         }}>
           <label>MÃ ĐƠN HÀNG
@@ -155,8 +175,9 @@ export default function OrderManagement() {
           <div className="ad-filter-actions">
             <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
             <button className="ad-button ad-button-quiet" type="button" onClick={() => {
-              const cleared = { code: '', customer: '' };
+              const cleared = { code: '', customer: '', status: '', payment: '' };
               setQueries(cleared);
+              setPage(1);
               loadOrders(cleared);
             }}>Làm mới</button>
             <button className="ad-button ad-button-pink" type="button" onClick={exportExcel} disabled={!orders.length}>
@@ -169,7 +190,43 @@ export default function OrderManagement() {
       </section>
 
       <section className="ad-brand-panel ad-brand-list">
-        <h2><FontAwesomeIcon icon={faListUl} /> Danh sách hiện tại</h2>
+        <div className="ad-list-head">
+          <h2><FontAwesomeIcon icon={faListUl} /> Danh sách hiện tại</h2>
+          <div className="ad-list-filters">
+            <label className="ad-list-filter">Trạng thái đơn hàng:
+              <select
+                value={queries.status} aria-label="Lọc theo trạng thái"
+                onChange={(event) => {
+                  const next = { ...queries, status: event.target.value };
+                  setQueries(next);
+                  setPage(1);
+                  loadOrders(next);
+                }}
+              >
+                <option value="">Tất cả</option>
+                {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="ad-list-filter">Phương thức thanh toán:
+              <select
+                value={queries.payment} aria-label="Lọc theo phương thức"
+                onChange={(event) => {
+                  const next = { ...queries, payment: event.target.value };
+                  setQueries(next);
+                  setPage(1);
+                  loadOrders(next);
+                }}
+              >
+                <option value="">Tất cả</option>
+                <option value="COD">Tiền mặt (COD)</option>
+                <option value="VIETQR">VietQR</option>
+                <option value="EMPTY">Chưa chọn</option>
+              </select>
+            </label>
+          </div>
+        </div>
         <p className="ad-brand-count"><strong>Kết quả:</strong> <em>{loading ? 'Đang tải...' : `${orders.length} bản ghi`}</em></p>
         <div className="ad-table-wrap">
           <table className="ad-brand-table ad-order-table">
@@ -182,11 +239,11 @@ export default function OrderManagement() {
             </thead>
             <tbody>
               {loading ? <tr><td colSpan="11" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
-                : orders.length ? orders.map((order, index) => {
+                : pageOrders.length ? pageOrders.map((order, index) => {
                   const badge = STATUS_COLORS[order.status] || STATUS_COLORS.CHO_DUYET;
                   return (
                     <tr key={order.code}>
-                      <td className="ad-brand-index">{index + 1}</td>
+                      <td className="ad-brand-index">{(safePage - 1) * pageSize + index + 1}</td>
                       <td className="ad-brand-code">{order.code}</td>
                       <td>
                         <div style={{ fontWeight: 600 }}>{order.customerName}</div>
@@ -224,7 +281,19 @@ export default function OrderManagement() {
                 }) : <tr><td colSpan="11" className="ad-table-empty">Chưa có đơn hàng phù hợp.</td></tr>}
             </tbody>
           </table>
+          {!loading && !orders.length && (
+            <EmptyState
+              title="Chưa có đơn hàng nào"
+              hint="Đơn hàng mới của khách sẽ hiện ở đây"
+            />
+          )}
         </div>
+        <Pagination
+          page={safePage} pageSize={pageSize} total={orders.length}
+          onPage={setPage}
+          onPageSize={(size) => { setPageSize(size); setPage(1); }}
+          onRefresh={() => loadOrders()}
+        />
       </section>
 
       {detail && (
@@ -294,20 +363,25 @@ export default function OrderManagement() {
                         font: 'inherit', fontSize: 13, fontWeight: 600, color: '#15803d', background: '#fff'
                       }}
                     >
-                      {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                      {[{ value: detail.status, label: STATUS_LABELS[detail.status] || detail.status },
+                        ...(NEXT_STATUSES[detail.status] || []).map((value) => ({ value, label: STATUS_LABELS[value] || value }))
+                      ].map(({ value, label }) => (
                         <option key={value} value={value}>{label}</option>
                       ))}
                     </select>
                     <button
-                      type="button" title="Áp dụng trạng thái" disabled={saving || pendingStatus === detail.status}
+                      type="button" title="Áp dụng trạng thái mới" disabled={saving || pendingStatus === detail.status}
                       onClick={() => updateStatus(detail.code, pendingStatus)}
                       style={{
                         width: 44, borderRadius: '0 6px 6px 0', background: '#2563eb',
                         color: '#fff', display: 'grid', placeItems: 'center'
                       }}
                     >
-                      <FontAwesomeIcon icon={faLock} />
+                      <FontAwesomeIcon icon={faCheck} />
                     </button>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 6 }}>
+                    Chọn trạng thái mới rồi bấm nút ✓ để áp dụng. Đơn chỉ đi tiếp, không lùi lại được.
                   </div>
                 </div>
               </div>

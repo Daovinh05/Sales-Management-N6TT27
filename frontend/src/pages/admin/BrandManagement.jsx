@@ -5,6 +5,8 @@ import {
   faTrash, faUpload, faXmark
 } from '@fortawesome/free-solid-svg-icons';
 import api from '../../services/api.js';
+import Pagination from '../../components/admin/Pagination.jsx';
+import EmptyState from '../../components/admin/EmptyState.jsx';
 
 const formatDate = (value) => new Intl.DateTimeFormat('vi-VN', {
   dateStyle: 'short', timeStyle: 'medium'
@@ -27,6 +29,8 @@ export default function BrandManagement() {
   const [codeQuery, setCodeQuery] = useState('');
   const [nameQuery, setNameQuery] = useState('');
   const [filters, setFilters] = useState({ code: '', name: '' });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState({ code: '', name: '' });
   const [error, setError] = useState('');
@@ -53,6 +57,10 @@ export default function BrandManagement() {
     brand.code.toLowerCase().includes(filters.code.toLowerCase())
     && brand.name.toLowerCase().includes(filters.name.toLowerCase())
   ), [brands, filters]);
+
+  const brandPageCount = Math.max(1, Math.ceil(filteredBrands.length / pageSize));
+  const brandSafePage = Math.min(Math.max(1, page), brandPageCount);
+  const pageBrands = filteredBrands.slice((brandSafePage - 1) * pageSize, brandSafePage * pageSize);
 
   const openCreate = () => {
     setForm({ code: '', name: '' });
@@ -144,6 +152,7 @@ export default function BrandManagement() {
 
         <form className="ad-brand-filter" onSubmit={(event) => {
           event.preventDefault();
+          setPage(1);
           setFilters({ code: codeQuery.trim(), name: nameQuery.trim() });
         }}>
           <label>MÃ THƯƠNG HIỆU
@@ -155,7 +164,7 @@ export default function BrandManagement() {
           <div className="ad-filter-actions">
             <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
             <button className="ad-button ad-button-quiet" type="button" onClick={() => {
-              setCodeQuery(''); setNameQuery(''); setFilters({ code: '', name: '' });
+              setCodeQuery(''); setNameQuery(''); setFilters({ code: '', name: '' }); setPage(1);
             }}>Làm mới</button>
             <button className="ad-button ad-button-pink" type="button" onClick={() => downloadCsv(filteredBrands)}>
               <FontAwesomeIcon icon={faDownload} /> Xuất CSV
@@ -173,9 +182,9 @@ export default function BrandManagement() {
             <thead><tr><th>STT</th><th>MÃ THƯƠNG HIỆU</th><th>TÊN THƯƠNG HIỆU</th><th>NGÀY TẠO</th><th>THAO TÁC</th></tr></thead>
             <tbody>
               {loading ? <tr><td colSpan="5" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
-                : filteredBrands.length ? filteredBrands.map((brand, index) => (
+                : pageBrands.length ? pageBrands.map((brand, index) => (
                   <tr key={brand.code}>
-                    <td className="ad-brand-index">{index + 1}</td><td className="ad-brand-code">{brand.code}</td>
+                    <td className="ad-brand-index">{(brandSafePage - 1) * pageSize + index + 1}</td><td className="ad-brand-code">{brand.code}</td>
                     <td>{brand.name}</td><td>{formatDate(brand.createdAt)}</td>
                     <td className="ad-brand-row-actions">
                       <button className="ad-button ad-button-edit" title="Sửa thương hiệu" onClick={() => openEdit(brand)}><FontAwesomeIcon icon={faPen} /><span>Sửa</span></button>
@@ -185,7 +194,21 @@ export default function BrandManagement() {
                 )) : <tr><td colSpan="5" className="ad-table-empty">Chưa có thương hiệu phù hợp.</td></tr>}
             </tbody>
           </table>
+          {!loading && !filteredBrands.length && (
+            <EmptyState
+              title="Chưa có thương hiệu nào"
+              hint="Bấm Thêm mới để tạo thương hiệu đầu tiên"
+              actionLabel="Thêm mới"
+              onAction={openCreate}
+            />
+          )}
         </div>
+        <Pagination
+          page={brandSafePage} pageSize={pageSize} total={filteredBrands.length}
+          onPage={setPage}
+          onPageSize={(size) => { setPageSize(size); setPage(1); }}
+          onRefresh={loadBrands}
+        />
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {

@@ -6,6 +6,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import api from '../../services/api.js';
 import { resolveImage } from '../../services/shop.js';
+import Pagination from '../../components/admin/Pagination.jsx';
+import EmptyState from '../../components/admin/EmptyState.jsx';
 
 const formatPrice = (value) => {
   if (value === null || value === undefined || value === '') return '0';
@@ -18,6 +20,9 @@ export default function VariantManagement() {
   const [variants, setVariants] = useState([]);
   const [codeQuery, setCodeQuery] = useState('');
   const [nameQuery, setNameQuery] = useState('');
+  const [stockFilter, setStockFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [products, setProducts] = useState([]);
   const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -50,6 +55,19 @@ export default function VariantManagement() {
   };
 
   useEffect(() => { loadAll('', ''); }, []);
+
+  const visibleVariants = variants.filter((variant) => {
+    const stock = Number(variant.stockQuantity || 0);
+    if (stockFilter === 'OUT') return stock <= 0;
+    if (stockFilter === 'ONE') return stock === 1;
+    if (stockFilter === 'THREE') return stock <= 3;
+    if (stockFilter === 'FIVE') return stock <= 5;
+    return true;
+  });
+
+  const pageCount = Math.max(1, Math.ceil(visibleVariants.length / pageSize));
+  const safePage = Math.min(Math.max(1, page), pageCount);
+  const pageVariants = visibleVariants.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const openCreate = () => {
     setForm(emptyForm);
@@ -171,6 +189,7 @@ export default function VariantManagement() {
 
         <form className="ad-brand-filter" onSubmit={(event) => {
           event.preventDefault();
+          setPage(1);
           loadAll(codeQuery, nameQuery);
         }}>
           <label>MÃ BIẾN THỂ
@@ -182,7 +201,7 @@ export default function VariantManagement() {
           <div className="ad-filter-actions">
             <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
             <button className="ad-button ad-button-quiet" type="button" onClick={() => {
-              setCodeQuery(''); setNameQuery(''); loadAll('', '');
+              setCodeQuery(''); setNameQuery(''); setStockFilter(''); setPage(1); loadAll('', '');
             }}>Làm mới</button>
             <button className="ad-button ad-button-pink" type="button" onClick={exportExcel}>
               <FontAwesomeIcon icon={faDownload} /> Xuất Excel
@@ -193,16 +212,29 @@ export default function VariantManagement() {
       </section>
 
       <section className="ad-brand-panel ad-brand-list">
-        <h2><FontAwesomeIcon icon={faListUl} /> Danh sách hiện tại</h2>
-        <p className="ad-brand-count"><strong>Kết quả:</strong> {loading ? 'Đang tải...' : `${variants.length} bản ghi`}</p>
+        <div className="ad-list-head">
+          <h2><FontAwesomeIcon icon={faListUl} /> Danh sách hiện tại</h2>
+          <div className="ad-list-filters">
+            <label className="ad-list-filter">Tồn kho:
+              <select value={stockFilter} onChange={(event) => { setStockFilter(event.target.value); setPage(1); }}>
+                <option value="">Tất cả</option>
+                <option value="OUT">Hết hàng</option>
+                <option value="ONE">Còn 1</option>
+                <option value="THREE">Còn ≤ 3</option>
+                <option value="FIVE">Còn ≤ 5</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <p className="ad-brand-count"><strong>Kết quả:</strong> {loading ? 'Đang tải...' : `${visibleVariants.length} bản ghi`}</p>
         <div className="ad-table-wrap">
           <table className="ad-brand-table">
             <thead><tr><th>STT</th><th>MÃ BIẾN THỂ</th><th>TÊN SẢN PHẨM</th><th>TÊN BIẾN THỂ</th><th>HÌNH ẢNH</th><th>MÀU SẮC</th><th>RAM</th><th>DUNG LƯỢNG</th><th>GIÁ</th><th>SỐ LƯỢNG KHO</th><th>THAO TÁC</th></tr></thead>
             <tbody>
               {loading ? <tr><td colSpan="11" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
-                : variants.length ? variants.map((variant, index) => (
+                : pageVariants.length ? pageVariants.map((variant, index) => (
                   <tr key={variant.code}>
-                    <td className="ad-brand-index">{index + 1}</td>
+                    <td className="ad-brand-index">{(safePage - 1) * pageSize + index + 1}</td>
                     <td className="ad-brand-code">{variant.code}</td>
                     <td>{variant.productName || variant.productCode}</td>
                     <td>{variant.name || '—'}</td>
@@ -224,7 +256,21 @@ export default function VariantManagement() {
                 )) : <tr><td colSpan="11" className="ad-table-empty">Chưa có biến thể phù hợp.</td></tr>}
             </tbody>
           </table>
+          {!loading && !visibleVariants.length && (
+            <EmptyState
+              title="Chưa có biến thể nào"
+              hint="Bấm Thêm mới để tạo biến thể đầu tiên"
+              actionLabel="Thêm mới"
+              onAction={openCreate}
+            />
+          )}
         </div>
+        <Pagination
+          page={safePage} pageSize={pageSize} total={visibleVariants.length}
+          onPage={setPage}
+          onPageSize={(size) => { setPageSize(size); setPage(1); }}
+          onRefresh={() => loadAll()}
+        />
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {

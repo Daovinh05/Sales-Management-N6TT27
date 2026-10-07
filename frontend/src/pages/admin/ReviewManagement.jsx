@@ -5,6 +5,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
+import Pagination from '../../components/admin/Pagination.jsx';
+import EmptyState from '../../components/admin/EmptyState.jsx';
 
 const formatDate = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value))
@@ -14,6 +16,8 @@ export default function ReviewManagement() {
   const [reviews, setReviews] = useState([]);
   const [queries, setQueries] = useState({ code: '', customer: '', product: '' });
   const [filters, setFilters] = useState({ code: '', customer: '', product: '' });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState({ customerName: '', productName: '', rating: '5', content: '', reply: '' });
   const [loading, setLoading] = useState(true);
@@ -40,6 +44,10 @@ export default function ReviewManagement() {
     && review.customerName.toLocaleLowerCase('vi').includes(filters.customer.toLocaleLowerCase('vi'))
     && review.productName.toLocaleLowerCase('vi').includes(filters.product.toLocaleLowerCase('vi'))
   ), [reviews, filters]);
+
+  const reviewPageCount = Math.max(1, Math.ceil(filteredReviews.length / pageSize));
+  const reviewSafePage = Math.min(Math.max(1, page), reviewPageCount);
+  const pageReviews = filteredReviews.slice((reviewSafePage - 1) * pageSize, reviewSafePage * pageSize);
 
   const openCreate = () => {
     setForm({ customerName: '', productName: '', rating: '5', content: '', reply: '' });
@@ -113,6 +121,7 @@ export default function ReviewManagement() {
 
         <form className="ad-review-filter" onSubmit={(event) => {
           event.preventDefault();
+          setPage(1);
           setFilters(Object.fromEntries(Object.entries(queries).map(([key, value]) => [key, value.trim()])));
         }}>
           <label>MÃ ĐÁNH GIÁ
@@ -129,6 +138,7 @@ export default function ReviewManagement() {
             <button className="ad-button ad-button-quiet" type="button" onClick={() => {
               setQueries({ code: '', customer: '', product: '' });
               setFilters({ code: '', customer: '', product: '' });
+              setPage(1);
             }}>Làm mới</button>
             <button className="ad-button ad-button-pink" type="button" onClick={exportExcel} disabled={!filteredReviews.length}>
               <FontAwesomeIcon icon={faDownload} /> Xuất Excel
@@ -146,9 +156,9 @@ export default function ReviewManagement() {
             <thead><tr><th>STT</th><th>MÃ ĐÁNH GIÁ</th><th>TÊN KHÁCH HÀNG</th><th>TÊN SẢN PHẨM</th><th>SỐ SAO</th><th>NỘI DUNG</th><th>PHẢN HỒI</th><th>THAO TÁC</th></tr></thead>
             <tbody>
               {loading ? <tr><td colSpan="8" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
-                : filteredReviews.length ? filteredReviews.map((review, index) => (
+                : pageReviews.length ? pageReviews.map((review, index) => (
                   <tr key={review.id}>
-                    <td className="ad-brand-index">{index + 1}</td>
+                    <td className="ad-brand-index">{(reviewSafePage - 1) * pageSize + index + 1}</td>
                     <td className="ad-brand-code">{review.code}</td>
                     <td>{review.customerName}</td><td>{review.productName}</td>
                     <td><span className="ad-review-rating"><FontAwesomeIcon icon={faStar} /> {review.rating}</span></td>
@@ -161,7 +171,19 @@ export default function ReviewManagement() {
                 )) : <tr><td colSpan="8" className="ad-table-empty">Chưa có đánh giá phù hợp.</td></tr>}
             </tbody>
           </table>
+          {!loading && !filteredReviews.length && (
+            <EmptyState
+              title="Chưa có đánh giá nào"
+              hint="Đánh giá của khách sẽ hiện ở đây"
+            />
+          )}
         </div>
+        <Pagination
+          page={reviewSafePage} pageSize={pageSize} total={filteredReviews.length}
+          onPage={setPage}
+          onPageSize={(size) => { setPageSize(size); setPage(1); }}
+          onRefresh={loadReviews}
+        />
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {

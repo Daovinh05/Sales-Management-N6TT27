@@ -12,6 +12,7 @@ import com.salemanagement.repository.OrderRepository;
 import com.salemanagement.service.OrderService;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,15 @@ public class OrderServiceImpl implements OrderService {
 
     private static final Set<String> PAYMENT_METHODS = Set.of("COD", "VIETQR");
 
+    // Trạng thái chỉ đi tiến, không nhảy cóc hay đi lùi.
+    // Đơn kết thúc (HOAN_THANH / DA_HUY) không đổi nữa.
+    private static final Map<String, Set<String>> NEXT_STATUSES = Map.of(
+            Order.STATUS_PENDING, Set.of(Order.STATUS_CONFIRMED, Order.STATUS_CANCELLED),
+            Order.STATUS_CONFIRMED, Set.of(Order.STATUS_SHIPPING, Order.STATUS_CANCELLED),
+            Order.STATUS_SHIPPING, Set.of(Order.STATUS_COMPLETED, Order.STATUS_CANCELLED),
+            Order.STATUS_COMPLETED, Set.of(),
+            Order.STATUS_CANCELLED, Set.of());
+
     private final OrderRepository orderRepository;
     private final InventoryRepository inventoryRepository;
 
@@ -36,10 +46,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OrderResponse> list(String code, String customerName) {
+    public List<OrderResponse> list(String code, String customerName, String status, String paymentMethod) {
         return orderRepository
-                .findByCodeContainingIgnoreCaseAndCustomerNameContainingIgnoreCaseOrderByCreatedAtDesc(
-                        code == null ? "" : code.trim(), customerName == null ? "" : customerName.trim())
+                .filter(code == null ? "" : code.trim(),
+                        customerName == null ? "" : customerName.trim(),
+                        status == null ? "" : status.trim().toUpperCase(),
+                        paymentMethod == null ? "" : paymentMethod.trim().toUpperCase())
                 .stream()
                 .map(OrderResponse::summary)
                 .toList();
@@ -117,8 +129,9 @@ public class OrderServiceImpl implements OrderService {
         }
         // Đơn đã kết thúc (hoàn thành / đã hủy) thì không được đổi nữa,
         // tránh trừ kho 2 lần hoặc hồi kho sai.
-        if (Order.STATUS_COMPLETED.equals(oldStatus) || Order.STATUS_CANCELLED.equals(oldStatus)) {
-            throw new BusinessException("Đơn hàng đã kết thúc, không thể đổi trạng thái", HttpStatus.BAD_REQUEST);
+        if (!NEXT_STATUSES.getOrDefault(oldStatus, Set.of()).contains(status)) {
+            throw new BusinessException("Không thể chuyển đơn từ trạng thái hiện tại sang trạng thái này",
+                    HttpStatus.BAD_REQUEST);
         }
 
         if (Order.STATUS_CANCELLED.equals(status)) {

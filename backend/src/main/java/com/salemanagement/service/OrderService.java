@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface OrderService {
 
-    List<OrderResponse> list(String code, String customerName);
+    List<OrderResponse> list(String code, String customerName, String status, String paymentMethod);
 
     List<OrderResponse> myOrders(String username);
 

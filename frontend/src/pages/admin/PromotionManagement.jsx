@@ -6,6 +6,8 @@ import {
 import readXlsxFile from 'read-excel-file/browser';
 import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
+import Pagination from '../../components/admin/Pagination.jsx';
+import EmptyState from '../../components/admin/EmptyState.jsx';
 
 const formatDateTime = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value))
@@ -55,6 +57,8 @@ export default function PromotionManagement() {
   const [now, setNow] = useState(() => Date.now());
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const fileInput = useRef(null);
 
   const loadPromotions = async () => {
@@ -81,6 +85,10 @@ export default function PromotionManagement() {
     promotion.code.toLocaleLowerCase('vi').includes(filters.code.toLocaleLowerCase('vi'))
     && promotion.name.toLocaleLowerCase('vi').includes(filters.name.toLocaleLowerCase('vi'))
   ), [promotions, filters]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredPromotions.length / pageSize));
+  const safePage = Math.min(Math.max(1, page), pageCount);
+  const pagePromotions = filteredPromotions.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const openCreate = () => {
     setForm({ code: '', name: '', discountAmount: '', startsAt: '', endsAt: '' });
@@ -230,6 +238,7 @@ export default function PromotionManagement() {
 
         <form className="ad-promotion-filter" onSubmit={(event) => {
           event.preventDefault();
+          setPage(1);
           setFilters({ code: queries.code.trim(), name: queries.name.trim() });
         }}>
           <label>MÃ KHUYẾN MÃI
@@ -243,6 +252,7 @@ export default function PromotionManagement() {
             <button className="ad-button ad-button-quiet" type="button" onClick={() => {
               setQueries({ code: '', name: '' });
               setFilters({ code: '', name: '' });
+              setPage(1);
             }}>Làm mới</button>
             <button className="ad-button ad-button-pink" type="button" onClick={exportExcel} disabled={!filteredPromotions.length}>
               <FontAwesomeIcon icon={faDownload} /> Xuất Excel
@@ -261,11 +271,11 @@ export default function PromotionManagement() {
             <thead><tr><th>STT</th><th>MÃ KM</th><th>TÊN KHUYẾN MÃI</th><th>TIỀN KHUYẾN MÃI</th><th>NGÀY BẮT ĐẦU</th><th>NGÀY KẾT THÚC</th><th>TRẠNG THÁI KHUYẾN MÃI</th><th>THAO TÁC</th></tr></thead>
             <tbody>
               {loading ? <tr><td colSpan="8" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
-                : filteredPromotions.length ? filteredPromotions.map((promotion, index) => {
+                : pagePromotions.length ? pagePromotions.map((promotion, index) => {
                   const status = getStatus(promotion, now);
                   const statusClass = status === 'Còn khuyến mãi' ? 'active' : status === 'Hết khuyến mãi' ? 'expired' : 'upcoming';
                   return <tr key={promotion.code}>
-                    <td className="ad-brand-index">{index + 1}</td>
+                    <td className="ad-brand-index">{(safePage - 1) * pageSize + index + 1}</td>
                     <td className="ad-brand-code">{promotion.code}</td>
                     <td>{promotion.name}</td>
                     <td>{formatAmount(promotion.discountAmount)}</td>
@@ -280,7 +290,21 @@ export default function PromotionManagement() {
                 }) : <tr><td colSpan="8" className="ad-table-empty">Chưa có khuyến mãi phù hợp.</td></tr>}
             </tbody>
           </table>
+          {!loading && !filteredPromotions.length && (
+            <EmptyState
+              title="Chưa có khuyến mãi nào"
+              hint="Bấm Thêm mới khuyến mãi để tạo chương trình đầu tiên"
+              actionLabel="Thêm mới khuyến mãi"
+              onAction={openCreate}
+            />
+          )}
         </div>
+        <Pagination
+          page={safePage} pageSize={pageSize} total={filteredPromotions.length}
+          onPage={setPage}
+          onPageSize={(size) => { setPageSize(size); setPage(1); }}
+          onRefresh={loadPromotions}
+        />
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {
