@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faReceipt, faXmark } from '@fortawesome/free-solid-svg-icons';
 import api from '../../services/api.js';
+import PaymentModal from './PaymentModal.jsx';
 
 const STATUS_LABELS = {
   CHO_DUYET: 'Chờ xác nhận',
@@ -43,6 +44,21 @@ export default function OrderHistory({ notify, onBack }) {
   const [loading, setLoading] = useState(true);
   const [variantMap, setVariantMap] = useState({});
   const [detail, setDetail] = useState(null);
+  const [payingOrder, setPayingOrder] = useState(null);
+
+  const refreshOrder = (updated) => {
+    setOrders((list) => list.map((o) => (o.code === updated.code ? updated : o)));
+  };
+
+  const cancelOrder = async (code) => {
+    try {
+      const { data } = await api.post(`/orders/${encodeURIComponent(code)}/cancel`);
+      refreshOrder(data);
+      notify?.('success', `Đã hủy đơn hàng ${data.code}, tồn kho được hoàn lại.`);
+    } catch {
+      notify?.('error', 'Không thể hủy đơn. Vui lòng thử lại.');
+    }
+  };
 
   useEffect(() => {
     api.get('/orders/mine').then(({ data }) => {
@@ -128,9 +144,21 @@ export default function OrderHistory({ notify, onBack }) {
                         <div className="oh-item-right">
                           <div className="oh-item-sub">Số tiền thanh toán</div>
                           <div className="oh-pay">{formatMoney(o.paymentAmount)}</div>
-                          <button className="oh-detail-btn" type="button" onClick={() => setDetail(o)}>
-                            <FontAwesomeIcon icon={faEye} /> Xem chi tiết
-                          </button>
+                          <div className="oh-actions">
+                            {o.status === 'CHO_DUYET' && !o.paymentMethod && (
+                              <button className="oh-detail-btn oh-btn-green" type="button" onClick={() => setPayingOrder(o)}>
+                                Thanh toán
+                              </button>
+                            )}
+                            {(o.status === 'CHO_DUYET' || o.status === 'DA_XAC_NHAN') && (
+                              <button className="oh-detail-btn oh-btn-red" type="button" onClick={() => cancelOrder(o.code)}>
+                                Hủy đơn
+                              </button>
+                            )}
+                            <button className="oh-detail-btn oh-btn-blue" type="button" onClick={() => setDetail(o)}>
+                              <FontAwesomeIcon icon={faEye} /> Xem chi tiết
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -169,7 +197,7 @@ export default function OrderHistory({ notify, onBack }) {
                   <div className="oh-kv"><span>Người nhận:</span><strong>{detail.customerName}</strong></div>
                   <div className="oh-kv"><span>Số điện thoại:</span><strong>{detail.customerPhone || '—'}</strong></div>
                   <div className="oh-kv"><span>Địa chỉ:</span><strong>{detail.shippingAddress || '—'}</strong></div>
-                  <div className="oh-kv"><span>Phương thức:</span><strong>{detail.paymentMethod === 'COD' ? 'cod' : 'vnpay'}</strong></div>
+                  <div className="oh-kv"><span>Phương thức:</span><strong>{detail.paymentMethod === 'COD' ? 'Tiền mặt (COD)' : detail.paymentMethod === 'VIETQR' ? 'VietQR' : 'Chưa chọn'}</strong></div>
                 </div>
               </div>
               <h4>Chi tiết sản phẩm</h4>
@@ -198,6 +226,15 @@ export default function OrderHistory({ notify, onBack }) {
             </div>
           </div>
         </div>
+      )}
+      {payingOrder && (
+        <PaymentModal
+          order={payingOrder}
+          notify={notify}
+          onPaid={(paid) => { refreshOrder(paid); setPayingOrder(null); }}
+          onCancelled={(cancelled) => { refreshOrder(cancelled); setPayingOrder(null); }}
+          onClose={() => setPayingOrder(null)}
+        />
       )}
     </div>
   );
