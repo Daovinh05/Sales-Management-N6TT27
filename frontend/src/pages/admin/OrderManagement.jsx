@@ -26,6 +26,10 @@ const STATUS_COLORS = {
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString('vi-VN')} ₫`;
 
+const paymentLabel = (method) => method === 'COD'
+  ? 'Tiền mặt (COD)'
+  : method === 'VIETQR' ? 'VietQR' : 'Chưa chọn';
+
 const formatDateTime = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', {
     hour: '2-digit', minute: '2-digit', second: '2-digit',
@@ -172,12 +176,12 @@ export default function OrderManagement() {
             <thead>
               <tr>
                 <th>STT</th><th>MÃ ĐH</th><th>KHÁCH HÀNG</th><th>TỔNG TIỀN</th>
-                <th>KHUYẾN MÃI</th><th>THANH TOÁN</th><th>TRẠNG THÁI</th>
+                <th>KHUYẾN MÃI</th><th>THANH TOÁN</th><th>PHƯƠNG THỨC</th><th>TRẠNG THÁI</th>
                 <th>NGÀY TẠO</th><th>CHI TIẾT</th><th>THAO TÁC</th>
               </tr>
             </thead>
             <tbody>
-              {loading ? <tr><td colSpan="10" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
+              {loading ? <tr><td colSpan="11" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
                 : orders.length ? orders.map((order, index) => {
                   const badge = STATUS_COLORS[order.status] || STATUS_COLORS.CHO_DUYET;
                   return (
@@ -195,6 +199,7 @@ export default function OrderManagement() {
                       <td style={{ color: '#15803d', fontWeight: 700 }}>{formatMoney(order.totalAmount)}</td>
                       <td style={{ color: '#dc2626', fontWeight: 700 }}>-{formatMoney(order.discountAmount)}</td>
                       <td style={{ color: '#15803d', fontWeight: 700 }}>{formatMoney(order.paymentAmount)}</td>
+                      <td style={{ fontSize: 12 }}>{paymentLabel(order.paymentMethod)}</td>
                       <td>
                         <span style={{
                           display: 'inline-block', padding: '4px 10px', borderRadius: 6,
@@ -216,7 +221,7 @@ export default function OrderManagement() {
                       </td>
                     </tr>
                   );
-                }) : <tr><td colSpan="10" className="ad-table-empty">Chưa có đơn hàng phù hợp.</td></tr>}
+                }) : <tr><td colSpan="11" className="ad-table-empty">Chưa có đơn hàng phù hợp.</td></tr>}
             </tbody>
           </table>
         </div>
@@ -320,6 +325,7 @@ export default function OrderManagement() {
                     <FontAwesomeIcon icon={faMoneyBillWave} /> Chi tiết thanh toán
                   </div>
                   <div className="ad-order-pay-row"><span>Tạm tính:</span><span>{formatMoney(detail.totalAmount)}</span></div>
+                  <div className="ad-order-pay-row"><span>Phương thức:</span><span>{paymentLabel(detail.paymentMethod)}</span></div>
                   <div className="ad-order-pay-row"><span>Giảm giá:</span><span style={{ color: '#dc2626' }}>-{formatMoney(detail.discountAmount)}</span></div>
                   <div className="ad-order-pay-total">
                     <span>TỔNG THANH TOÁN:</span><span style={{ color: '#dc2626' }}>{formatMoney(detail.paymentAmount)}</span>
