@@ -17,10 +17,22 @@ const formatDate = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short' }).format(new Date(value))
   : '—';
 
+const getUserRole = (user) => {
+  if (user.roles.includes('ROLE_ADMIN')) return 'ROLE_ADMIN';
+  if (user.roles.includes('ROLE_WAREHOUSE_STAFF')) return 'ROLE_WAREHOUSE_STAFF';
+  return 'ROLE_CUSTOMER';
+};
+
+const getRoleLabel = (role) => ({
+  ROLE_ADMIN: 'Quản trị viên',
+  ROLE_WAREHOUSE_STAFF: 'Nhân viên kho',
+  ROLE_CUSTOMER: 'Người dùng'
+}[role] || 'Người dùng');
+
 function downloadCsv(users) {
   const rows = [['Mã tài khoản', 'Tài khoản', 'Họ và tên', 'Email', 'Số điện thoại', 'Vai trò', 'Trạng thái', 'Ngày tạo'],
     ...users.map((user) => [user.id, user.username, user.fullName, user.email, user.phone,
-      user.roles.includes('ROLE_ADMIN') ? 'Quản trị viên' : 'Người dùng', user.status, formatDate(user.createdAt)])];
+      getRoleLabel(getUserRole(user)), user.status, formatDate(user.createdAt)])];
   const csv = rows.map((row) => row.map((value) => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join('\r\n');
   const link = document.createElement('a');
   link.href = URL.createObjectURL(new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' }));
@@ -90,7 +102,7 @@ export default function UserManagement() {
 
   const openEdit = (user) => {
     setEditingUser(user);
-    setRole(user.roles.includes('ROLE_ADMIN') ? 'ROLE_ADMIN' : 'ROLE_CUSTOMER');
+    setRole(getUserRole(user));
     setEditForm({ username: user.username, email: user.email || '' });
     setAvatarFile(null);
     setAvatarPreview(avatarFor(user));
@@ -184,7 +196,11 @@ export default function UserManagement() {
         const password = column(row, ['password', 'matkhau']);
         if (!username || password.length < 6) { failed += 1; continue; }
         const rawRole = normalize(column(row, ['role', 'quyen', 'vaitro']));
-        const importedRole = rawRole.includes('admin') || rawRole.includes('quantri') ? 'ROLE_ADMIN' : 'ROLE_CUSTOMER';
+        const importedRole = rawRole.includes('admin') || rawRole.includes('quantri')
+          ? 'ROLE_ADMIN'
+          : rawRole.includes('warehouse') || rawRole.includes('staff') || rawRole.includes('nhanvienkho')
+            ? 'ROLE_WAREHOUSE_STAFF'
+            : 'ROLE_CUSTOMER';
         try {
           await api.post('/users', {
             username,
@@ -269,7 +285,7 @@ export default function UserManagement() {
                     }} /></td>
                     <td>{user.id}</td><td>{user.fullName || '—'}</td><td className="ad-user-name">{user.username}</td>
                     <td>{user.email || '—'}</td>
-                    <td><span className={`ad-role-badge ${isAdmin ? 'admin' : ''}`}>{isAdmin ? 'Quản trị viên' : 'Người dùng'}</span></td>
+                    <td><span className={`ad-role-badge ${isAdmin ? 'admin' : ''}`}>{getRoleLabel(getUserRole(user))}</span></td>
                     <td>{formatDate(user.createdAt)}</td>
                     <td className="ad-brand-row-actions">
                       <button className="ad-button ad-button-edit" type="button" title="Sửa vai trò" onClick={() => openEdit(user)}><FontAwesomeIcon icon={faPen} /><span>Sửa</span></button>
@@ -314,6 +330,7 @@ export default function UserManagement() {
               <label>Quyền<select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>
                 <option value="ROLE_CUSTOMER">Người dùng</option>
                 <option value="ROLE_ADMIN">Quản trị viên</option>
+                <option value="ROLE_WAREHOUSE_STAFF">Nhân viên kho</option>
               </select></label>
             </div>
           </> : <>
@@ -342,6 +359,7 @@ export default function UserManagement() {
             <label>Vai trò<select value={role} onChange={(event) => setRole(event.target.value)}>
               <option value="ROLE_CUSTOMER">Người dùng</option>
               <option value="ROLE_ADMIN">Quản trị viên</option>
+              <option value="ROLE_WAREHOUSE_STAFF">Nhân viên kho</option>
             </select></label>
           </>}
           {error && <p className="ad-brand-message" role="alert">{error}</p>}

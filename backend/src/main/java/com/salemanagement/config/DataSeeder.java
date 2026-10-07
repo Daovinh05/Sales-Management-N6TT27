@@ -6,6 +6,7 @@ import com.salemanagement.entity.Order;
 import com.salemanagement.entity.OrderDetail;
 import com.salemanagement.entity.Product;
 import com.salemanagement.entity.ProductVariant;
+import com.salemanagement.entity.Promotion;
 import com.salemanagement.entity.Role;
 import com.salemanagement.enums.ERole;
 import com.salemanagement.entity.Supplier;
@@ -18,6 +19,7 @@ import com.salemanagement.repository.CategoryRepository;
 import com.salemanagement.repository.OrderRepository;
 import com.salemanagement.repository.ProductRepository;
 import com.salemanagement.repository.ProductVariantRepository;
+import com.salemanagement.repository.PromotionRepository;
 import com.salemanagement.repository.RoleRepository;
 import com.salemanagement.repository.SupplierRepository;
 import com.salemanagement.repository.UserRepository;
@@ -158,7 +160,7 @@ public class DataSeeder {
                     variant.setRam("8GB");
                     variant.setStorage("256GB");
                     variant.setPrice(new BigDecimal("34990000"));
-                    /* variant.setStockQuantity(10); */
+                    variant.setStockQuantity(10);
                     variant.setImageUrl("https://picsum.photos/seed/bt01/800/800");
                     variantRepository.save(variant);
                 }
@@ -213,7 +215,7 @@ public class DataSeeder {
         variant.setRam(ram);
         variant.setStorage(storage);
         variant.setPrice(new BigDecimal(price));
-        /* variant.setStockQuantity(stock); */
+        variant.setStockQuantity(stock);
         variant.setImageUrl("https://picsum.photos/seed/" + imageSeed + "/800/800");
         variantRepository.save(variant);
     }
@@ -260,6 +262,23 @@ public class DataSeeder {
     }
 
     @Bean
+    CommandLineRunner seedPromotions(PromotionRepository promotionRepository) {
+        return args -> {
+            if (promotionRepository.existsById("KM01")) {
+                return;
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+            Promotion promotion = new Promotion();
+            promotion.setCode("KM01");
+            promotion.setName("Ưu đãi tân sinh viên UTT");
+            promotion.setDiscountAmount(new BigDecimal("20000"));
+            promotion.setStartsAt(now.minusDays(1));
+            promotion.setEndsAt(now.plusDays(30));
+            promotionRepository.save(promotion);
+        };
+    }
+
     @org.springframework.core.annotation.Order(3)
     CommandLineRunner seedInventory(WarehouseRepository warehouseRepository,
                                     ProductVariantRepository variantRepository,
