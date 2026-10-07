@@ -12,6 +12,7 @@ import com.salemanagement.entity.Supplier;
 import com.salemanagement.entity.User;
 import com.salemanagement.entity.Warehouse;
 import com.salemanagement.entity.Inventory;
+import com.salemanagement.entity.Promotion;
 import com.salemanagement.repository.BrandRepository;
 import com.salemanagement.repository.CategoryRepository;
 import com.salemanagement.repository.OrderRepository;
@@ -21,6 +22,7 @@ import com.salemanagement.repository.RoleRepository;
 import com.salemanagement.repository.SupplierRepository;
 import com.salemanagement.repository.UserRepository;
 import com.salemanagement.repository.InventoryRepository;
+import com.salemanagement.repository.PromotionRepository;
 import com.salemanagement.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -29,6 +31,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Configuration
@@ -292,6 +295,43 @@ public class DataSeeder {
                         .quantity(quantity)
                         .reservedQuantity(0)
                         .build()));
+    }
+
+    @Bean
+    CommandLineRunner seedPromotions(PromotionRepository promotionRepository) {
+        return args -> {
+            // Ngày tương đối so với hiện tại để đủ 3 trạng thái: đang, sắp diễn ra, hết hạn.
+            LocalDateTime now = LocalDateTime.now();
+            seedPromotion(promotionRepository, "KM01", "Chào Hè 2026", "500000",
+                    now.minusMonths(4), now.minusMonths(2));
+            seedPromotion(promotionRepository, "KM02", "Black Friday", "1000000",
+                    now.plusDays(20), now.plusDays(30));
+            seedPromotion(promotionRepository, "KM03", "Khách hàng mới", "200000",
+                    now.minusMonths(1), now.plusMonths(2));
+            seedPromotion(promotionRepository, "KM04", "Giảm giá Tết", "300000",
+                    now.minusMonths(8), now.minusMonths(7));
+            seedPromotion(promotionRepository, "KM05", "Sale cuối tuần", "200000",
+                    now.minusDays(2), now.plusDays(5));
+            seedPromotion(promotionRepository, "KM06", "Flash Sale", "500000",
+                    now.minusHours(1), now.plusHours(23));
+            seedPromotion(promotionRepository, "KM07", "Mừng khai trương", "123000",
+                    now.minusDays(10), now.plusMonths(1));
+        };
+    }
+
+    private void seedPromotion(PromotionRepository promotionRepository,
+                               String code, String name, String discount,
+                               LocalDateTime startsAt, LocalDateTime endsAt) {
+        if (promotionRepository.existsById(code)) {
+            return;
+        }
+        Promotion promotion = new Promotion();
+        promotion.setCode(code);
+        promotion.setName(name);
+        promotion.setDiscountAmount(new BigDecimal(discount));
+        promotion.setStartsAt(startsAt);
+        promotion.setEndsAt(endsAt);
+        promotionRepository.save(promotion);
     }
 
     @Bean
