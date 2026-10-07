@@ -61,7 +61,7 @@ public class StorefrontServiceImpl implements StorefrontService {
         Category category = product.getCategory();
         Brand brand = product.getBrand();
         int quantity = first == null ? 0 : inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, first.getCode())
-                .map(com.salemanagement.entity.Inventory::getQuantity).orElse(0);
+                .map(inv -> Math.max(0, inv.getQuantity() - inv.getReservedQuantity())).orElse(0);
         return StorefrontProductResponse.of(
                 product.getCode(),
                 product.getName(),
@@ -77,7 +77,7 @@ public class StorefrontServiceImpl implements StorefrontService {
     private ProductVariantResponse toVariant(ProductVariant variant) {
         Product product = variant.getProduct();
         int quantity = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode())
-                .map(com.salemanagement.entity.Inventory::getQuantity).orElse(0);
+                .map(inv -> Math.max(0, inv.getQuantity() - inv.getReservedQuantity())).orElse(0);
         return ProductVariantResponse.of(
                 variant.getCode(),
                 product == null ? null : product.getCode(),
