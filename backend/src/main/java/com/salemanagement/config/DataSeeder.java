@@ -10,6 +10,7 @@ import com.salemanagement.entity.Role;
 import com.salemanagement.enums.ERole;
 import com.salemanagement.entity.Supplier;
 import com.salemanagement.entity.User;
+import com.salemanagement.entity.Warehouse;
 import com.salemanagement.repository.BrandRepository;
 import com.salemanagement.repository.CategoryRepository;
 import com.salemanagement.repository.OrderRepository;
@@ -18,6 +19,7 @@ import com.salemanagement.repository.ProductVariantRepository;
 import com.salemanagement.repository.RoleRepository;
 import com.salemanagement.repository.SupplierRepository;
 import com.salemanagement.repository.UserRepository;
+import com.salemanagement.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -232,6 +234,22 @@ public class DataSeeder {
 
         seedVariant(variantRepository, product, variantCode, variantName, color,
                 ram, storage, price, stock, imageSeed);
+    }
+
+    @Bean
+    CommandLineRunner seedWarehouse(WarehouseRepository warehouseRepository) {
+        return args -> {
+            // Code nghiệp vụ đang cứng warehouse id = 1 (WarehouseStaffServiceImpl, WarehouseAdminServiceImpl).
+            // Nếu bảng warehouse trống thì mọi API nhập kho đều 404 "Không tìm thấy kho".
+            if (warehouseRepository.count() == 0) {
+                warehouseRepository.save(Warehouse.builder()
+                        .name("Kho trung tâm")
+                        .address("Hà Nội")
+                        .phone("0900000000")
+                        .status("ACTIVE")
+                        .build());
+            }
+        };
     }
 
     @Bean
