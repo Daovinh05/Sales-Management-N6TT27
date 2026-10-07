@@ -18,6 +18,27 @@ export function AuthProvider({ children, notify }) {
     return () => window.removeEventListener('auth:expired', handleExpiredSession);
   }, [notify]);
 
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    let active = true;
+    api.get('/users/me').then(({ data }) => {
+      if (!active) return;
+      setUser((current) => {
+        if (!current || current.id !== data.id) return current;
+        const updatedUser = {
+          ...current,
+          username: data.username,
+          fullName: data.fullName,
+          email: data.email,
+          avatarUrl: data.avatarUrl
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        return updatedUser;
+      });
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [user?.id]);
+
   const login = async (username, password) => {
     const { data } = await api.post('/auth/login', { username, password });
     localStorage.setItem('accessToken', data.token);
@@ -34,12 +55,21 @@ export function AuthProvider({ children, notify }) {
     notify?.('success', 'Đăng ký thành công, mời đăng nhập');
   };
 
-  const updateProfile = async (payload) => {
-    const { data } = await api.put('/users/me', payload);
+  const updateProfile = async (payload, avatarFile) => {
+    const formData = new FormData();
+    formData.append('data', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+    if (avatarFile) formData.append('avatar', avatarFile);
+    const { data } = await api.put('/users/me', formData);
     const updatedUser = { ...user, ...data };
     localStorage.setItem('user', JSON.stringify(updatedUser));
     setUser(updatedUser);
     return data;
+  };
+
+  const syncProfile = (profile) => {
+    const updatedUser = { ...user, ...profile };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
   };
 
   const logout = () => {
@@ -49,5 +79,5 @@ export function AuthProvider({ children, notify }) {
     setUser(null);
   };
 
-  return <AuthCtx.Provider value={{ user, login, register, updateProfile, logout }}>{children}</AuthCtx.Provider>;
+  return <AuthCtx.Provider value={{ user, login, register, updateProfile, syncProfile, logout }}>{children}</AuthCtx.Provider>;
 }

@@ -33,6 +33,11 @@
 .kh-profile-aside, .kh-profile-content { background: #fff; border: 1px solid #e7e9e8; border-radius: 8px; }
 .kh-profile-aside { padding: 28px 20px; text-align: center; }
 .kh-profile-avatar { display: grid; place-items: center; width: 72px; height: 72px; margin: 0 auto 14px; border-radius: 50%; background: #e5f3f0; color: #006a5b; font-size: 28px; }
+.kh-profile-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.kh-profile-avatar-edit { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.kh-profile-avatar-edit button { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #d7ddda; border-radius: 5px; padding: 9px 12px; background: #fff; color: #006a5b; font-size: 12px; font-weight: 700; cursor: pointer; }
+.kh-profile-avatar-edit button:disabled { opacity: .6; cursor: wait; }
+.kh-profile-avatar-edit .kh-profile-avatar-reset { color: #59625f; }
 .kh-profile-aside h2 { margin: 0; color: #202b29; font-size: 18px; }
 .kh-profile-aside p { margin: 5px 0 12px; color: #777; font-size: 13px; }
 .kh-profile-role { display: inline-block; padding: 5px 10px; border-radius: 4px; background: #eaf5f2; color: #006a5b; font-size: 12px; font-weight: 700; }

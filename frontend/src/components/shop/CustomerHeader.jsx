@@ -5,6 +5,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useState } from 'react';
 import { useAuth } from '../../store/auth.jsx';
+import api from '../../services/api.js';
+
+const apiOrigin = (api.defaults.baseURL || 'http://localhost:8080/api').replace(/\/api\/?$/, '');
 
 export function TopBanner() {
   return (
@@ -24,7 +27,9 @@ export function TopBanner() {
 export function CustomerHeader({ cartCount, onCart, onSearch, onAccount }) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
-  const avatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user?.username || 'K') + '&background=006a5b&color=fff';
+  const avatar = user?.avatarUrl
+    ? `${apiOrigin}/uploads/avatars/${encodeURIComponent(user.avatarUrl)}`
+    : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user?.username || 'K') + '&background=006a5b&color=fff';
   const toggleAccountMenu = () => setOpen((current) => !current);
   const openProfile = () => {
     setOpen(false);
