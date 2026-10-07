@@ -11,6 +11,7 @@ import com.salemanagement.enums.ERole;
 import com.salemanagement.entity.Supplier;
 import com.salemanagement.entity.User;
 import com.salemanagement.entity.Warehouse;
+import com.salemanagement.entity.Inventory;
 import com.salemanagement.repository.BrandRepository;
 import com.salemanagement.repository.CategoryRepository;
 import com.salemanagement.repository.OrderRepository;
@@ -19,6 +20,7 @@ import com.salemanagement.repository.ProductVariantRepository;
 import com.salemanagement.repository.RoleRepository;
 import com.salemanagement.repository.SupplierRepository;
 import com.salemanagement.repository.UserRepository;
+import com.salemanagement.repository.InventoryRepository;
 import com.salemanagement.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -101,6 +103,7 @@ public class DataSeeder {
     }
 
     @Bean
+    @org.springframework.core.annotation.Order(1)
     CommandLineRunner seedCatalog(CategoryRepository categoryRepository,
                                   BrandRepository brandRepository,
                                   SupplierRepository supplierRepository,
@@ -237,6 +240,7 @@ public class DataSeeder {
     }
 
     @Bean
+    @org.springframework.core.annotation.Order(2)
     CommandLineRunner seedWarehouse(WarehouseRepository warehouseRepository) {
         return args -> {
             // Code nghiệp vụ đang cứng warehouse id = 1 (WarehouseStaffServiceImpl, WarehouseAdminServiceImpl).
@@ -250,6 +254,44 @@ public class DataSeeder {
                         .build());
             }
         };
+    }
+
+    @Bean
+    @org.springframework.core.annotation.Order(3)
+    CommandLineRunner seedInventory(WarehouseRepository warehouseRepository,
+                                    ProductVariantRepository variantRepository,
+                                    InventoryRepository inventoryRepository) {
+        return args -> {
+            // Tồn mẫu khớp số lượng dự kiến của biến thể (BT03 hết hàng mẫu để test).
+            // Cần chạy sau seedCatalog (biến thể) và seedWarehouse (kho id = 1).
+            Warehouse warehouse = warehouseRepository.findById(1L).orElse(null);
+            if (warehouse == null) {
+                return;
+            }
+            seedInventoryRow(inventoryRepository, variantRepository, warehouse, "BT01", 10);
+            seedInventoryRow(inventoryRepository, variantRepository, warehouse, "BT06", 8);
+            seedInventoryRow(inventoryRepository, variantRepository, warehouse, "BT07", 19);
+            seedInventoryRow(inventoryRepository, variantRepository, warehouse, "BT02", 8);
+            seedInventoryRow(inventoryRepository, variantRepository, warehouse, "BT04", 6);
+            seedInventoryRow(inventoryRepository, variantRepository, warehouse, "BT05", 3);
+        };
+    }
+
+    private void seedInventoryRow(InventoryRepository inventoryRepository,
+                                 ProductVariantRepository variantRepository,
+                                 Warehouse warehouse,
+                                 String variantCode, int quantity) {
+        if (inventoryRepository
+                .findByWarehouseIdAndProductVariant_Code(warehouse.getId(), variantCode).isPresent()) {
+            return;
+        }
+        variantRepository.findById(variantCode).ifPresent(variant ->
+                inventoryRepository.save(Inventory.builder()
+                        .warehouse(warehouse)
+                        .productVariant(variant)
+                        .quantity(quantity)
+                        .reservedQuantity(0)
+                        .build()));
     }
 
     @Bean
