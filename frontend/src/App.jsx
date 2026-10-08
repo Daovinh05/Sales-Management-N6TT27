@@ -38,6 +38,7 @@ function Landing({ notify, toasts }) {
         onCart={() => { setModal('login'); notify('warning', 'Vui lòng đăng nhập để xem giỏ hàng'); }}
         onLogin={() => setModal('login')}
         onRegister={() => setModal('register')}
+        onHome={() => setQuery('')}
       />
       <Home
         query={query}
@@ -297,6 +298,7 @@ function Shop({ notify, toasts }) {
         onRemove={removeItem}
         onViewCart={openCartPage}
         onCheckout={checkoutCart}
+        onView={viewProduct}
       />
     </>
   );
