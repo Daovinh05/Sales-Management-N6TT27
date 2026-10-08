@@ -79,8 +79,7 @@ public class ProductServiceImpl implements ProductService {
         Brand brand = product.getBrand();
         Supplier supplier = product.getSupplier();
         ProductVariant firstVariant = variantRepository.findFirstByProductOrderByCodeAsc(product).orElse(null);
-        int quantity = firstVariant == null ? 0 : inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, firstVariant.getCode())
-                .map(inv -> Math.max(0, inv.getQuantity() - inv.getReservedQuantity())).orElse(0);
+        int quantity = inventoryRepository.sumAvailableQuantityByProduct(1L, product.getCode());
         return ProductResponse.of(
                 product.getCode(),
                 product.getName(),
@@ -151,11 +150,12 @@ public class ProductServiceImpl implements ProductService {
                         "Không tìm thấy sản phẩm có mã: " + code, HttpStatus.NOT_FOUND));
         // Port đúng PHP SanPham_delete: xóa biến thể liên quan trước rồi mới xóa sản phẩm.
         // Chặn trước khi xóa biến thể nào: còn tồn kho hoặc đã phát sinh nhập/đơn thì dừng cả product.
-        // Dọn dòng giỏ hàng đang giữ các biến thể để tránh kẹt khóa ngoại.
+        // Dọn dòng giỏ hàng và dòng tồn kho rỗng của các biến thể để tránh kẹt khóa ngoại.
         List<ProductVariant> variants = variantRepository.findByProduct(product);
         variants.forEach(this::ensureVariantDeletable);
         variants.forEach(variant -> {
             cartItemRepository.deleteByVariant(variant);
+            inventoryRepository.deleteByProductVariant(variant);
             variantRepository.delete(variant);
         });
         productRepository.delete(product);

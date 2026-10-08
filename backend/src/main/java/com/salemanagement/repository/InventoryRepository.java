@@ -22,4 +22,12 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     Optional<Inventory> findByWarehouseIdAndProductVariant_CodeForUpdate(
             @Param("warehouseId") Long warehouseId,
             @Param("variantCode") String variantCode);
+
+    void deleteByProductVariant(com.salemanagement.entity.ProductVariant productVariant);
+
+    @Query("select coalesce(sum(case when (i.quantity - i.reservedQuantity) > 0 then (i.quantity - i.reservedQuantity) else 0 end), 0) "
+            + "from Inventory i where i.warehouse.id = :warehouseId and i.productVariant.product.code = :productCode")
+    int sumAvailableQuantityByProduct(
+            @Param("warehouseId") Long warehouseId,
+            @Param("productCode") String productCode);
 }
