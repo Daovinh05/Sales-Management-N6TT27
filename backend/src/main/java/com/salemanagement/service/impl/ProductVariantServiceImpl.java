@@ -32,6 +32,8 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private final FileStorageService fileStorageService;
     private final CartItemRepository cartItemRepository;
     private final com.salemanagement.repository.InventoryRepository inventoryRepository;
+    private final com.salemanagement.repository.ImportDetailRepository importDetailRepository;
+    private final com.salemanagement.repository.OrderRepository orderRepository;
 
     private static String normalizeCode(String code) {
         return code == null ? null : code.trim().toUpperCase();
@@ -142,11 +144,35 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         ProductVariant variant = variantRepository.findById(normalizeCode(code))
                 .orElseThrow(() -> new BusinessException(
                         "Không tìm thấy biến thể có mã: " + code, HttpStatus.NOT_FOUND));
+        ensureDeletable(variant);
         // Port đúng PHP BienThe_delete: xóa file ảnh trước rồi xóa bản ghi.
         // Dọn dòng giỏ hàng đang giữ biến thể để tránh kẹt khóa ngoại.
         fileStorageService.deleteVariantImage(variant.getImageUrl());
         cartItemRepository.deleteByVariant(variant);
         variantRepository.delete(variant);
+    }
+
+    /** Chặn xóa khi còn tồn kho hoặc đã phát sinh phiếu nhập / đơn hàng (tránh kẹt FK, mất lịch sử). */
+    private void ensureDeletable(ProductVariant variant) {
+        boolean hasStock = inventoryRepository
+                .findByWarehouseIdAndProductVariant_Code(1L, variant.getCode())
+                .map(inv -> (inv.getQuantity() != null && inv.getQuantity() > 0)
+                        || (inv.getReservedQuantity() != null && inv.getReservedQuantity() > 0))
+                .orElse(false);
+        if (hasStock) {
+            throw new BusinessException(
+                    "Biến thể " + variant.getCode() + " còn tồn kho, không thể xóa", HttpStatus.CONFLICT);
+        }
+        if (importDetailRepository.existsByProductVariant_Code(variant.getCode())) {
+            throw new BusinessException(
+                    "Biến thể " + variant.getCode() + " đã phát sinh phiếu nhập, không thể xóa",
+                    HttpStatus.CONFLICT);
+        }
+        if (orderRepository.countByDetailsVariantCode(variant.getCode()) > 0) {
+            throw new BusinessException(
+                    "Biến thể " + variant.getCode() + " đã phát sinh đơn hàng, không thể xóa",
+                    HttpStatus.CONFLICT);
+        }
     }
 
     @Override

@@ -37,6 +37,8 @@ public class ProductServiceImpl implements ProductService {
     private final SupplierRepository supplierRepository;
     private final CartItemRepository cartItemRepository;
     private final com.salemanagement.repository.InventoryRepository inventoryRepository;
+    private final com.salemanagement.repository.ImportDetailRepository importDetailRepository;
+    private final com.salemanagement.repository.OrderRepository orderRepository;
 
     private static String normalizeCode(String code) {
         return code == null ? null : code.trim().toUpperCase();
@@ -148,13 +150,39 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new BusinessException(
                         "Không tìm thấy sản phẩm có mã: " + code, HttpStatus.NOT_FOUND));
         // Port đúng PHP SanPham_delete: xóa biến thể liên quan trước rồi mới xóa sản phẩm.
-        // (Khi có module đơn hàng sẽ bổ sung chặn 409 nếu biến thể đã phát sinh chi tiết đơn.)
+        // Chặn trước khi xóa biến thể nào: còn tồn kho hoặc đã phát sinh nhập/đơn thì dừng cả product.
         // Dọn dòng giỏ hàng đang giữ các biến thể để tránh kẹt khóa ngoại.
-        variantRepository.findByProduct(product).forEach(variant -> {
+        List<ProductVariant> variants = variantRepository.findByProduct(product);
+        variants.forEach(this::ensureVariantDeletable);
+        variants.forEach(variant -> {
             cartItemRepository.deleteByVariant(variant);
             variantRepository.delete(variant);
         });
         productRepository.delete(product);
+    }
+
+    /** Giống ProductVariantServiceImpl.ensureDeletable: chặn xóa khi còn tồn hoặc đã phát sinh giao dịch. */
+    private void ensureVariantDeletable(ProductVariant variant) {
+        boolean hasStock = inventoryRepository
+                .findByWarehouseIdAndProductVariant_Code(1L, variant.getCode())
+                .map(inv -> (inv.getQuantity() != null && inv.getQuantity() > 0)
+                        || (inv.getReservedQuantity() != null && inv.getReservedQuantity() > 0))
+                .orElse(false);
+        if (hasStock) {
+            throw new BusinessException(
+                    "Biến thể " + variant.getCode() + " còn tồn kho, không thể xóa sản phẩm",
+                    HttpStatus.CONFLICT);
+        }
+        if (importDetailRepository.existsByProductVariant_Code(variant.getCode())) {
+            throw new BusinessException(
+                    "Biến thể " + variant.getCode() + " đã phát sinh phiếu nhập, không thể xóa sản phẩm",
+                    HttpStatus.CONFLICT);
+        }
+        if (orderRepository.countByDetailsVariantCode(variant.getCode()) > 0) {
+            throw new BusinessException(
+                    "Biến thể " + variant.getCode() + " đã phát sinh đơn hàng, không thể xóa sản phẩm",
+                    HttpStatus.CONFLICT);
+        }
     }
 
     @Override

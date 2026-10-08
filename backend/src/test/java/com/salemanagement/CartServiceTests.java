@@ -28,6 +28,8 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.salemanagement.repository.InventoryRepository;
+import com.salemanagement.repository.ImportDetailRepository;
+import com.salemanagement.repository.OrderRepository;
 import com.salemanagement.repository.WarehouseRepository;
 import com.salemanagement.entity.Inventory;
 import com.salemanagement.entity.Warehouse;
@@ -57,6 +59,10 @@ class CartServiceTests {
     private SupplierRepository supplierRepository;
     @Autowired
     private InventoryRepository inventoryRepository;
+    @Autowired
+    private ImportDetailRepository importDetailRepository;
+    @Autowired
+    private OrderRepository orderRepository;
     @Autowired
     private WarehouseRepository warehouseRepository;
 
@@ -189,7 +195,18 @@ class CartServiceTests {
             }
         };
         ProductVariantServiceImpl variantService = new ProductVariantServiceImpl(
-                variantRepository, productRepository, files, cartItemRepository, inventoryRepository);
+                variantRepository, productRepository, files, cartItemRepository, inventoryRepository,
+                importDetailRepository, orderRepository);
+        // Biến thể còn tồn (setup quantity=5) thì chặn xóa; hạ tồn về 0 rồi mới xóa được.
+        assertThatThrownBy(() -> variantService.delete("BT01"))
+                .isInstanceOf(BusinessException.class)
+                .extracting(ex -> ((BusinessException) ex).getStatus())
+                .isEqualTo(HttpStatus.CONFLICT);
+        Inventory inv = inventoryRepository.findByWarehouseIdAndProductVariant_Code(
+                warehouseRepository.findAll().get(0).getId(), "BT01").orElseThrow();
+        inv.setQuantity(0);
+        inv.setReservedQuantity(0);
+        inventoryRepository.save(inv);
         variantService.delete("BT01");
         assertThat(cartService.getCart(user).getTotalItems()).isZero();
         assertThat(variantRepository.existsById("BT01")).isFalse();
@@ -200,7 +217,13 @@ class CartServiceTests {
         cartService.addItem(user, addRequest("BT01", 2));
         ProductServiceImpl productService = new ProductServiceImpl(
                 productRepository, variantRepository, categoryRepository,
-                brandRepository, supplierRepository, cartItemRepository, inventoryRepository);
+                brandRepository, supplierRepository, cartItemRepository, inventoryRepository,
+                importDetailRepository, orderRepository);
+        Inventory inv = inventoryRepository.findByWarehouseIdAndProductVariant_Code(
+                warehouseRepository.findAll().get(0).getId(), "BT01").orElseThrow();
+        inv.setQuantity(0);
+        inv.setReservedQuantity(0);
+        inventoryRepository.save(inv);
         productService.delete("SP01");
         assertThat(cartService.getCart(user).getTotalItems()).isZero();
         assertThat(productRepository.existsById("SP01")).isFalse();
