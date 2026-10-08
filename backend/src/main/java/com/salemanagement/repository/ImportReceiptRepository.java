@@ -18,6 +18,18 @@ public interface ImportReceiptRepository extends JpaRepository<ImportReceipt, Lo
            countQuery = "SELECT count(ir) FROM ImportReceipt ir")
     Page<ImportReceipt> findAllWithDetails(Pageable pageable);
 
+    @Query(value = "SELECT ir FROM ImportReceipt ir JOIN FETCH ir.createdBy JOIN FETCH ir.supplier " +
+           "WHERE (:createdBy is null or lower(ir.createdBy.fullName) like lower(concat('%', :createdBy, '%'))) " +
+           "AND (:status is null or ir.status = :status)",
+           countQuery = "SELECT count(ir) FROM ImportReceipt ir " +
+           "WHERE (:createdBy is null or lower(ir.createdBy.fullName) like lower(concat('%', :createdBy, '%'))) " +
+           "AND (:status is null or ir.status = :status)")
+    Page<ImportReceipt> findAllWithFilters(
+            @Param("createdBy") String createdBy,
+            @Param("status") com.salemanagement.enums.EImportStatus status,
+            Pageable pageable);
+
+
     @Query("SELECT ir FROM ImportReceipt ir JOIN FETCH ir.createdBy JOIN FETCH ir.supplier LEFT JOIN FETCH ir.details d LEFT JOIN FETCH d.productVariant WHERE ir.id = :id")
     Optional<ImportReceipt> findByIdWithFullDetails(@Param("id") Long id);
     @Query("SELECT ir FROM ImportReceipt ir JOIN FETCH ir.createdBy JOIN FETCH ir.supplier LEFT JOIN FETCH ir.details d LEFT JOIN FETCH d.productVariant WHERE ir.id = :id AND ir.createdBy.username = :username")
@@ -26,6 +38,18 @@ public interface ImportReceiptRepository extends JpaRepository<ImportReceipt, Lo
     @Query(value = "SELECT ir FROM ImportReceipt ir JOIN FETCH ir.supplier WHERE ir.createdBy.username = :username",
            countQuery = "SELECT count(ir) FROM ImportReceipt ir WHERE ir.createdBy.username = :username")
     Page<ImportReceipt> findByCreatedByUsernameWithDetails(@Param("username") String username, Pageable pageable);
+
+    @Query(value = "SELECT ir FROM ImportReceipt ir JOIN FETCH ir.supplier WHERE ir.createdBy.username = :username " +
+           "AND (:supplierName is null or lower(ir.supplier.name) like lower(concat('%', :supplierName, '%'))) " +
+           "AND (:status is null or ir.status = :status)",
+           countQuery = "SELECT count(ir) FROM ImportReceipt ir WHERE ir.createdBy.username = :username " +
+           "AND (:supplierName is null or lower(ir.supplier.name) like lower(concat('%', :supplierName, '%'))) " +
+           "AND (:status is null or ir.status = :status)")
+    Page<ImportReceipt> findByUsernameWithFilters(
+            @Param("username") String username,
+            @Param("supplierName") String supplierName,
+            @Param("status") com.salemanagement.enums.EImportStatus status,
+            Pageable pageable);
 
     long countByCreatedByUsername(String username);
     long countByCreatedByUsernameAndStatus(String username, com.salemanagement.enums.EImportStatus status);

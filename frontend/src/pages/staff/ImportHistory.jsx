@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileInvoice, faEye, faXmark, faUsers, faWarehouse } from '@fortawesome/free-solid-svg-icons';
+import { faFileInvoice, faEye, faXmark, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import warehouseStaffService from '../../services/warehouseStaffService.js';
+import Pagination from '../../components/admin/Pagination.jsx';
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -29,17 +30,26 @@ export default function ImportHistory({ notify }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  const [queries, setQueries] = useState({ supplierName: '', status: 'ALL' });
+  const [filters, setFilters] = useState({ supplierName: '', status: 'ALL' });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+
   const [selectedReceipt, setSelectedReceipt] = useState(null);
 
   useEffect(() => {
     loadHistory();
-  }, []);
+  }, [page, pageSize, filters]);
 
   const loadHistory = async () => {
     setLoading(true);
     try {
-      const data = await warehouseStaffService.getMyImports();
-      setHistory(Array.isArray(data) ? data : data.content || []);
+      const status = filters.status === 'ALL' ? '' : filters.status;
+      const data = await warehouseStaffService.getMyImports(page - 1, pageSize, filters.supplierName, status);
+      setHistory(data.content || []);
+      setTotal(data.totalElements || 0);
     } catch (err) {
       setError('Lỗi tải lịch sử nhập kho.');
     } finally {
@@ -61,8 +71,36 @@ export default function ImportHistory({ notify }) {
     <div className="ad-brand-page">
       <section className="ad-brand-panel ad-brand-list">
         <h2><FontAwesomeIcon icon={faFileInvoice} /> Lịch sử phiếu nhập của tôi</h2>
-        {error && <p className="ad-brand-message" role="alert">{error}</p>}
         
+        <form className="ad-supplier-filter" onSubmit={(e) => {
+          e.preventDefault();
+          setPage(1);
+          setFilters({ supplierName: queries.supplierName.trim(), status: queries.status });
+        }}>
+          <label>NHÀ CUNG CẤP
+            <input value={queries.supplierName} onChange={(e) => setQueries({ ...queries, supplierName: e.target.value })} placeholder="Nhập tên nhà cung cấp cần tìm..." />
+          </label>
+          <label>TRẠNG THÁI
+            <select value={queries.status} onChange={(e) => setQueries({ ...queries, status: e.target.value })}>
+              <option value="ALL">Tất cả</option>
+              <option value="PENDING">Chờ duyệt</option>
+              <option value="APPROVED">Đã duyệt</option>
+              <option value="REJECTED">Từ chối</option>
+            </select>
+          </label>
+          <div className="ad-filter-actions">
+            <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
+            <button className="ad-button ad-button-quiet" type="button" onClick={() => {
+              setQueries({ supplierName: '', status: 'ALL' });
+              setFilters({ supplierName: '', status: 'ALL' });
+              setPage(1);
+            }}>Làm mới</button>
+          </div>
+        </form>
+
+        {error && <p className="ad-brand-message" role="alert">{error}</p>}
+        <p className="ad-brand-count"><strong>Kết quả:</strong> {loading ? 'Đang tải...' : `${total} bản ghi`}</p>
+
         <div className="ad-table-wrap" style={{ marginTop: '15px' }}>
           <table className="ad-brand-table">
             <thead>
@@ -98,6 +136,13 @@ export default function ImportHistory({ notify }) {
             </tbody>
           </table>
         </div>
+        
+        <Pagination
+          page={page} pageSize={pageSize} total={total}
+          onPage={setPage}
+          onPageSize={(size) => { setPageSize(size); setPage(1); }}
+          onRefresh={loadHistory}
+        />
       </section>
 
       {selectedReceipt && (
@@ -128,8 +173,8 @@ export default function ImportHistory({ notify }) {
                 <table className="ad-brand-table">
                   <thead>
                     <tr>
-                      <th>MÃ SP</th>
-                      <th>TÊN SẢN PHẨM</th>
+                      <th>MÃ BT</th>
+                      <th>TÊN BIẾN THỂ</th>
                       <th style={{ textAlign: 'center' }}>SỐ LƯỢNG</th>
                       <th style={{ textAlign: 'right' }}>ĐƠN GIÁ</th>
                       <th style={{ textAlign: 'right' }}>THÀNH TIỀN</th>

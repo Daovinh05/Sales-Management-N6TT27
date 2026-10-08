@@ -103,9 +103,20 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ImportReceiptSummaryResponse> getMyImports(String username, int page, int size) {
-        Page<ImportReceipt> pageResult = importReceiptRepository.findByCreatedByUsernameWithDetails(
-                username, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+    public PageResponse<ImportReceiptSummaryResponse> getMyImports(String username, String supplierName, String status, int page, int size) {
+        com.salemanagement.enums.EImportStatus eStatus = null;
+        if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("ALL")) {
+            try {
+                eStatus = com.salemanagement.enums.EImportStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // ignore
+            }
+        }
+
+        String supplierNameFilter = (supplierName != null && !supplierName.trim().isEmpty()) ? supplierName : null;
+
+        Page<ImportReceipt> pageResult = importReceiptRepository.findByUsernameWithFilters(
+                username, supplierNameFilter, eStatus, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
 
         List<ImportReceiptSummaryResponse> content = pageResult.getContent().stream()
                 .map(receipt -> ImportReceiptSummaryResponse.builder()

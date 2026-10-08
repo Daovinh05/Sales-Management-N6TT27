@@ -27,15 +27,21 @@ public class WarehouseAdminController {
     }
 
     @GetMapping("/warehouses/staff")
-    public ResponseEntity<List<StaffResponse>> getWarehouseStaffs() {
-        return ResponseEntity.ok(warehouseAdminService.getWarehouseStaffs());
+    public ResponseEntity<PageResponse<StaffResponse>> getWarehouseStaffs(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String email,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(warehouseAdminService.getWarehouseStaffs(name, email, page, size));
     }
 
     @GetMapping("/imports")
     public ResponseEntity<PageResponse<ImportReceiptSummaryResponse>> getImportHistory(
+            @RequestParam(required = false) String createdBy,
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(warehouseAdminService.getImportHistory(page, size));
+        return ResponseEntity.ok(warehouseAdminService.getImportHistory(createdBy, status, page, size));
     }
 
     @GetMapping("/imports/{id}")

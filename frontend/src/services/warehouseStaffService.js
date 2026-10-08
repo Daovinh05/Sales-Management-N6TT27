@@ -1,8 +1,8 @@
 import api from './api.js';
 
 export const warehouseStaffService = {
-  getMyImports: async () => {
-    const res = await api.get('/staff/imports');
+  getMyImports: async (page = 0, size = 10, supplierName = '', status = '') => {
+    const res = await api.get(`/staff/imports?page=${page}&size=${size}&supplierName=${encodeURIComponent(supplierName)}&status=${encodeURIComponent(status)}`);
     return res.data;
   },
   

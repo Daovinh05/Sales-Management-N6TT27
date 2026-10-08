@@ -23,9 +23,11 @@ public class WarehouseStaffController {
     @GetMapping("/imports")
     public ResponseEntity<PageResponse<ImportReceiptSummaryResponse>> getMyImports(
             Authentication authentication,
+            @RequestParam(required = false) String supplierName,
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(warehouseStaffService.getMyImports(authentication.getName(), page, size));
+        return ResponseEntity.ok(warehouseStaffService.getMyImports(authentication.getName(), supplierName, status, page, size));
     }
 
     @PostMapping("/imports")

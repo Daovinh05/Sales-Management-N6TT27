@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWarehouse, faUsers, faFileInvoice, faEye, faXmark, faChevronLeft, faChevronRight, faPen } from '@fortawesome/free-solid-svg-icons';
+import { faWarehouse, faUsers, faFileInvoice, faEye, faXmark, faChevronLeft, faChevronRight, faPen, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import warehouseAdminService from '../../services/warehouseAdminService.js';
+import Pagination from '../../components/admin/Pagination.jsx';
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -32,10 +33,20 @@ export default function WarehouseDashboard() {
 
   // States
   const [warehouseInfo, setWarehouseInfo] = useState(null);
+  
   const [staffs, setStaffs] = useState([]);
+  const [staffQueries, setStaffQueries] = useState({ name: '', email: '' });
+  const [staffFilters, setStaffFilters] = useState({ name: '', email: '' });
+  const [staffPage, setStaffPage] = useState(1);
+  const [staffPageSize, setStaffPageSize] = useState(10);
+  const [staffTotal, setStaffTotal] = useState(0);
+
   const [history, setHistory] = useState([]);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [historyQueries, setHistoryQueries] = useState({ createdBy: '', status: 'ALL' });
+  const [historyFilters, setHistoryFilters] = useState({ createdBy: '', status: 'ALL' });
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyPageSize, setHistoryPageSize] = useState(10);
+  const [historyTotal, setHistoryTotal] = useState(0);
 
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -47,8 +58,8 @@ export default function WarehouseDashboard() {
   useEffect(() => {
     if (activeTab === 'info') loadWarehouseInfo();
     else if (activeTab === 'staff') loadStaffs();
-    else if (activeTab === 'history') loadHistory(0);
-  }, [activeTab]);
+    else if (activeTab === 'history') loadHistory();
+  }, [activeTab, staffPage, staffPageSize, staffFilters, historyPage, historyPageSize, historyFilters]);
 
   const loadWarehouseInfo = async () => {
     setLoading(true);
@@ -65,8 +76,9 @@ export default function WarehouseDashboard() {
   const loadStaffs = async () => {
     setLoading(true);
     try {
-      const data = await warehouseAdminService.getWarehouseStaffs();
-      setStaffs(data);
+      const data = await warehouseAdminService.getWarehouseStaffs(staffPage - 1, staffPageSize, staffFilters.name, staffFilters.email);
+      setStaffs(data.content);
+      setStaffTotal(data.totalElements);
     } catch (err) {
       setError('Lỗi tải danh sách nhân sự.');
     } finally {
@@ -74,13 +86,13 @@ export default function WarehouseDashboard() {
     }
   };
 
-  const loadHistory = async (pageNo) => {
+  const loadHistory = async () => {
     setLoading(true);
     try {
-      const data = await warehouseAdminService.getImportHistory(pageNo, 10);
+      const status = historyFilters.status === 'ALL' ? '' : historyFilters.status;
+      const data = await warehouseAdminService.getImportHistory(historyPage - 1, historyPageSize, historyFilters.createdBy, status);
       setHistory(data.content);
-      setPage(data.page);
-      setTotalPages(data.totalPages);
+      setHistoryTotal(data.totalElements);
     } catch (err) {
       setError('Lỗi tải lịch sử nhập kho.');
     } finally {
@@ -106,7 +118,7 @@ export default function WarehouseDashboard() {
     try {
       await warehouseAdminService.updateImportStatus(selectedReceipt.id, status);
       alert(`Đã ${status === 'APPROVED' ? 'duyệt' : 'từ chối'} phiếu nhập thành công!`);
-      loadHistory(page);
+      loadHistory();
       setSelectedReceipt(null);
     } catch (err) {
       alert(err?.response?.data?.message || 'Lỗi cập nhật trạng thái phiếu nhập');
@@ -186,6 +198,28 @@ export default function WarehouseDashboard() {
       {activeTab === 'staff' && (
         <section className="ad-brand-panel ad-brand-list">
           <h2><FontAwesomeIcon icon={faUsers} /> Danh sách nhân sự kho</h2>
+          <form className="ad-supplier-filter" onSubmit={(e) => {
+            e.preventDefault();
+            setStaffPage(1);
+            setStaffFilters({ name: staffQueries.name.trim(), email: staffQueries.email.trim() });
+          }}>
+            <label>HỌ TÊN
+              <input value={staffQueries.name} onChange={(e) => setStaffQueries({ ...staffQueries, name: e.target.value })} placeholder="Nhập họ tên cần tìm..." />
+            </label>
+            <label>EMAIL
+              <input value={staffQueries.email} onChange={(e) => setStaffQueries({ ...staffQueries, email: e.target.value })} placeholder="Nhập email cần tìm..." />
+            </label>
+            <div className="ad-filter-actions">
+              <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
+              <button className="ad-button ad-button-quiet" type="button" onClick={() => {
+                setStaffQueries({ name: '', email: '' });
+                setStaffFilters({ name: '', email: '' });
+                setStaffPage(1);
+              }}>Làm mới</button>
+            </div>
+          </form>
+          
+          <p className="ad-brand-count"><strong>Kết quả:</strong> {loading ? 'Đang tải...' : `${staffTotal} bản ghi`}</p>
           <div className="ad-table-wrap" style={{ marginTop: '15px' }}>
             <table className="ad-brand-table">
               <thead>
@@ -213,6 +247,12 @@ export default function WarehouseDashboard() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            page={staffPage} pageSize={staffPageSize} total={staffTotal}
+            onPage={setStaffPage}
+            onPageSize={(size) => { setStaffPageSize(size); setStaffPage(1); }}
+            onRefresh={loadStaffs}
+          />
         </section>
       )}
 
@@ -220,6 +260,33 @@ export default function WarehouseDashboard() {
       {activeTab === 'history' && (
         <section className="ad-brand-panel ad-brand-list">
           <h2><FontAwesomeIcon icon={faFileInvoice} /> Lịch sử phiếu nhập</h2>
+          <form className="ad-supplier-filter" onSubmit={(e) => {
+            e.preventDefault();
+            setHistoryPage(1);
+            setHistoryFilters({ createdBy: historyQueries.createdBy.trim(), status: historyQueries.status });
+          }}>
+            <label>NGƯỜI TẠO
+              <input value={historyQueries.createdBy} onChange={(e) => setHistoryQueries({ ...historyQueries, createdBy: e.target.value })} placeholder="Nhập tên người tạo..." />
+            </label>
+            <label>TRẠNG THÁI
+              <select value={historyQueries.status} onChange={(e) => setHistoryQueries({ ...historyQueries, status: e.target.value })}>
+                <option value="ALL">Tất cả</option>
+                <option value="PENDING">Chờ duyệt</option>
+                <option value="APPROVED">Đã duyệt</option>
+                <option value="REJECTED">Từ chối</option>
+              </select>
+            </label>
+            <div className="ad-filter-actions">
+              <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
+              <button className="ad-button ad-button-quiet" type="button" onClick={() => {
+                setHistoryQueries({ createdBy: '', status: 'ALL' });
+                setHistoryFilters({ createdBy: '', status: 'ALL' });
+                setHistoryPage(1);
+              }}>Làm mới</button>
+            </div>
+          </form>
+
+          <p className="ad-brand-count"><strong>Kết quả:</strong> {loading ? 'Đang tải...' : `${historyTotal} bản ghi`}</p>
           <div className="ad-table-wrap" style={{ marginTop: '15px' }}>
             <table className="ad-brand-table">
               <thead>
@@ -255,18 +322,12 @@ export default function WarehouseDashboard() {
               </tbody>
             </table>
           </div>
-          
-          {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
-              <button className="ad-button ad-button-quiet" disabled={page === 0} onClick={() => loadHistory(page - 1)}>
-                <FontAwesomeIcon icon={faChevronLeft} /> Trước
-              </button>
-              <span style={{ display: 'flex', alignItems: 'center' }}>Trang {page + 1} / {totalPages}</span>
-              <button className="ad-button ad-button-quiet" disabled={page === totalPages - 1} onClick={() => loadHistory(page + 1)}>
-                Sau <FontAwesomeIcon icon={faChevronRight} />
-              </button>
-            </div>
-          )}
+          <Pagination
+            page={historyPage} pageSize={historyPageSize} total={historyTotal}
+            onPage={setHistoryPage}
+            onPageSize={(size) => { setHistoryPageSize(size); setHistoryPage(1); }}
+            onRefresh={loadHistory}
+          />
         </section>
       )}
 
@@ -301,8 +362,8 @@ export default function WarehouseDashboard() {
                     <table className="ad-brand-table">
                       <thead>
                         <tr>
-                          <th>MÃ SP</th>
-                          <th>TÊN SẢN PHẨM</th>
+                          <th>MÃ BT</th>
+                          <th>TÊN BIẾN THỂ</th>
                           <th style={{ textAlign: 'center' }}>SỐ LƯỢNG</th>
                           <th style={{ textAlign: 'right' }}>ĐƠN GIÁ</th>
                           <th style={{ textAlign: 'right' }}>THÀNH TIỀN</th>
