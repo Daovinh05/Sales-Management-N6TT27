@@ -6,12 +6,18 @@ import {
 import { faFacebookF, faTiktok, faYoutube } from '@fortawesome/free-brands-svg-icons';
 import { useAuth } from '../store/auth.jsx';
 
-export function Header({ cartCount, onCart, onLogin, onRegister, onSearch }) {
+export function Header({ cartCount, onCart, onLogin, onRegister, onSearch, onHome }) {
   const { user, logout } = useAuth();
   const isAdmin = user?.roles?.includes('ROLE_ADMIN');
+  const goHome = () => {
+    onSearch?.('');
+    onHome?.();
+    if (window.location.hash) window.location.hash = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   return (
     <header className="tz-header">
-      <div className="tz-logo">TECH<span>ZONE</span></div>
+      <div className="tz-logo" onClick={goHome} title="Về trang chủ" style={{ cursor: 'pointer' }}>TECH<span>ZONE</span></div>
       <ul className="tz-nav">
         <li className="tz-nav-item">NEW</li>
         <li className="tz-nav-item">BÁN CHẠY</li>
