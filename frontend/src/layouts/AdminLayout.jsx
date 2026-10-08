@@ -73,7 +73,7 @@ export default function AdminLayout({ notify, toasts = [] }) {
     <div className="ad-wrap">
       <AppToast toasts={toasts} />
       <aside className="ad-side">
-        <div className="ad-brand"><FontAwesomeIcon icon={faMobileScreen} /> Phone Store</div>
+        <div className="ad-brand" onClick={() => go('Tổng quan')} title="Về trang chủ" style={{ cursor: 'pointer' }}><FontAwesomeIcon icon={faMobileScreen} /> Phone Store</div>
         <nav className="ad-menu">
           {MENU.map((m, index) => (
             <button
