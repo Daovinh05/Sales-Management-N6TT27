@@ -273,67 +273,72 @@ export default function WarehouseDashboard() {
       {/* MODAL CHI TIẾT PHIẾU NHẬP */}
       {selectedReceipt && (
         <div className="ad-dialog-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) setSelectedReceipt(null); }}>
-          <div className="ad-brand-dialog" style={{ maxWidth: '700px', width: '90%' }}>
+          <div className="ad-brand-dialog" style={{ maxWidth: '850px', width: '95%' }}>
             <div className="ad-dialog-heading">
-              <h2>Chi tiết phiếu nhập #{selectedReceipt.id}</h2>
+              <div className="ad-title" style={{ fontSize: '18px' }}>Chi tiết phiếu nhập #{selectedReceipt.id}</div>
               <button className="ad-icon-button" type="button" onClick={() => setSelectedReceipt(null)}>
                 <FontAwesomeIcon icon={faXmark} />
               </button>
             </div>
             
-            <div style={{ padding: '20px', maxHeight: '60vh', overflowY: 'auto' }}>
-              {selectedReceipt.loading ? <p>Đang tải dữ liệu...</p> : (
+            <div style={{ maxHeight: '75vh', overflowY: 'auto', padding: '4px' }}>
+              {selectedReceipt.loading ? <div style={{ padding: '20px' }}>Đang tải dữ liệu...</div> : (
                 <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px' }}>
-                    <div>
-                      <p><strong>Người tạo:</strong> {selectedReceipt.createdByName}</p>
-                      <p><strong>Ngày nhập:</strong> {formatDate(selectedReceipt.createdAt)}</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px dashed #d8e2ef' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#64748b', minWidth: '110px' }}>Người tạo:</span> <span style={{ fontWeight: 600 }}>{selectedReceipt.createdByName}</span></div>
+                      <div style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#64748b', minWidth: '110px' }}>Ngày tạo phiếu:</span> <span style={{ fontWeight: 600 }}>{formatDate(selectedReceipt.createdAt)}</span></div>
+                      <div style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#64748b', minWidth: '110px' }}>Ghi chú:</span> <span style={{ fontStyle: selectedReceipt.note ? 'normal' : 'italic', color: selectedReceipt.note ? 'inherit' : '#94a3b8' }}>{selectedReceipt.note || 'Không có ghi chú'}</span></div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p><strong>Trạng thái:</strong> {getStatusBadge(selectedReceipt.status)}</p>
-                      <p><strong>Nhà cung cấp:</strong> {selectedReceipt.supplierName}</p>
-                      <p><strong>Tổng tiền:</strong> <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>{formatCurrency(selectedReceipt.totalAmount)}</span></p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#64748b', minWidth: '110px' }}>Nhà cung cấp:</span> <span style={{ fontWeight: 600 }}>{selectedReceipt.supplierName}</span></div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: '#64748b', minWidth: '110px' }}>Trạng thái:</span> <span>{getStatusBadge(selectedReceipt.status)}</span></div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: '#64748b', minWidth: '110px' }}>Tổng tiền:</span> <span style={{ color: '#dc2626', fontWeight: 'bold', fontSize: '18px' }}>{formatCurrency(selectedReceipt.totalAmount)}</span></div>
                     </div>
                   </div>
 
-                  <table className="ad-brand-table">
-                    <thead>
-                      <tr>
-                        <th>MÃ SẢN PHẨM</th>
-                        <th>TÊN SẢN PHẨM</th>
-                        <th>SỐ LƯỢNG</th>
-                        <th>ĐƠN GIÁ</th>
-                        <th>THÀNH TIỀN</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedReceipt.details?.map((item, idx) => (
-                        <tr key={idx}>
-                          <td>{item.variantCode}</td>
-                          <td>{item.variantName}</td>
-                          <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                          <td>{formatCurrency(item.unitPrice)}</td>
-                          <td style={{ fontWeight: 'bold' }}>{formatCurrency(item.subTotal)}</td>
+                  <div className="ad-table-wrap">
+                    <table className="ad-brand-table">
+                      <thead>
+                        <tr>
+                          <th>MÃ SP</th>
+                          <th>TÊN SẢN PHẨM</th>
+                          <th style={{ textAlign: 'center' }}>SỐ LƯỢNG</th>
+                          <th style={{ textAlign: 'right' }}>ĐƠN GIÁ</th>
+                          <th style={{ textAlign: 'right' }}>THÀNH TIỀN</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {selectedReceipt.details?.length > 0 ? selectedReceipt.details.map((item, idx) => (
+                          <tr key={idx}>
+                            <td className="ad-brand-code">{item.variantCode}</td>
+                            <td style={{ fontWeight: 500 }}>{item.variantName}</td>
+                            <td style={{ textAlign: 'center' }}>{item.quantity}</td>
+                            <td style={{ textAlign: 'right' }}>{formatCurrency(item.unitPrice)}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 'bold' }}>{formatCurrency(item.subTotal || item.quantity * item.unitPrice)}</td>
+                          </tr>
+                        )) : (
+                          <tr><td colSpan="5" className="ad-table-empty">Không có sản phẩm nào.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </>
               )}
             </div>
 
-            <div className="ad-dialog-actions" style={{ padding: '15px 20px', borderTop: '1px solid #e9ecef', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <div className="ad-dialog-actions" style={{ paddingTop: '16px', borderTop: '1px solid #e9ecef', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               {selectedReceipt && !selectedReceipt.loading && selectedReceipt.status === 'PENDING' && (
                 <>
-                  <button className="ad-button ad-button-primary" style={{ backgroundColor: '#28a745', borderColor: '#28a745' }} type="button" onClick={() => handleUpdateStatus('APPROVED')}>
+                  <button className="ad-button" style={{ backgroundColor: '#10b981', color: '#fff' }} type="button" onClick={() => handleUpdateStatus('APPROVED')}>
                     Duyệt phiếu
                   </button>
-                  <button className="ad-button ad-button-primary" style={{ backgroundColor: '#dc3545', borderColor: '#dc3545' }} type="button" onClick={() => handleUpdateStatus('REJECTED')}>
+                  <button className="ad-button" style={{ backgroundColor: '#ef4444', color: '#fff' }} type="button" onClick={() => handleUpdateStatus('REJECTED')}>
                     Từ chối
                   </button>
                 </>
               )}
-              <button className="ad-button ad-button-quiet" type="button" onClick={() => setSelectedReceipt(null)}>
+              <button className="ad-button ad-button-blue" type="button" onClick={() => setSelectedReceipt(null)}>
                 Đóng
               </button>
             </div>

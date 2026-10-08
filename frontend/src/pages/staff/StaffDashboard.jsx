@@ -33,8 +33,8 @@ export default function StaffDashboard({ notify }) {
     <div className="ad-brand-page">
       <div className="ad-brand-panel">
         <div className="ad-brand-heading">
-          <h2>Bàn làm việc Nhân viên Kho</h2>
-          <p>Xin chào, <strong>{user?.username}</strong>! Chúc bạn một ngày làm việc hiệu quả.</p>
+          <div className="ad-title">Bàn làm việc Nhân viên Kho</div>
+          <p>Chúc bạn một ngày làm việc hiệu quả.</p>
         </div>
       </div>
 
@@ -82,9 +82,9 @@ export default function StaffDashboard({ notify }) {
 
       <div className="ad-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', marginTop: '20px' }}>
         <div className="ad-brand-panel" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <h2 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b' }}>
+          <div className="ad-title" style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b' }}>
             <FontAwesomeIcon icon={faHistory} style={{ color: '#2563eb' }} /> Lịch sử nhập kho
-          </h2>
+          </div>
           <p style={{ color: '#64748b', fontSize: '14px', marginTop: '12px', flex: 1, lineHeight: '1.5' }}>
             Xem danh sách các phiếu nhập đã tạo, kiểm tra chi tiết và theo dõi trạng thái phê duyệt từ Quản trị viên.
           </p>
@@ -96,14 +96,14 @@ export default function StaffDashboard({ notify }) {
         </div>
 
         <div className="ad-brand-panel" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <h2 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b' }}>
+          <div className="ad-title" style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b' }}>
             <FontAwesomeIcon icon={faPlus} style={{ color: '#0bb783' }} /> Lập phiếu nhập mới
-          </h2>
+          </div>
           <p style={{ color: '#64748b', fontSize: '14px', marginTop: '12px', flex: 1, lineHeight: '1.5' }}>
             Tra cứu thông tin sản phẩm và lập phiếu nhập hàng mới vào kho chờ Admin phê duyệt.
           </p>
           <div style={{ marginTop: '20px' }}>
-            <button className="ad-button ad-button-primary" onClick={() => go('/staff/imports/create')}>
+            <button className="ad-button ad-button-blue" onClick={() => go('/staff/imports/create')}>
               Lập phiếu nhập
             </button>
           </div>
