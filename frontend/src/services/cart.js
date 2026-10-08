@@ -5,6 +5,7 @@ import { resolveImage } from './shop.js';
 export const toCartItem = (it) => ({
   id: it.variantCode,
   variantCode: it.variantCode,
+  productCode: it.productCode,
   name: it.variantName ? `${it.productName} - ${it.variantName}` : (it.productName || ''),
   brandName: [it.color, it.storage, it.ram].filter(Boolean).join(' • '),
   img: resolveImage(it.imageUrl),

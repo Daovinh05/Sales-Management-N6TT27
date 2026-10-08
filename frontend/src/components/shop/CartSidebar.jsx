@@ -2,9 +2,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { fmt } from '../../services/catalog.js';
 
-export default function CartSidebar({ open, items, onClose, onQty, onRemove, onViewCart, onCheckout }) {
+export default function CartSidebar({ open, items, onClose, onQty, onRemove, onViewCart, onCheckout, onView }) {
   const total = items.reduce((s, it) => s + it.price * it.qty, 0);
   const count = items.reduce((s, it) => s + it.qty, 0);
+
+  const viewDetail = (it) => {
+    const code = it.productCode || it.code;
+    if (!code || !onView) return;
+    onClose?.();
+    onView(code);
+  };
   return (
     <>
       {open && <div className="kh-overlay" onClick={onClose} />}
@@ -17,9 +24,25 @@ export default function CartSidebar({ open, items, onClose, onQty, onRemove, onV
           {items.length === 0 && <div className="kh-cempty">Chưa có sản phẩm trong giỏ hàng...</div>}
           {items.map((it) => (
             <div key={it.id} className="kh-citem">
-              {it.img ? <img src={it.img} alt={it.name} /> : <div className="kh-cnoimg">Không có hình</div>}
+              {it.img ? (
+                <img
+                  src={it.img}
+                  alt={it.name}
+                  className={it.productCode || it.code ? 'clickable' : ''}
+                  title={it.productCode || it.code ? 'Xem chi tiết sản phẩm' : undefined}
+                  onClick={() => viewDetail(it)}
+                />
+              ) : (
+                <div className="kh-cnoimg">Không có hình</div>
+              )}
               <div>
-                <div className="n">{it.name}</div>
+                <div
+                  className={`n ${it.productCode || it.code ? 'clickable' : ''}`}
+                  title={it.productCode || it.code ? 'Xem chi tiết sản phẩm' : undefined}
+                  onClick={() => viewDetail(it)}
+                >
+                  {it.name}
+                </div>
                 <div className="v">{it.brandName} • SL: {it.qty}</div>
                 <div className="p">{fmt(it.price)}</div>
                 <div className="kh-cqty">
