@@ -11,8 +11,8 @@ export const warehouseAdminService = {
     return res.data;
   },
 
-  getImportHistory: async (page = 0, size = 10, createdBy = '', status = '') => {
-    const res = await api.get(`/admin/imports?page=${page}&size=${size}&createdBy=${encodeURIComponent(createdBy)}&status=${encodeURIComponent(status)}`);
+  getImportHistory: async (page = 0, size = 10, createdBy = '', supplierName = '', status = '', productKeyword = '') => {
+    const res = await api.get(`/admin/imports?page=${page}&size=${size}&createdBy=${encodeURIComponent(createdBy)}&supplierName=${encodeURIComponent(supplierName)}&status=${encodeURIComponent(status)}&productKeyword=${encodeURIComponent(productKeyword)}`);
     return res.data;
   },
 

@@ -42,8 +42,8 @@ export default function WarehouseDashboard() {
   const [staffTotal, setStaffTotal] = useState(0);
 
   const [history, setHistory] = useState([]);
-  const [historyQueries, setHistoryQueries] = useState({ createdBy: '', status: 'ALL' });
-  const [historyFilters, setHistoryFilters] = useState({ createdBy: '', status: 'ALL' });
+  const [historyQueries, setHistoryQueries] = useState({ createdBy: '', supplierName: '', status: 'ALL', productKeyword: '' });
+  const [historyFilters, setHistoryFilters] = useState({ createdBy: '', supplierName: '', status: 'ALL', productKeyword: '' });
   const [historyPage, setHistoryPage] = useState(1);
   const [historyPageSize, setHistoryPageSize] = useState(10);
   const [historyTotal, setHistoryTotal] = useState(0);
@@ -90,7 +90,7 @@ export default function WarehouseDashboard() {
     setLoading(true);
     try {
       const status = historyFilters.status === 'ALL' ? '' : historyFilters.status;
-      const data = await warehouseAdminService.getImportHistory(historyPage - 1, historyPageSize, historyFilters.createdBy, status);
+      const data = await warehouseAdminService.getImportHistory(historyPage - 1, historyPageSize, historyFilters.createdBy, historyFilters.supplierName, status, historyFilters.productKeyword);
       setHistory(data.content);
       setHistoryTotal(data.totalElements);
     } catch (err) {
@@ -198,20 +198,20 @@ export default function WarehouseDashboard() {
       {activeTab === 'staff' && (
         <section className="ad-brand-panel ad-brand-list">
           <h2><FontAwesomeIcon icon={faUsers} /> Danh sách nhân sự kho</h2>
-          <form className="ad-supplier-filter" onSubmit={(e) => {
+          <form className="ad-supplier-filter" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'flex-end' }} onSubmit={(e) => {
             e.preventDefault();
             setStaffPage(1);
             setStaffFilters({ name: staffQueries.name.trim(), email: staffQueries.email.trim() });
           }}>
-            <label>HỌ TÊN
+            <label style={{ flex: '1 1 250px', display: 'flex', flexDirection: 'column', gap: '6px' }}>HỌ TÊN
               <input value={staffQueries.name} onChange={(e) => setStaffQueries({ ...staffQueries, name: e.target.value })} placeholder="Nhập họ tên cần tìm..." />
             </label>
-            <label>EMAIL
+            <label style={{ flex: '1 1 250px', display: 'flex', flexDirection: 'column', gap: '6px' }}>EMAIL
               <input value={staffQueries.email} onChange={(e) => setStaffQueries({ ...staffQueries, email: e.target.value })} placeholder="Nhập email cần tìm..." />
             </label>
-            <div className="ad-filter-actions">
-              <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
-              <button className="ad-button ad-button-quiet" type="button" onClick={() => {
+            <div className="ad-filter-actions" style={{ flex: '1 1 250px', display: 'flex', gap: '10px' }}>
+              <button className="ad-button ad-button-blue" type="submit" style={{ flex: 1, margin: 0 }}><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
+              <button className="ad-button ad-button-quiet" type="button" style={{ flex: 1, margin: 0 }} onClick={() => {
                 setStaffQueries({ name: '', email: '' });
                 setStaffFilters({ name: '', email: '' });
                 setStaffPage(1);
@@ -260,15 +260,21 @@ export default function WarehouseDashboard() {
       {activeTab === 'history' && (
         <section className="ad-brand-panel ad-brand-list">
           <h2><FontAwesomeIcon icon={faFileInvoice} /> Lịch sử phiếu nhập</h2>
-          <form className="ad-supplier-filter" onSubmit={(e) => {
+          <form className="ad-supplier-filter" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'flex-end' }} onSubmit={(e) => {
             e.preventDefault();
             setHistoryPage(1);
-            setHistoryFilters({ createdBy: historyQueries.createdBy.trim(), status: historyQueries.status });
+            setHistoryFilters({ createdBy: historyQueries.createdBy.trim(), supplierName: historyQueries.supplierName.trim(), status: historyQueries.status, productKeyword: historyQueries.productKeyword.trim() });
           }}>
-            <label>NGƯỜI TẠO
+            <label style={{ flex: '1 1 200px' }}>NGƯỜI TẠO
               <input value={historyQueries.createdBy} onChange={(e) => setHistoryQueries({ ...historyQueries, createdBy: e.target.value })} placeholder="Nhập tên người tạo..." />
             </label>
-            <label>TRẠNG THÁI
+            <label style={{ flex: '1 1 200px' }}>NHÀ CUNG CẤP
+              <input value={historyQueries.supplierName} onChange={(e) => setHistoryQueries({ ...historyQueries, supplierName: e.target.value })} placeholder="Nhập tên nhà cung cấp..." />
+            </label>
+            <label style={{ flex: '1 1 200px' }}>BIẾN THỂ
+              <input value={historyQueries.productKeyword} onChange={(e) => setHistoryQueries({ ...historyQueries, productKeyword: e.target.value })} placeholder="Nhập mã/tên BT trong phiếu..." />
+            </label>
+            <label style={{ flex: '1 1 200px' }}>TRẠNG THÁI
               <select value={historyQueries.status} onChange={(e) => setHistoryQueries({ ...historyQueries, status: e.target.value })}>
                 <option value="ALL">Tất cả</option>
                 <option value="PENDING">Chờ duyệt</option>
@@ -276,11 +282,11 @@ export default function WarehouseDashboard() {
                 <option value="REJECTED">Từ chối</option>
               </select>
             </label>
-            <div className="ad-filter-actions">
+            <div className="ad-filter-actions" style={{ flex: '1 1 200px', display: 'flex', gap: '10px' }}>
               <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
               <button className="ad-button ad-button-quiet" type="button" onClick={() => {
-                setHistoryQueries({ createdBy: '', status: 'ALL' });
-                setHistoryFilters({ createdBy: '', status: 'ALL' });
+                setHistoryQueries({ createdBy: '', supplierName: '', status: 'ALL', productKeyword: '' });
+                setHistoryFilters({ createdBy: '', supplierName: '', status: 'ALL', productKeyword: '' });
                 setHistoryPage(1);
               }}>Làm mới</button>
             </div>

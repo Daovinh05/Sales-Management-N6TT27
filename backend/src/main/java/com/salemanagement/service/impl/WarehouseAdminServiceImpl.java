@@ -63,7 +63,7 @@ public class WarehouseAdminServiceImpl implements WarehouseAdminService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ImportReceiptSummaryResponse> getImportHistory(String createdBy, String status, int page, int size) {
+    public PageResponse<ImportReceiptSummaryResponse> getImportHistory(String createdBy, String supplierName, String status, String productKeyword, int page, int size) {
         com.salemanagement.enums.EImportStatus eStatus = null;
         if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("ALL")) {
             try {
@@ -74,9 +74,11 @@ public class WarehouseAdminServiceImpl implements WarehouseAdminService {
         }
         
         String createdByFilter = (createdBy != null && !createdBy.trim().isEmpty()) ? createdBy : null;
+        String supplierNameFilter = (supplierName != null && !supplierName.trim().isEmpty()) ? supplierName : null;
+        String productKeywordFilter = (productKeyword != null && !productKeyword.trim().isEmpty()) ? productKeyword : null;
 
         Page<ImportReceipt> pageResult = importReceiptRepository.findAllWithFilters(
-                createdByFilter, eStatus, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+                createdByFilter, supplierNameFilter, eStatus, productKeywordFilter, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
 
         List<ImportReceiptSummaryResponse> content = pageResult.getContent().stream()
                 .map(receipt -> ImportReceiptSummaryResponse.builder()

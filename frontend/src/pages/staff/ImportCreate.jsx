@@ -125,10 +125,10 @@ export default function ImportCreate({ notify, onSuccess }) {
           <section className="ad-brand-panel ad-brand-list">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
               <div className="ad-title" style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                <FontAwesomeIcon icon={faPlusCircle} style={{ color: '#2563eb' }} /> Chi tiết sản phẩm nhập
+                <FontAwesomeIcon icon={faPlusCircle} style={{ color: '#2563eb' }} /> Chi tiết biến thể nhập
               </div>
               <button type="button" className="ad-button ad-button-blue" onClick={addItem}>
-                <FontAwesomeIcon icon={faPlusCircle} /> Thêm sản phẩm
+                <FontAwesomeIcon icon={faPlusCircle} /> Thêm biến thể
               </button>
             </div>
             
@@ -136,7 +136,7 @@ export default function ImportCreate({ notify, onSuccess }) {
               <table className="ad-brand-table">
                 <thead>
                   <tr>
-                    <th>SẢN PHẨM (BIẾN THỂ)</th>
+                    <th>BIẾN THỂ</th>
                     <th style={{ width: '15%' }}>SỐ LƯỢNG</th>
                     <th style={{ width: '20%' }}>ĐƠN GIÁ (VNĐ)</th>
                     <th style={{ width: '20%' }}>THÀNH TIỀN</th>

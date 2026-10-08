@@ -38,10 +38,12 @@ public class WarehouseAdminController {
     @GetMapping("/imports")
     public ResponseEntity<PageResponse<ImportReceiptSummaryResponse>> getImportHistory(
             @RequestParam(required = false) String createdBy,
+            @RequestParam(required = false) String supplierName,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String productKeyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(warehouseAdminService.getImportHistory(createdBy, status, page, size));
+        return ResponseEntity.ok(warehouseAdminService.getImportHistory(createdBy, supplierName, status, productKeyword, page, size));
     }
 
     @GetMapping("/imports/{id}")

@@ -18,17 +18,24 @@ public interface ImportReceiptRepository extends JpaRepository<ImportReceipt, Lo
            countQuery = "SELECT count(ir) FROM ImportReceipt ir")
     Page<ImportReceipt> findAllWithDetails(Pageable pageable);
 
-    @Query(value = "SELECT ir FROM ImportReceipt ir JOIN FETCH ir.createdBy JOIN FETCH ir.supplier " +
+    @Query(value = "SELECT DISTINCT ir FROM ImportReceipt ir JOIN FETCH ir.createdBy JOIN FETCH ir.supplier " +
+           "LEFT JOIN ir.details d LEFT JOIN d.productVariant pv " +
            "WHERE (:createdBy is null or lower(ir.createdBy.fullName) like lower(concat('%', :createdBy, '%'))) " +
-           "AND (:status is null or ir.status = :status)",
-           countQuery = "SELECT count(ir) FROM ImportReceipt ir " +
+           "AND (:supplierName is null or lower(ir.supplier.name) like lower(concat('%', :supplierName, '%'))) " +
+           "AND (:status is null or ir.status = :status) " +
+           "AND (:productKeyword is null or lower(pv.code) like lower(concat('%', :productKeyword, '%')) or lower(pv.name) like lower(concat('%', :productKeyword, '%')))",
+           countQuery = "SELECT count(DISTINCT ir) FROM ImportReceipt ir " +
+           "LEFT JOIN ir.details d LEFT JOIN d.productVariant pv " +
            "WHERE (:createdBy is null or lower(ir.createdBy.fullName) like lower(concat('%', :createdBy, '%'))) " +
-           "AND (:status is null or ir.status = :status)")
+           "AND (:supplierName is null or lower(ir.supplier.name) like lower(concat('%', :supplierName, '%'))) " +
+           "AND (:status is null or ir.status = :status) " +
+           "AND (:productKeyword is null or lower(pv.code) like lower(concat('%', :productKeyword, '%')) or lower(pv.name) like lower(concat('%', :productKeyword, '%')))")
     Page<ImportReceipt> findAllWithFilters(
             @Param("createdBy") String createdBy,
+            @Param("supplierName") String supplierName,
             @Param("status") com.salemanagement.enums.EImportStatus status,
+            @Param("productKeyword") String productKeyword,
             Pageable pageable);
-
 
     @Query("SELECT ir FROM ImportReceipt ir JOIN FETCH ir.createdBy JOIN FETCH ir.supplier LEFT JOIN FETCH ir.details d LEFT JOIN FETCH d.productVariant WHERE ir.id = :id")
     Optional<ImportReceipt> findByIdWithFullDetails(@Param("id") Long id);
@@ -39,16 +46,20 @@ public interface ImportReceiptRepository extends JpaRepository<ImportReceipt, Lo
            countQuery = "SELECT count(ir) FROM ImportReceipt ir WHERE ir.createdBy.username = :username")
     Page<ImportReceipt> findByCreatedByUsernameWithDetails(@Param("username") String username, Pageable pageable);
 
-    @Query(value = "SELECT ir FROM ImportReceipt ir JOIN FETCH ir.supplier WHERE ir.createdBy.username = :username " +
-           "AND (:supplierName is null or lower(ir.supplier.name) like lower(concat('%', :supplierName, '%'))) " +
-           "AND (:status is null or ir.status = :status)",
-           countQuery = "SELECT count(ir) FROM ImportReceipt ir WHERE ir.createdBy.username = :username " +
-           "AND (:supplierName is null or lower(ir.supplier.name) like lower(concat('%', :supplierName, '%'))) " +
-           "AND (:status is null or ir.status = :status)")
+    @Query(value = "SELECT DISTINCT ir FROM ImportReceipt ir JOIN FETCH ir.supplier " +
+           "LEFT JOIN ir.details d LEFT JOIN d.productVariant pv " +
+           "WHERE ir.createdBy.username = :username " +
+           "AND (:status is null or ir.status = :status) " +
+           "AND (:productKeyword is null or lower(pv.code) like lower(concat('%', :productKeyword, '%')) or lower(pv.name) like lower(concat('%', :productKeyword, '%')))",
+           countQuery = "SELECT count(DISTINCT ir) FROM ImportReceipt ir " +
+           "LEFT JOIN ir.details d LEFT JOIN d.productVariant pv " +
+           "WHERE ir.createdBy.username = :username " +
+           "AND (:status is null or ir.status = :status) " +
+           "AND (:productKeyword is null or lower(pv.code) like lower(concat('%', :productKeyword, '%')) or lower(pv.name) like lower(concat('%', :productKeyword, '%')))")
     Page<ImportReceipt> findByUsernameWithFilters(
             @Param("username") String username,
-            @Param("supplierName") String supplierName,
             @Param("status") com.salemanagement.enums.EImportStatus status,
+            @Param("productKeyword") String productKeyword,
             Pageable pageable);
 
     long countByCreatedByUsername(String username);

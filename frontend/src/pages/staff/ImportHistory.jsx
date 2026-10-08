@@ -31,8 +31,8 @@ export default function ImportHistory({ notify }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const [queries, setQueries] = useState({ supplierName: '', status: 'ALL' });
-  const [filters, setFilters] = useState({ supplierName: '', status: 'ALL' });
+  const [queries, setQueries] = useState({ productKeyword: '', status: 'ALL' });
+  const [filters, setFilters] = useState({ productKeyword: '', status: 'ALL' });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
@@ -47,7 +47,7 @@ export default function ImportHistory({ notify }) {
     setLoading(true);
     try {
       const status = filters.status === 'ALL' ? '' : filters.status;
-      const data = await warehouseStaffService.getMyImports(page - 1, pageSize, filters.supplierName, status);
+      const data = await warehouseStaffService.getMyImports(page - 1, pageSize, filters.productKeyword, status);
       setHistory(data.content || []);
       setTotal(data.totalElements || 0);
     } catch (err) {
@@ -72,15 +72,15 @@ export default function ImportHistory({ notify }) {
       <section className="ad-brand-panel ad-brand-list">
         <h2><FontAwesomeIcon icon={faFileInvoice} /> Lịch sử phiếu nhập của tôi</h2>
         
-        <form className="ad-supplier-filter" onSubmit={(e) => {
+        <form className="ad-supplier-filter" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'flex-end' }} onSubmit={(e) => {
           e.preventDefault();
           setPage(1);
-          setFilters({ supplierName: queries.supplierName.trim(), status: queries.status });
+          setFilters({ productKeyword: queries.productKeyword.trim(), status: queries.status });
         }}>
-          <label>NHÀ CUNG CẤP
-            <input value={queries.supplierName} onChange={(e) => setQueries({ ...queries, supplierName: e.target.value })} placeholder="Nhập tên nhà cung cấp cần tìm..." />
+          <label style={{ flex: '1 1 200px' }}>BIẾN THỂ
+            <input value={queries.productKeyword} onChange={(e) => setQueries({ ...queries, productKeyword: e.target.value })} placeholder="Nhập mã/tên BT trong phiếu..." />
           </label>
-          <label>TRẠNG THÁI
+          <label style={{ flex: '1 1 200px' }}>TRẠNG THÁI
             <select value={queries.status} onChange={(e) => setQueries({ ...queries, status: e.target.value })}>
               <option value="ALL">Tất cả</option>
               <option value="PENDING">Chờ duyệt</option>
@@ -88,11 +88,11 @@ export default function ImportHistory({ notify }) {
               <option value="REJECTED">Từ chối</option>
             </select>
           </label>
-          <div className="ad-filter-actions">
+          <div className="ad-filter-actions" style={{ flex: '1 1 200px', display: 'flex', gap: '10px' }}>
             <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
             <button className="ad-button ad-button-quiet" type="button" onClick={() => {
-              setQueries({ supplierName: '', status: 'ALL' });
-              setFilters({ supplierName: '', status: 'ALL' });
+              setQueries({ productKeyword: '', status: 'ALL' });
+              setFilters({ productKeyword: '', status: 'ALL' });
               setPage(1);
             }}>Làm mới</button>
           </div>

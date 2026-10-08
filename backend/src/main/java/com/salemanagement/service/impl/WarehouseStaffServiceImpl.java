@@ -103,7 +103,7 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ImportReceiptSummaryResponse> getMyImports(String username, String supplierName, String status, int page, int size) {
+    public PageResponse<ImportReceiptSummaryResponse> getMyImports(String username, String productKeyword, String status, int page, int size) {
         com.salemanagement.enums.EImportStatus eStatus = null;
         if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("ALL")) {
             try {
@@ -113,10 +113,10 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
             }
         }
 
-        String supplierNameFilter = (supplierName != null && !supplierName.trim().isEmpty()) ? supplierName : null;
+        String productKeywordFilter = (productKeyword != null && !productKeyword.trim().isEmpty()) ? productKeyword : null;
 
         Page<ImportReceipt> pageResult = importReceiptRepository.findByUsernameWithFilters(
-                username, supplierNameFilter, eStatus, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+                username, eStatus, productKeywordFilter, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
 
         List<ImportReceiptSummaryResponse> content = pageResult.getContent().stream()
                 .map(receipt -> ImportReceiptSummaryResponse.builder()
