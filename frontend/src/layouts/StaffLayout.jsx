@@ -43,7 +43,7 @@ export default function StaffLayout({ notify, toasts = [] }) {
     <div className="ad-wrap">
       <AppToast toasts={toasts} />
       <aside className="ad-side">
-        <div className="ad-brand"><FontAwesomeIcon icon={faMobileScreen} /> Phone Store (Kho)</div>
+        <div className="ad-brand" onClick={() => go('Bàn làm việc')} title="Về trang chủ" style={{ cursor: 'pointer' }}><FontAwesomeIcon icon={faMobileScreen} /> Phone Store (Kho)</div>
         <nav className="ad-menu">
           {MENU.map((m, index) => (
             <button

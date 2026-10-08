@@ -15,6 +15,10 @@ public interface OrderRepository extends JpaRepository<Order, String> {
 
     List<Order> findByUsernameOrderByCreatedAtDesc(String username);
 
+    // Kiểm tra biến thể đã phát sinh đơn hàng chưa (OrderDetail chỉ lưu variantCode dạng String).
+    @Query("select count(d) from Order o join o.details d where upper(d.variantCode) = upper(:variantCode)")
+    long countByDetailsVariantCode(@Param("variantCode") String variantCode);
+
     // Lọc admin: chuỗi rỗng = tất cả; payment = 'EMPTY' là đơn chưa chọn phương thức.
     @Query("select o from Order o"
             + " where (:code = '' or upper(o.code) like upper(concat('%', :code, '%')))"

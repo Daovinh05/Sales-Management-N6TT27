@@ -1,81 +1,95 @@
-# BÁO CÁO DỰ ÁN QUẢN LÝ BÁN HÀNG
+# BÁO CÁO DỰ ÁN & VẬN DỤNG KỸ NĂNG LÀM CHỦ CODE
 
-**Người thực hiện:** Đào Phúc Dân
-**Thời gian tổng hợp:** 03/10/2026
-**Phần việc:** Quản lý sản phẩm và quản lý biến thể
+* **Người thực hiện:** Đào Phúc Dân
+* **Học phần / Lớp:** Đồ án Quản lý bán hàng - N6TT27
+* **Dự án:** Hệ thống Quản lý bán hàng công nghệ (TECHZONE)
 
-## 1. Tổng quan và hiểu biết về dự án
+---
 
-Luồng chính của ứng dụng:
+## Ý 1: Xây dựng hệ thống với sự trợ giúp của AI Agent (3 điểm)
 
-1. Người dùng đăng nhập, backend cấp access token và refresh token; frontend gắn access token khi gọi API.
-2. Tài khoản ADMIN vào trang quản trị, tài khoản khách vào khu vực mua sắm.
-3. Các màn hình quản trị gọi API để thao tác dữ liệu; endpoint ghi dữ liệu chặn quyền ADMIN ở backend.
-4. Riêng cụm sản phẩm tách làm 2 bảng: bảng sản phẩm giữ thông tin chung (mã, tên, danh mục, thương hiệu, nhà cung cấp), bảng biến thể giữ giá, tồn kho, ảnh, màu, RAM, dung lượng.
-5. Docker Compose kết nối frontend, backend, MySQL; kèm Redis và phpMyAdmin.
+### 1. Cách em dùng công cụ để phân tích hệ thống trước khi code:
+* **Phân rã nghiệp vụ:** Chia nhỏ bài toán thành các phân hệ lõi: Danh mục, Sản phẩm, Biến thể, Kho hàng, Giỏ hàng, Đơn hàng.
+* **Mô hình hóa bằng Mermaid (`mermaid/`) trước khi gõ code:**
+  * `01-use-case.mmd`: Xác định rõ ranh giới quyền hạn của từng vai trò (Admin, Warehouse Staff, Customer, Guest).
+  * `02-erd.mmd`: Thiết kế quan hệ thực thể CSDL, tách riêng Sản phẩm (thông tin chung) và Biến thể (giá, màu, RAM, dung lượng); xác định cấu trúc tồn kho (`quantity`, `reservedQuantity`).
+  * `03-system-architecture.mmd`: Định hình kiến trúc phân tầng React SPA <-> Spring Boot API <-> MySQL / Redis.
+  * `04-sequence-order.mmd`: Vẽ biểu đồ tuần tự luồng đặt hàng phức tạp: kiểm tra tồn -> khóa dòng kho (lock) -> giữ chỗ tồn -> tạo đơn.
 
-## 2. Công nghệ và cấu trúc
+### 2. Cách em định nghĩa hệ thống file và kiến trúc:
+* Áp dụng kiến trúc phân tầng (Layered Architecture) chuẩn:
+  * `entity/`: Định nghĩa các bảng CSDL (`Product`, `ProductVariant`, `Inventory`, `Order`, `OrderDetail`...).
+  * `repository/`: Truy vấn dữ liệu với Spring Data JPA, viết JPQL tối ưu và dùng Pessimistic Lock.
+  * `dto/` (`request/`, `response/`): Tách biệt dữ liệu nhận/trả, validate đầu vào bằng Bean Validation.
+  * `service/` & `service/impl/`: Nơi duy nhất xử lý logic nghiệp vụ và transaction.
+  * `controller/`: Chỉ nhận request, validate DTO và gọi service, giữ controller mỏng.
+  * `security/` & `config/`: Cấu hình JWT filter, mã hóa mật khẩu và phân quyền endpoint.
 
-- **Frontend:** React 18, Vite, Axios; Font Awesome cho biểu tượng; nhập/xuất Excel qua API backend.
-- **Backend:** Java 21, Spring Boot 4.1.1, Spring Data JPA, Spring Security, Bean Validation, JWT; Apache POI đọc/ghi Excel.
-- **Cơ sở dữ liệu:** MySQL 8; truy cập dữ liệu theo luồng controller, service, repository, entity.
-- **Ảnh biến thể:** lưu file trong thư mục uploads, phục vụ qua đường dẫn public.
-- **Kiểm thử:** test JPA với H2; kiểm thử API bằng gọi trực tiếp sau khi chạy Docker.
+### 3. Phân định rõ ràng: "Chỗ nào em tự viết, chỗ nào em nhờ AI viết":
+* **Chỗ em nhờ AI viết:**
+  * Sinh khung code ban đầu (boilerplate): DTO records, getters/setters, mapper chuyển đổi giữa entity và DTO.
+  * Viết CRUD mẫu và các regex kiểm tra định dạng số điện thoại, format hiển thị giá tiền.
+  * Dựng khung giao diện JSX và bảng hiển thị dữ liệu React cơ bản.
+* **Chỗ em tự thiết kế và viết 100% (không để AI tự quyết định):**
+  * Thiết kế mô hình dữ liệu, chọn kiểu dữ liệu chuẩn (`BigDecimal` cho tiền tệ thay vì `double` để tránh sai số dấu phẩy động).
+  * Nghiệp vụ nhạy cảm về giá và kho: Bắt buộc lấy giá gốc từ server (`variant.getPrice()`), không tin giá client gửi lên; dùng `@Lock(LockModeType.PESSIMISTIC_WRITE)` để khóa dòng tồn kho chống bán lố khi nhiều người cùng mua.
+  * Xử lý toàn vẹn dữ liệu: Chặn xóa biến thể/sản phẩm khi còn hàng hoặc đã có đơn/phiếu nhập; dọn dòng tồn kho rỗng trước khi xóa biến thể để tránh lỗi khóa ngoại (FK constraint).
+  * Thiết lập phân quyền bảo mật Spring Security và bảo vệ các endpoint ghi dữ liệu.
 
-## 3. Công việc đã thực hiện
+---
 
-### Quản lý sản phẩm
+## Ý 2: Kỹ năng kiểm soát code (5 điểm)
 
-- Tạo entity và repository sản phẩm, liên kết nhiều-một tới danh mục, thương hiệu, nhà cung cấp.
-- Tạo DTO tạo mới và cập nhật riêng, DTO trả về gộp sẵn tên danh mục, thương hiệu, nhà cung cấp cùng giá, tồn kho, ảnh của biến thể đầu tiên.
-- Viết tầng service chứa toàn bộ nghiệp vụ: chuẩn hóa mã in hoa, báo trùng mã, báo khóa ngoại không tồn tại, xóa kèm biến thể liên quan, import Excel gom lỗi theo từng dòng.
-- Viết controller mỏng chỉ validate đầu vào và gọi service: xem danh sách có lọc theo mã/tên, xem chi tiết, thêm, sửa, xóa, nhập và xuất Excel.
-- Dựng trang quản trị gộp 4 màn PHP cũ thành 1 component: bộ lọc mã/tên, bảng 11 cột, badge tồn kho, dialog thêm/sửa, nhập/xuất Excel.
+### a) Kiểm soát tính năng và luồng code:
+* **Nắm rõ vị trí từng tính năng trong source code:**
+  * **Code đăng nhập nằm ở đâu:**
+    * Controller: `AuthController.java` (endpoint `POST /api/auth/login`).
+    * Service: `AuthServiceImpl.java` (gọi `AuthenticationManager.authenticate()` xác thực, tạo JWT qua `JwtUtils`).
+    * Filter & Cấu hình: `JwtAuthFilter.java` và `SecurityConfig.java`.
+  * **Muốn tạo ràng buộc mật khẩu phải có dấu `@` thì sửa ở đâu:**
+    * Vào `RegisterRequest.java` (dòng 16), thêm annotation Bean Validation trên trường `password`:
+      `@Pattern(regexp = ".*@.*", message = "Mật khẩu bắt buộc phải chứa ký tự @")`
+    * Controller có gắn `@Valid` sẽ tự động chặn request không hợp lệ và trả mã lỗi `400 Bad Request`.
+  * **Code đặt hàng và giữ chỗ kho ở đâu:**
+    * `OrderServiceImpl.java` (dòng 86-127): `create()` tự đọc giá từ DB, gọi `reserveStock()` khóa dòng tồn kho.
+  * **Code chặn xóa biến thể khi còn tồn kho hoặc có giao dịch ở đâu:**
+    * `ProductVariantServiceImpl.java` (dòng 156) và `ProductServiceImpl.java` (dòng 165): `ensureDeletable()` kiểm tra tồn và lịch sử, trả mã lỗi `409 Conflict`.
+* **Luồng xử lý 1 Request từ Client -> Server:**
+  * Client (Axios) gắn token -> `JwtAuthFilter` (giải mã token, nạp user) -> `Controller` (validate DTO) -> `Service` (nghiệp vụ + transaction) -> `Repository` (truy vấn CSDL) -> `MySQL`.
 
-### Quản lý biến thể
+### b) Kỹ năng sử dụng Skill và công cụ phụ trợ (graphify, sơ đồ kiến trúc):
+* **Dùng skill Graphify / Dependency Mapping:** Quét cây thư mục, lập sơ đồ phụ thuộc giữa các tầng để phát hiện sớm lỗi phụ thuộc vòng (Circular Dependency) hoặc vi phạm kiến trúc (Controller gọi thẳng Repository).
+* **Dùng Mermaid trực tiếp trong IDE:** Mở sequence diagram để soi thứ tự thực thi (ví dụ: mở transaction -> lock tồn kho -> tạo order detail -> tính tổng tiền) trước khi code.
+* **Dùng Rules / Context Engineering cho AI:** Đặt các quy tắc ràng buộc AI (luôn dùng thông báo tiếng Việt có dấu, quy chuẩn Conventional Commits, giữ nguyên mô hình 1 kho trung tâm id=1).
 
-- Tạo entity và repository biến thể, liên kết nhiều-một tới sản phẩm; giá dùng BigDecimal, ảnh lưu TEXT.
-- Tạo DTO tạo mới và cập nhật riêng, mã biến thể chỉ nhập khi tạo và khóa khi sửa.
-- Viết service lưu file ảnh: chỉ nhận định dạng ảnh hợp lệ, làm sạch tên file, tự chống trùng tên, xóa file cũ khi thay hoặc xóa biến thể.
-- Viết tầng service nghiệp vụ: báo thiếu mã sản phẩm, báo trùng mã biến thể, báo mã sản phẩm không tồn tại, giữ ảnh cũ khi sửa không upload mới, import Excel không kèm ảnh.
-- Viết controller nhận multipart cho phép gửi JSON fields kèm file ảnh trong cùng một request, đủ các endpoint xem, thêm, sửa, xóa, nhập, xuất Excel.
-- Dựng trang quản trị: bộ lọc mã/tên biến thể, bảng đầy đủ màu/RAM/dung lượng/giá/tồn, dialog 9 trường có chọn sản phẩm từ dropdown, upload ảnh kèm xem trước, nhập/xuất Excel.
+### c) Phân tích qua Log, Diff & Góc nhìn Leader đánh giá hiệu quả nhóm:
+* **Ý hiểu về công cụ:**
+  * `git diff`: Soi chiếu từng dòng thay đổi trước khi commit, loại bỏ các dòng `console.log`, tránh việc format lại toàn bộ file làm nhiễu lịch sử git.
+  * `git log`: Cuốn nhật ký tiến độ; commit rõ ràng theo chuẩn Conventional Commits (`feat:`, `fix:`).
+* **Đóng vai trò Leader - Cách em đánh giá thành viên làm việc hiệu quả:**
+  * **Không đo bằng số dòng code (LOC):** Dòng code nhiều chỉ là copy-paste từ AI, dễ gây ra code thừa và nợ kỹ thuật.
+  * **Tiêu chí 1 - Tính nguyên tử của Commit:** Commit nhỏ gọn (2-3 file/commit), nội dung tập trung giải quyết đúng 1 vấn đề, message rõ ràng.
+  * **Tiêu chí 2 - Khả năng làm chủ code:** Hỏi bất kỳ dòng code nào trong PR đều giải thích được lý do và luồng chạy, không trả lời kiểu "AI sinh ra nên em để vậy".
+  * **Tiêu chí 3 - Xử lý trường hợp biên (Edge Cases):** Luôn có tư duy phòng thủ (check `null` trước khi `.compareTo()`, bắt lỗi khóa ngoại khi xóa, validate dữ liệu đầu vào).
+  * **Tiêu chí 4 - Độ tin cậy qua Test:** Tính năng viết ra phải có Unit/Integration Test đi kèm chứng minh chạy đúng.
+  * **Tiêu chí 5 - Kỹ năng giải quyết conflict:** Thường xuyên rebase, giải quyết conflict cẩn thận mà không ghi đè mất code của người khác.
 
-### Việc chung cho cả hai phân hệ
+---
 
-- Mở đọc public cho API sản phẩm, biến thể, danh mục, nhà cung cấp và đường dẫn ảnh; thao tác ghi giữ nguyên yêu cầu quyền ADMIN.
-- Cấu hình thư mục upload, giới hạn dung lượng file, seed sẵn một bộ dữ liệu mẫu để mở trang là có dữ liệu.
-- Nối cả hai trang vào sidebar layout quản trị cạnh trang danh mục và khuyến mãi của bạn.
-- Chia toàn bộ việc thành 21 commit nhỏ theo chuẩn Conventional Commits, cụm sản phẩm và cụm biến thể tách riêng từng commit theo tầng.
-- Xử lý conflict khi rebase lên main theo nguyên tắc giữ code của bạn: bỏ entity/controller danh mục và nhà cung cấp của mình để dùng bản service-pattern của bạn, giữ lại phần sản phẩm/biến thể và tự thích ứng.
+## Ý 3: Kết hợp các công cụ test tính năng nâng cao (2 điểm)
 
-## 4. Kết quả và trạng thái
+### 1. Kiểm thử tầng dữ liệu và nghiệp vụ (`@DataJpaTest` + H2 Database):
+* Xây dựng bộ test tự động trong `OrderAndCatalogIntegrityTests.java` kiểm thử các ca biên thực tế:
+  * **Test chống hack giá client:** Client gửi `unitPrice = 100đ` (hoặc `0đ`), server tự lấy giá DB `15.000.000đ`, tính đúng tổng đơn `30.000.000đ`.
+  * **Test tổng tồn đa biến thể:** Biến thể A tồn = 0, Biến thể B tồn = 10 -> Tổng tồn sản phẩm tính đúng là 10 (không bị lấy sai biến thể đầu dẫn đến báo hết hàng).
+  * **Test bảo toàn lịch sử kho:** Biến thể đã có kho hoặc phiếu nhập thì cấm đổi `productCode`, server trả về `409 Conflict`.
+  * **Test phòng vệ giá null:** Biến thể mới chưa đặt giá bán (`price = null`), tạo phiếu nhập kho không bị crash `NullPointerException`.
 
-- Backend biên dịch thành công, test JPA pass toàn bộ, frontend build thành công.
-- Rebuild Docker và khởi động thành công, bảng mới tự tạo và seed đủ dữ liệu mẫu.
-- Kiểm thử API thật: đăng nhập admin lấy JWT, tạo sản phẩm trả 201, tạo trùng trả 409, xóa trả 204; tạo biến thể multipart trả 201, đọc chi tiết join đúng tên sản phẩm.
-- Mở trình duyệt đăng nhập admin dùng được hết các trang quản lý sản phẩm, biến thể, danh mục, khuyến mãi.
+### 2. Kiểm thử đồng thời và ràng buộc toàn vẹn (`CartServiceTests.java`):
+* Test chặn thêm giỏ hàng khi vượt quá tồn khả dụng trong kho.
+* Test dọn sạch dòng tồn kho rỗng trước khi xóa biến thể để không bị lỗi vi phạm khóa ngoại CSDL (FK violation).
 
-## 5. Phần còn hạn chế
-
-- Xóa sản phẩm hiện xóa kèm biến thể; chưa chặn khi biến thể đã phát sinh trong đơn hàng vì module đơn hàng chưa có.
-- Import Excel mới báo tổng số tạo mới/trùng/lỗi, chưa hiển thị chi tiết từng dòng lỗi trên giao diện.
-- Cửa hàng phía khách vẫn dùng dữ liệu mẫu, chưa nối vào API sản phẩm thật.
-- Muốn build Docker cần máy truy cập được Docker Registry và cấu hình `JWT_SECRET` trong file `.env`.
-
-## 6. Cách chạy bằng Docker
-
-Tại thư mục gốc dự án, cấu hình `JWT_SECRET` trong `.env`, sau đó chạy:
-
-```powershell
-docker compose up -d --build
-```
-
-Các địa chỉ dịch vụ theo `docker-compose.yml`:
-
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8080/api
-- Swagger UI: http://localhost:8080/swagger-ui/index.html
-- phpMyAdmin: http://localhost:8081
-- MySQL: `localhost:3306`
-- Redis: `localhost:6379`
+### 3. Kiểm thử đóng gói và tự động hóa quy trình:
+* **Frontend:** Chạy `npm run build` xác nhận Vite đóng gói thành công, không có lỗi cú pháp JSX.
+* **Backend:** Chạy `./mvnw test` đảm bảo toàn bộ 16/16 test case pass 100%.
+* **Docker Compose:** Khởi chạy đồng bộ Frontend, Backend, MySQL, Redis để kiểm thử môi trường chạy thật.

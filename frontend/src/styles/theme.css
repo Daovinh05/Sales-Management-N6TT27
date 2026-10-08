@@ -18,7 +18,7 @@ button { cursor: pointer; border: none; background: none; }
 
 /* Header */
 .tz-header { height: var(--header-height); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; background: rgba(255,255,255,.95); position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 0 #eee; backdrop-filter: blur(10px); gap: 16px; }
-.tz-logo { font-weight: 800; font-size: 24px; letter-spacing: -0.5px; white-space: nowrap; }
+.tz-logo { font-weight: 800; font-size: 24px; letter-spacing: -0.5px; white-space: nowrap; cursor: pointer; }
 .tz-logo span { color: var(--brand); }
 .tz-nav { display: flex; gap: 30px; align-items: center; list-style: none; }
 .tz-nav-item { font-size: 14px; font-weight: 600; color: #333; cursor: pointer; position: relative; white-space: nowrap; }

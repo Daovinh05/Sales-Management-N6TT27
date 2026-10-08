@@ -6,7 +6,8 @@
 
 .kh-header { background: #fff; position: sticky; top: 0; z-index: 900; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
 .kh-header .tz-container { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 12px; padding-bottom: 12px; }
-.kh-logo { font-size: 28px; font-weight: 800; color: #00483d; display: flex; align-items: center; gap: 8px; }
+.kh-logo { font-size: 28px; font-weight: 800; color: #00483d; display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; }
+.kh-logo:hover { color: #006a5b; }
 .kh-search { flex-grow: 1; max-width: 700px; display: flex; }
 .kh-search input { flex: 1; border: 1px solid #e0e0e0; border-right: none; border-radius: 8px 0 0 8px; padding: 10px 14px; font-size: 14px; outline: none; }
 .kh-search input:focus { border-color: #006a5b; }
@@ -119,7 +120,11 @@
 .kh-cempty { color: #777; font-size: 14px; text-align: center; margin-top: 40px; }
 .kh-citem { display: flex; gap: 10px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px dashed #ddd; }
 .kh-citem img { width: 70px; height: 70px; object-fit: contain; background: #f4f4f4; border-radius: 6px; }
+.kh-citem img.clickable { cursor: pointer; }
+.kh-citem img.clickable:hover { outline: 1px solid #d70018; }
 .kh-citem .n { font-size: 13px; font-weight: 700; }
+.kh-citem .n.clickable { cursor: pointer; }
+.kh-citem .n.clickable:hover { color: #d70018; text-decoration: underline; }
 .kh-citem .v { font-size: 11px; color: #777; text-transform: uppercase; }
 .kh-citem .p { font-size: 13px; color: #d70018; font-weight: 700; }
 .kh-citem .rm { margin-left: auto; width: 28px; height: 28px; border-radius: 50%; border: 1px solid #ddd; color: #777; }

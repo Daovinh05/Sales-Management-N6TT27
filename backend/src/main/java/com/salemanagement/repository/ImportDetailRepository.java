@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ImportDetailRepository extends JpaRepository<ImportDetail, Long> {
+
+    boolean existsByProductVariant_Code(String variantCode);
 }

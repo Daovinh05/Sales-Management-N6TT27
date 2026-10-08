@@ -14,7 +14,7 @@ const formatPrice = (value) => {
   return Number(value).toLocaleString('vi-VN');
 };
 
-const emptyForm = { code: '', productCode: '', name: '', color: '', ram: '', storage: '', price: '', stockQuantity: '' };
+const emptyForm = { code: '', productCode: '', name: '', color: '', ram: '', storage: '', price: '' };
 
 export default function VariantManagement() {
   const [variants, setVariants] = useState([]);
@@ -86,11 +86,10 @@ export default function VariantManagement() {
       ram: variant.ram || '',
       storage: variant.storage || '',
       price: variant.price ?? '',
-      stockQuantity: variant.stockQuantity ?? '',
     });
     setImageFile(null);
     setCurrentImage(variant.imageUrl || '');
-    setDialog({ mode: 'edit', code: variant.code });
+    setDialog({ mode: 'edit', code: variant.code, stock: variant.stockQuantity ?? 0 });
     setError('');
   };
 
@@ -107,7 +106,6 @@ export default function VariantManagement() {
       formData.append('ram', form.ram || '');
       formData.append('storage', form.storage || '');
       formData.append('price', form.price === '' ? '' : String(form.price));
-      formData.append('stockQuantity', form.stockQuantity === '' ? '' : String(form.stockQuantity));
       if (imageFile) formData.append('image', imageFile);
       if (dialog.mode === 'create') {
         await api.post('/variants', formData);
@@ -306,7 +304,11 @@ export default function VariantManagement() {
           <label>RAM<input maxLength="50" value={form.ram} onChange={(event) => setForm({ ...form, ram: event.target.value })} /></label>
           <label>Dung lượng<input maxLength="50" value={form.storage} onChange={(event) => setForm({ ...form, storage: event.target.value })} /></label>
           <label>Giá<input type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} /></label>
-          <label>Số lượng kho<input type="number" min="0" step="1" value={form.stockQuantity} onChange={(event) => setForm({ ...form, stockQuantity: event.target.value })} /></label>
+          <div>
+            <p className="ad-brand-message" style={{ margin: 0 }}>
+              Tồn kho hiện tại: <strong>{dialog.mode === 'edit' ? Number(dialog.stock || 0) : 0}</strong> — tồn chỉ tăng qua duyệt phiếu nhập kho.
+            </p>
+          </div>
           <div className="ad-dialog-actions">
             <button className="ad-button ad-button-quiet" type="button" onClick={() => setDialog(null)}>Hủy</button>
             <button className="ad-button ad-button-primary" disabled={saving}>{saving ? 'Đang lưu...' : 'Lưu biến thể'}</button>

@@ -222,7 +222,7 @@ export default function ProductManagement() {
         <p className="ad-brand-count"><strong>Kết quả:</strong> {loading ? 'Đang tải...' : `${visibleProducts.length} bản ghi`}</p>
         <div className="ad-table-wrap">
           <table className="ad-brand-table">
-            <thead><tr><th>STT</th><th>MÃ SP</th><th>TÊN SP</th><th>TÊN BIẾN THỂ</th><th>HÌNH ẢNH</th><th>GIÁ</th><th>SỐ LƯỢNG</th><th>DANH MỤC</th><th>THƯƠNG HIỆU</th><th>NHÀ CUNG CẤP</th><th>THAO TÁC</th></tr></thead>
+            <thead><tr><th>STT</th><th>MÃ SP</th><th>TÊN SP</th><th>BIẾN THỂ ĐẠI DIỆN</th><th>HÌNH ẢNH</th><th>GIÁ</th><th>TỔNG TỒN</th><th>DANH MỤC</th><th>THƯƠNG HIỆU</th><th>NHÀ CUNG CẤP</th><th>THAO TÁC</th></tr></thead>
             <tbody>
               {loading ? <tr><td colSpan="11" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
                 : pageProducts.length ? pageProducts.map((product, index) => (
@@ -236,7 +236,7 @@ export default function ProductManagement() {
                       : <span>Không có hình</span>}</td>
                     <td>{formatCurrency(product.price)}</td>
                     <td>{Number(product.stockQuantity || 0) > 0
-                      ? <span className="ad-role-badge admin">Còn {product.stockQuantity}</span>
+                      ? <span className="ad-role-badge admin" title="Tổng tồn khả dụng tất cả biến thể">Còn {product.stockQuantity}</span>
                       : <span className="ad-role-badge">Hết hàng</span>}</td>
                     <td>{product.categoryName || 'N/A'}</td>
                     <td>{product.brandName || 'N/A'}</td>

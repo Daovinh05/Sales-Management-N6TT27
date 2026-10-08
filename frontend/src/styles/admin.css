@@ -1,7 +1,8 @@
 /* Clone trang Quanly web cũ */
 .ad-wrap { display: flex; height: 100vh; background: #f8fafc; font-family: Inter, 'Be Vietnam Pro', sans-serif; }
 .ad-side { width: 260px; background: #fff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 22px 16px; overflow-y: auto; flex-shrink: 0; }
-.ad-brand { font-size: 22px; font-weight: 800; color: #4361ee; display: flex; align-items: center; gap: 10px; padding: 0 8px 20px; font-family: Nunito, Inter, sans-serif; }
+.ad-brand { font-size: 22px; font-weight: 800; color: #4361ee; display: flex; align-items: center; gap: 10px; padding: 0 8px 20px; font-family: Nunito, Inter, sans-serif; cursor: pointer; }
+.ad-brand:hover { opacity: .8; }
 .ad-menu { display: flex; flex-direction: column; gap: 8px; }
 .ad-menu a, .ad-menu button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 0; border-radius: 12px; background: transparent; color: #64748b; font: inherit; font-size: 16px; font-weight: 500; text-align: left; cursor: pointer; }
 .ad-menu a:hover, .ad-menu button:hover, .ad-menu a.active, .ad-menu button.active { background: #eff6ff; color: #4361ee; }

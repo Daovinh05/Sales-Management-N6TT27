@@ -98,6 +98,13 @@ export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmi
     onSubmitSearch?.('');
   };
 
+  const goHome = () => {
+    clearSearch();
+    onHome?.();
+    if (window.location.hash) window.location.hash = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const pickSuggestion = (s) => {
     setTerm(s.name);
     termRef.current = s.name;
@@ -123,7 +130,7 @@ export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmi
   return (
     <header className="kh-header">
       <div className="tz-container">
-        <a className="kh-logo" onClick={() => { onHome?.(); if (window.location.hash) window.location.hash = ''; }} style={{ cursor: 'pointer' }}>TECHZONE</a>
+        <a className="kh-logo" onClick={goHome} title="Về trang chủ sản phẩm" style={{ cursor: 'pointer' }}>TECHZONE</a>
         <form
           className="kh-search kh-search-wrap" ref={boxRef}
           onSubmit={(e) => { e.preventDefault(); submit(); }}

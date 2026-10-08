@@ -5,10 +5,12 @@ import com.salemanagement.dto.response.OrderResponse;
 import com.salemanagement.entity.Inventory;
 import com.salemanagement.entity.Order;
 import com.salemanagement.entity.OrderDetail;
+import com.salemanagement.entity.ProductVariant;
 import com.salemanagement.exception.BusinessException;
 import com.salemanagement.exception.ResourceNotFoundException;
 import com.salemanagement.repository.InventoryRepository;
 import com.salemanagement.repository.OrderRepository;
+import com.salemanagement.repository.ProductVariantRepository;
 import com.salemanagement.service.OrderService;
 import java.math.BigDecimal;
 import java.util.List;
@@ -40,6 +42,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final InventoryRepository inventoryRepository;
+    private final ProductVariantRepository variantRepository;
 
     // Đồng bộ với luồng nhập kho: toàn bộ tồn kho nằm ở kho trung tâm id = 1.
     private static final Long CENTRAL_WAREHOUSE_ID = 1L;
@@ -98,12 +101,24 @@ public class OrderServiceImpl implements OrderService {
 
         BigDecimal total = BigDecimal.ZERO;
         for (OrderRequest.OrderItemRequest item : request.items()) {
+            if (item.variantCode() == null || item.variantCode().isBlank()) {
+                throw new BusinessException("Mã biến thể không được để trống", HttpStatus.BAD_REQUEST);
+            }
+            // Giá bán lấy từ server theo variant, không tin unitPrice client gửi lên.
+            String variantCode = item.variantCode().trim().toUpperCase();
+            ProductVariant variant = variantRepository.findById(variantCode)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Không tìm thấy biến thể: " + item.variantCode()));
+            BigDecimal unitPrice = variant.getPrice() == null ? BigDecimal.ZERO : variant.getPrice();
+            String productName = item.productName() == null || item.productName().isBlank()
+                    ? resolveVariantName(variant)
+                    : item.productName().trim();
             OrderDetail detail = new OrderDetail();
             detail.setOrder(order);
-            detail.setVariantCode(normalize(item.variantCode()));
-            detail.setProductName(item.productName() == null ? "" : item.productName().trim());
+            detail.setVariantCode(variant.getCode());
+            detail.setProductName(productName);
             detail.setQuantity(item.quantity());
-            detail.setUnitPrice(item.unitPrice() == null ? BigDecimal.ZERO : item.unitPrice());
+            detail.setUnitPrice(unitPrice);
             order.getDetails().add(detail);
             total = total.add(detail.getUnitPrice().multiply(BigDecimal.valueOf(detail.getQuantity())));
 
@@ -319,6 +334,17 @@ public class OrderServiceImpl implements OrderService {
 
     private String normalize(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    /** Tên hiển thị chuẩn: "Tên SP - Tên biến thể", dùng khi client không gửi productName. */
+    private String resolveVariantName(ProductVariant variant) {
+        String productName = variant.getProduct() == null ? "" : variant.getProduct().getName();
+        if (variant.getName() == null || variant.getName().isBlank()) {
+            return productName == null ? "" : productName;
+        }
+        return (productName == null || productName.isBlank())
+                ? variant.getName().trim()
+                : productName.trim() + " - " + variant.getName().trim();
     }
 
     private String joinNote(String current, String addition) {
