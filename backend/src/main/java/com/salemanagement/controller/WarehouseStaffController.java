@@ -41,4 +41,10 @@ public class WarehouseStaffController {
             Authentication authentication) {
         return ResponseEntity.ok(warehouseStaffService.getMyImportDetail(id, authentication.getName()));
     }
+
+    @GetMapping("/imports/stats")
+    public ResponseEntity<com.salemanagement.dto.response.ImportStatsResponse> getImportStats(
+            Authentication authentication) {
+        return ResponseEntity.ok(warehouseStaffService.getImportStats(authentication.getName()));
+    }
 }

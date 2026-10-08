@@ -26,4 +26,7 @@ public interface ImportReceiptRepository extends JpaRepository<ImportReceipt, Lo
     @Query(value = "SELECT ir FROM ImportReceipt ir JOIN FETCH ir.supplier WHERE ir.createdBy.username = :username",
            countQuery = "SELECT count(ir) FROM ImportReceipt ir WHERE ir.createdBy.username = :username")
     Page<ImportReceipt> findByCreatedByUsernameWithDetails(@Param("username") String username, Pageable pageable);
+
+    long countByCreatedByUsername(String username);
+    long countByCreatedByUsernameAndStatus(String username, com.salemanagement.enums.EImportStatus status);
 }

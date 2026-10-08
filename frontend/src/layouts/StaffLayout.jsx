@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faRightFromBracket, faFileInvoice, faPlusCircle, faMobileScreen
+  faRightFromBracket, faFileInvoice, faPlusCircle, faMobileScreen, faChartPie
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../store/auth.jsx';
 import AppToast from '../components/common/AppToast.jsx';
 import ImportHistory from '../pages/staff/ImportHistory.jsx';
 import ImportCreate from '../pages/staff/ImportCreate.jsx';
+import StaffDashboard from '../pages/staff/StaffDashboard.jsx';
 
 const MENU = [
-  { icon: faFileInvoice, label: 'Lịch sử nhập kho', path: '/' },
-  { icon: faPlusCircle, label: 'Lập phiếu nhập mới', path: '/lap-phieu' }
+  { icon: faChartPie, label: 'Bàn làm việc', path: '/' },
+  { icon: faFileInvoice, label: 'Lịch sử nhập kho', path: '/staff/imports' },
+  { icon: faPlusCircle, label: 'Lập phiếu nhập mới', path: '/staff/imports/create' }
 ];
 
 const PATH_TO_PAGE = Object.fromEntries(MENU.map((m) => [m.path, m.label]));
@@ -18,7 +20,7 @@ const PAGE_TO_PATH = Object.fromEntries(MENU.map((m) => [m.label, m.path]));
 
 const pageFromHash = () => {
   const path = window.location.hash.replace(/^#/, '') || '/';
-  return PATH_TO_PAGE[path] || 'Lịch sử nhập kho';
+  return PATH_TO_PAGE[path] || 'Bàn làm việc';
 };
 
 export default function StaffLayout({ notify, toasts = [] }) {
@@ -67,7 +69,9 @@ export default function StaffLayout({ notify, toasts = [] }) {
           </div>
         </header>
         <div className="ad-content">
-          {activePage === 'Lịch sử nhập kho' ? (
+          {activePage === 'Bàn làm việc' ? (
+            <StaffDashboard notify={notify} />
+          ) : activePage === 'Lịch sử nhập kho' ? (
             <ImportHistory notify={notify} />
           ) : activePage === 'Lập phiếu nhập mới' ? (
             <ImportCreate notify={notify} onSuccess={() => go('Lịch sử nhập kho')} />

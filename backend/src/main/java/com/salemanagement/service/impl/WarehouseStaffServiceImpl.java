@@ -155,4 +155,20 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
                 .details(items)
                 .build();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public com.salemanagement.dto.response.ImportStatsResponse getImportStats(String username) {
+        long total = importReceiptRepository.countByCreatedByUsername(username);
+        long pending = importReceiptRepository.countByCreatedByUsernameAndStatus(username, com.salemanagement.enums.EImportStatus.PENDING);
+        long approved = importReceiptRepository.countByCreatedByUsernameAndStatus(username, com.salemanagement.enums.EImportStatus.APPROVED);
+        long rejected = importReceiptRepository.countByCreatedByUsernameAndStatus(username, com.salemanagement.enums.EImportStatus.REJECTED);
+
+        return com.salemanagement.dto.response.ImportStatsResponse.builder()
+                .totalImports(total)
+                .pendingImports(pending)
+                .approvedImports(approved)
+                .rejectedImports(rejected)
+                .build();
+    }
 }

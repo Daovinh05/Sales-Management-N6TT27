@@ -6,6 +6,11 @@ export const warehouseStaffService = {
     return res.data;
   },
   
+  getImportStats: async () => {
+    const res = await api.get('/staff/imports/stats');
+    return res.data;
+  },
+  
   createImport: async (payload) => {
     const res = await api.post('/staff/imports', payload);
     return res.data;

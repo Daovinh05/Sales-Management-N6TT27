@@ -261,24 +261,6 @@ public class DataSeeder {
         };
     }
 
-    @Bean
-    CommandLineRunner seedPromotions(PromotionRepository promotionRepository) {
-        return args -> {
-            if (promotionRepository.existsById("KM01")) {
-                return;
-            }
-
-            LocalDateTime now = LocalDateTime.now();
-            Promotion promotion = new Promotion();
-            promotion.setCode("KM01");
-            promotion.setName("Ưu đãi tân sinh viên UTT");
-            promotion.setDiscountAmount(new BigDecimal("20000"));
-            promotion.setStartsAt(now.minusDays(1));
-            promotion.setEndsAt(now.plusDays(30));
-            promotionRepository.save(promotion);
-        };
-    }
-
     @org.springframework.core.annotation.Order(3)
     CommandLineRunner seedInventory(WarehouseRepository warehouseRepository,
                                     ProductVariantRepository variantRepository,
