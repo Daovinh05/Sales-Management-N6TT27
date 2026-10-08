@@ -56,7 +56,8 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
             ProductVariant variant = productVariantRepository.findById(itemReq.getVariantCode())
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm: " + itemReq.getVariantCode()));
 
-            if (itemReq.getImportPrice().compareTo(variant.getPrice()) >= 0) {
+            if (variant.getPrice() != null && itemReq.getImportPrice() != null
+                    && itemReq.getImportPrice().compareTo(variant.getPrice()) >= 0) {
                 throw new IllegalArgumentException(String.format("Giá nhập của sản phẩm %s (%s) không được lớn hơn hoặc bằng giá bán hiện tại (%s)", 
                         variant.getName(), itemReq.getImportPrice(), variant.getPrice()));
             }

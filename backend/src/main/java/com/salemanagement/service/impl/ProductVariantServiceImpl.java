@@ -126,7 +126,17 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         ProductVariant variant = variantRepository.findById(normalizeCode(code))
                 .orElseThrow(() -> new BusinessException(
                         "Không tìm thấy biến thể có mã: " + code, HttpStatus.NOT_FOUND));
-        variant.setProduct(resolveProduct(request.getProductCode()));
+        Product newProduct = resolveProduct(request.getProductCode());
+        if (variant.getProduct() != null && !variant.getProduct().getCode().equalsIgnoreCase(newProduct.getCode())) {
+            boolean hasInventory = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode()).isPresent();
+            boolean hasImport = importDetailRepository.existsByProductVariant_Code(variant.getCode());
+            if (hasInventory || hasImport) {
+                throw new BusinessException(
+                        "Không thể đổi sản phẩm vì biến thể đã có dữ liệu kho hoặc lịch sử nhập hàng",
+                        HttpStatus.CONFLICT);
+            }
+        }
+        variant.setProduct(newProduct);
         apply(variant, request.getName(), request.getColor(), request.getRam(),
                 request.getStorage(), request.getPrice());
         // Giữ ảnh cũ nếu không upload mới — đúng behavior PHP bienthe_sua.
@@ -146,9 +156,10 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                         "Không tìm thấy biến thể có mã: " + code, HttpStatus.NOT_FOUND));
         ensureDeletable(variant);
         // Port đúng PHP BienThe_delete: xóa file ảnh trước rồi xóa bản ghi.
-        // Dọn dòng giỏ hàng đang giữ biến thể để tránh kẹt khóa ngoại.
+        // Dọn dòng giỏ hàng và dòng tồn kho (đã đảm bảo quantity=0, reserved=0) để tránh kẹt khóa ngoại.
         fileStorageService.deleteVariantImage(variant.getImageUrl());
         cartItemRepository.deleteByVariant(variant);
+        inventoryRepository.deleteByProductVariant(variant);
         variantRepository.delete(variant);
     }
 
