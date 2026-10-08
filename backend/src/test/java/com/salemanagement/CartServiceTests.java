@@ -66,11 +66,15 @@ class CartServiceTests {
     @Autowired
     private WarehouseRepository warehouseRepository;
 
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     private CartServiceImpl cartService;
     private User user;
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("ALTER TABLE warehouse ALTER COLUMN id RESTART WITH 1");
         cartService = new CartServiceImpl(cartRepository, cartItemRepository, variantRepository, inventoryRepository);
 
         Category category = new Category();
@@ -203,7 +207,7 @@ class CartServiceTests {
                 .extracting(ex -> ((BusinessException) ex).getStatus())
                 .isEqualTo(HttpStatus.CONFLICT);
         Inventory inv = inventoryRepository.findByWarehouseIdAndProductVariant_Code(
-                warehouseRepository.findAll().get(0).getId(), "BT01").orElseThrow();
+                1L, "BT01").orElseThrow();
         inv.setQuantity(0);
         inv.setReservedQuantity(0);
         inventoryRepository.save(inv);
@@ -220,7 +224,7 @@ class CartServiceTests {
                 brandRepository, supplierRepository, cartItemRepository, inventoryRepository,
                 importDetailRepository, orderRepository);
         Inventory inv = inventoryRepository.findByWarehouseIdAndProductVariant_Code(
-                warehouseRepository.findAll().get(0).getId(), "BT01").orElseThrow();
+                1L, "BT01").orElseThrow();
         inv.setQuantity(0);
         inv.setReservedQuantity(0);
         inventoryRepository.save(inv);
