@@ -103,9 +103,20 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ImportReceiptSummaryResponse> getMyImports(String username, int page, int size) {
-        Page<ImportReceipt> pageResult = importReceiptRepository.findByCreatedByUsernameWithDetails(
-                username, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+    public PageResponse<ImportReceiptSummaryResponse> getMyImports(String username, String productKeyword, String status, int page, int size) {
+        com.salemanagement.enums.EImportStatus eStatus = null;
+        if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("ALL")) {
+            try {
+                eStatus = com.salemanagement.enums.EImportStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // ignore
+            }
+        }
+
+        String productKeywordFilter = (productKeyword != null && !productKeyword.trim().isEmpty()) ? productKeyword : null;
+
+        Page<ImportReceipt> pageResult = importReceiptRepository.findByUsernameWithFilters(
+                username, eStatus, productKeywordFilter, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
 
         List<ImportReceiptSummaryResponse> content = pageResult.getContent().stream()
                 .map(receipt -> ImportReceiptSummaryResponse.builder()
@@ -153,6 +164,22 @@ public class WarehouseStaffServiceImpl implements WarehouseStaffService {
                 .note(receipt.getNote())
                 .status(receipt.getStatus().name())
                 .details(items)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public com.salemanagement.dto.response.ImportStatsResponse getImportStats(String username) {
+        long total = importReceiptRepository.countByCreatedByUsername(username);
+        long pending = importReceiptRepository.countByCreatedByUsernameAndStatus(username, com.salemanagement.enums.EImportStatus.PENDING);
+        long approved = importReceiptRepository.countByCreatedByUsernameAndStatus(username, com.salemanagement.enums.EImportStatus.APPROVED);
+        long rejected = importReceiptRepository.countByCreatedByUsernameAndStatus(username, com.salemanagement.enums.EImportStatus.REJECTED);
+
+        return com.salemanagement.dto.response.ImportStatsResponse.builder()
+                .totalImports(total)
+                .pendingImports(pending)
+                .approvedImports(approved)
+                .rejectedImports(rejected)
                 .build();
     }
 }

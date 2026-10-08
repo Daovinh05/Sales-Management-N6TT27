@@ -23,9 +23,11 @@ public class WarehouseStaffController {
     @GetMapping("/imports")
     public ResponseEntity<PageResponse<ImportReceiptSummaryResponse>> getMyImports(
             Authentication authentication,
+            @RequestParam(required = false) String productKeyword,
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(warehouseStaffService.getMyImports(authentication.getName(), page, size));
+        return ResponseEntity.ok(warehouseStaffService.getMyImports(authentication.getName(), productKeyword, status, page, size));
     }
 
     @PostMapping("/imports")
@@ -40,5 +42,11 @@ public class WarehouseStaffController {
             @PathVariable Long id,
             Authentication authentication) {
         return ResponseEntity.ok(warehouseStaffService.getMyImportDetail(id, authentication.getName()));
+    }
+
+    @GetMapping("/imports/stats")
+    public ResponseEntity<com.salemanagement.dto.response.ImportStatsResponse> getImportStats(
+            Authentication authentication) {
+        return ResponseEntity.ok(warehouseStaffService.getImportStats(authentication.getName()));
     }
 }

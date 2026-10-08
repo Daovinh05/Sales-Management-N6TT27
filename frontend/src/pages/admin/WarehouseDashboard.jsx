@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWarehouse, faUsers, faFileInvoice, faEye, faXmark, faChevronLeft, faChevronRight, faPen } from '@fortawesome/free-solid-svg-icons';
+import { faWarehouse, faUsers, faFileInvoice, faEye, faXmark, faChevronLeft, faChevronRight, faPen, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import warehouseAdminService from '../../services/warehouseAdminService.js';
+import Pagination from '../../components/admin/Pagination.jsx';
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -32,10 +33,20 @@ export default function WarehouseDashboard() {
 
   // States
   const [warehouseInfo, setWarehouseInfo] = useState(null);
+  
   const [staffs, setStaffs] = useState([]);
+  const [staffQueries, setStaffQueries] = useState({ name: '', email: '' });
+  const [staffFilters, setStaffFilters] = useState({ name: '', email: '' });
+  const [staffPage, setStaffPage] = useState(1);
+  const [staffPageSize, setStaffPageSize] = useState(10);
+  const [staffTotal, setStaffTotal] = useState(0);
+
   const [history, setHistory] = useState([]);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [historyQueries, setHistoryQueries] = useState({ createdBy: '', supplierName: '', status: 'ALL', productKeyword: '' });
+  const [historyFilters, setHistoryFilters] = useState({ createdBy: '', supplierName: '', status: 'ALL', productKeyword: '' });
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyPageSize, setHistoryPageSize] = useState(10);
+  const [historyTotal, setHistoryTotal] = useState(0);
 
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -47,8 +58,8 @@ export default function WarehouseDashboard() {
   useEffect(() => {
     if (activeTab === 'info') loadWarehouseInfo();
     else if (activeTab === 'staff') loadStaffs();
-    else if (activeTab === 'history') loadHistory(0);
-  }, [activeTab]);
+    else if (activeTab === 'history') loadHistory();
+  }, [activeTab, staffPage, staffPageSize, staffFilters, historyPage, historyPageSize, historyFilters]);
 
   const loadWarehouseInfo = async () => {
     setLoading(true);
@@ -65,8 +76,9 @@ export default function WarehouseDashboard() {
   const loadStaffs = async () => {
     setLoading(true);
     try {
-      const data = await warehouseAdminService.getWarehouseStaffs();
-      setStaffs(data);
+      const data = await warehouseAdminService.getWarehouseStaffs(staffPage - 1, staffPageSize, staffFilters.name, staffFilters.email);
+      setStaffs(data.content);
+      setStaffTotal(data.totalElements);
     } catch (err) {
       setError('Lỗi tải danh sách nhân sự.');
     } finally {
@@ -74,13 +86,13 @@ export default function WarehouseDashboard() {
     }
   };
 
-  const loadHistory = async (pageNo) => {
+  const loadHistory = async () => {
     setLoading(true);
     try {
-      const data = await warehouseAdminService.getImportHistory(pageNo, 10);
+      const status = historyFilters.status === 'ALL' ? '' : historyFilters.status;
+      const data = await warehouseAdminService.getImportHistory(historyPage - 1, historyPageSize, historyFilters.createdBy, historyFilters.supplierName, status, historyFilters.productKeyword);
       setHistory(data.content);
-      setPage(data.page);
-      setTotalPages(data.totalPages);
+      setHistoryTotal(data.totalElements);
     } catch (err) {
       setError('Lỗi tải lịch sử nhập kho.');
     } finally {
@@ -106,7 +118,7 @@ export default function WarehouseDashboard() {
     try {
       await warehouseAdminService.updateImportStatus(selectedReceipt.id, status);
       alert(`Đã ${status === 'APPROVED' ? 'duyệt' : 'từ chối'} phiếu nhập thành công!`);
-      loadHistory(page);
+      loadHistory();
       setSelectedReceipt(null);
     } catch (err) {
       alert(err?.response?.data?.message || 'Lỗi cập nhật trạng thái phiếu nhập');
@@ -186,6 +198,28 @@ export default function WarehouseDashboard() {
       {activeTab === 'staff' && (
         <section className="ad-brand-panel ad-brand-list">
           <h2><FontAwesomeIcon icon={faUsers} /> Danh sách nhân sự kho</h2>
+          <form className="ad-supplier-filter" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'flex-end' }} onSubmit={(e) => {
+            e.preventDefault();
+            setStaffPage(1);
+            setStaffFilters({ name: staffQueries.name.trim(), email: staffQueries.email.trim() });
+          }}>
+            <label style={{ flex: '1 1 250px', display: 'flex', flexDirection: 'column', gap: '6px' }}>HỌ TÊN
+              <input value={staffQueries.name} onChange={(e) => setStaffQueries({ ...staffQueries, name: e.target.value })} placeholder="Nhập họ tên cần tìm..." />
+            </label>
+            <label style={{ flex: '1 1 250px', display: 'flex', flexDirection: 'column', gap: '6px' }}>EMAIL
+              <input value={staffQueries.email} onChange={(e) => setStaffQueries({ ...staffQueries, email: e.target.value })} placeholder="Nhập email cần tìm..." />
+            </label>
+            <div className="ad-filter-actions" style={{ flex: '1 1 250px', display: 'flex', gap: '10px' }}>
+              <button className="ad-button ad-button-blue" type="submit" style={{ flex: 1, margin: 0 }}><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
+              <button className="ad-button ad-button-quiet" type="button" style={{ flex: 1, margin: 0 }} onClick={() => {
+                setStaffQueries({ name: '', email: '' });
+                setStaffFilters({ name: '', email: '' });
+                setStaffPage(1);
+              }}>Làm mới</button>
+            </div>
+          </form>
+          
+          <p className="ad-brand-count"><strong>Kết quả:</strong> {loading ? 'Đang tải...' : `${staffTotal} bản ghi`}</p>
           <div className="ad-table-wrap" style={{ marginTop: '15px' }}>
             <table className="ad-brand-table">
               <thead>
@@ -213,6 +247,12 @@ export default function WarehouseDashboard() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            page={staffPage} pageSize={staffPageSize} total={staffTotal}
+            onPage={setStaffPage}
+            onPageSize={(size) => { setStaffPageSize(size); setStaffPage(1); }}
+            onRefresh={loadStaffs}
+          />
         </section>
       )}
 
@@ -220,6 +260,39 @@ export default function WarehouseDashboard() {
       {activeTab === 'history' && (
         <section className="ad-brand-panel ad-brand-list">
           <h2><FontAwesomeIcon icon={faFileInvoice} /> Lịch sử phiếu nhập</h2>
+          <form className="ad-supplier-filter" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'flex-end' }} onSubmit={(e) => {
+            e.preventDefault();
+            setHistoryPage(1);
+            setHistoryFilters({ createdBy: historyQueries.createdBy.trim(), supplierName: historyQueries.supplierName.trim(), status: historyQueries.status, productKeyword: historyQueries.productKeyword.trim() });
+          }}>
+            <label style={{ flex: '1 1 200px' }}>NGƯỜI TẠO
+              <input value={historyQueries.createdBy} onChange={(e) => setHistoryQueries({ ...historyQueries, createdBy: e.target.value })} placeholder="Nhập tên người tạo..." />
+            </label>
+            <label style={{ flex: '1 1 200px' }}>NHÀ CUNG CẤP
+              <input value={historyQueries.supplierName} onChange={(e) => setHistoryQueries({ ...historyQueries, supplierName: e.target.value })} placeholder="Nhập tên nhà cung cấp..." />
+            </label>
+            <label style={{ flex: '1 1 200px' }}>BIẾN THỂ
+              <input value={historyQueries.productKeyword} onChange={(e) => setHistoryQueries({ ...historyQueries, productKeyword: e.target.value })} placeholder="Nhập mã/tên BT trong phiếu..." />
+            </label>
+            <label style={{ flex: '1 1 200px' }}>TRẠNG THÁI
+              <select value={historyQueries.status} onChange={(e) => setHistoryQueries({ ...historyQueries, status: e.target.value })}>
+                <option value="ALL">Tất cả</option>
+                <option value="PENDING">Chờ duyệt</option>
+                <option value="APPROVED">Đã duyệt</option>
+                <option value="REJECTED">Từ chối</option>
+              </select>
+            </label>
+            <div className="ad-filter-actions" style={{ flex: '1 1 200px', display: 'flex', gap: '10px' }}>
+              <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
+              <button className="ad-button ad-button-quiet" type="button" onClick={() => {
+                setHistoryQueries({ createdBy: '', supplierName: '', status: 'ALL', productKeyword: '' });
+                setHistoryFilters({ createdBy: '', supplierName: '', status: 'ALL', productKeyword: '' });
+                setHistoryPage(1);
+              }}>Làm mới</button>
+            </div>
+          </form>
+
+          <p className="ad-brand-count"><strong>Kết quả:</strong> {loading ? 'Đang tải...' : `${historyTotal} bản ghi`}</p>
           <div className="ad-table-wrap" style={{ marginTop: '15px' }}>
             <table className="ad-brand-table">
               <thead>
@@ -255,85 +328,84 @@ export default function WarehouseDashboard() {
               </tbody>
             </table>
           </div>
-          
-          {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
-              <button className="ad-button ad-button-quiet" disabled={page === 0} onClick={() => loadHistory(page - 1)}>
-                <FontAwesomeIcon icon={faChevronLeft} /> Trước
-              </button>
-              <span style={{ display: 'flex', alignItems: 'center' }}>Trang {page + 1} / {totalPages}</span>
-              <button className="ad-button ad-button-quiet" disabled={page === totalPages - 1} onClick={() => loadHistory(page + 1)}>
-                Sau <FontAwesomeIcon icon={faChevronRight} />
-              </button>
-            </div>
-          )}
+          <Pagination
+            page={historyPage} pageSize={historyPageSize} total={historyTotal}
+            onPage={setHistoryPage}
+            onPageSize={(size) => { setHistoryPageSize(size); setHistoryPage(1); }}
+            onRefresh={loadHistory}
+          />
         </section>
       )}
 
       {/* MODAL CHI TIẾT PHIẾU NHẬP */}
       {selectedReceipt && (
         <div className="ad-dialog-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) setSelectedReceipt(null); }}>
-          <div className="ad-brand-dialog" style={{ maxWidth: '700px', width: '90%' }}>
+          <div className="ad-brand-dialog" style={{ maxWidth: '850px', width: '95%' }}>
             <div className="ad-dialog-heading">
-              <h2>Chi tiết phiếu nhập #{selectedReceipt.id}</h2>
+              <div className="ad-title" style={{ fontSize: '18px' }}>Chi tiết phiếu nhập #{selectedReceipt.id}</div>
               <button className="ad-icon-button" type="button" onClick={() => setSelectedReceipt(null)}>
                 <FontAwesomeIcon icon={faXmark} />
               </button>
             </div>
             
-            <div style={{ padding: '20px', maxHeight: '60vh', overflowY: 'auto' }}>
-              {selectedReceipt.loading ? <p>Đang tải dữ liệu...</p> : (
+            <div style={{ maxHeight: '75vh', overflowY: 'auto', padding: '4px' }}>
+              {selectedReceipt.loading ? <div style={{ padding: '20px' }}>Đang tải dữ liệu...</div> : (
                 <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px' }}>
-                    <div>
-                      <p><strong>Người tạo:</strong> {selectedReceipt.createdByName}</p>
-                      <p><strong>Ngày nhập:</strong> {formatDate(selectedReceipt.createdAt)}</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px dashed #d8e2ef' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#64748b', minWidth: '110px' }}>Người tạo:</span> <span style={{ fontWeight: 600 }}>{selectedReceipt.createdByName}</span></div>
+                      <div style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#64748b', minWidth: '110px' }}>Ngày tạo phiếu:</span> <span style={{ fontWeight: 600 }}>{formatDate(selectedReceipt.createdAt)}</span></div>
+                      <div style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#64748b', minWidth: '110px' }}>Ghi chú:</span> <span style={{ fontStyle: selectedReceipt.note ? 'normal' : 'italic', color: selectedReceipt.note ? 'inherit' : '#94a3b8' }}>{selectedReceipt.note || 'Không có ghi chú'}</span></div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p><strong>Trạng thái:</strong> {getStatusBadge(selectedReceipt.status)}</p>
-                      <p><strong>Nhà cung cấp:</strong> {selectedReceipt.supplierName}</p>
-                      <p><strong>Tổng tiền:</strong> <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>{formatCurrency(selectedReceipt.totalAmount)}</span></p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}><span style={{ color: '#64748b', minWidth: '110px' }}>Nhà cung cấp:</span> <span style={{ fontWeight: 600 }}>{selectedReceipt.supplierName}</span></div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: '#64748b', minWidth: '110px' }}>Trạng thái:</span> <span>{getStatusBadge(selectedReceipt.status)}</span></div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><span style={{ color: '#64748b', minWidth: '110px' }}>Tổng tiền:</span> <span style={{ color: '#dc2626', fontWeight: 'bold', fontSize: '18px' }}>{formatCurrency(selectedReceipt.totalAmount)}</span></div>
                     </div>
                   </div>
 
-                  <table className="ad-brand-table">
-                    <thead>
-                      <tr>
-                        <th>MÃ SẢN PHẨM</th>
-                        <th>TÊN SẢN PHẨM</th>
-                        <th>SỐ LƯỢNG</th>
-                        <th>ĐƠN GIÁ</th>
-                        <th>THÀNH TIỀN</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedReceipt.details?.map((item, idx) => (
-                        <tr key={idx}>
-                          <td>{item.variantCode}</td>
-                          <td>{item.variantName}</td>
-                          <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                          <td>{formatCurrency(item.unitPrice)}</td>
-                          <td style={{ fontWeight: 'bold' }}>{formatCurrency(item.subTotal)}</td>
+                  <div className="ad-table-wrap">
+                    <table className="ad-brand-table">
+                      <thead>
+                        <tr>
+                          <th>MÃ BT</th>
+                          <th>TÊN BIẾN THỂ</th>
+                          <th style={{ textAlign: 'center' }}>SỐ LƯỢNG</th>
+                          <th style={{ textAlign: 'right' }}>ĐƠN GIÁ</th>
+                          <th style={{ textAlign: 'right' }}>THÀNH TIỀN</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {selectedReceipt.details?.length > 0 ? selectedReceipt.details.map((item, idx) => (
+                          <tr key={idx}>
+                            <td className="ad-brand-code">{item.variantCode}</td>
+                            <td style={{ fontWeight: 500 }}>{item.variantName}</td>
+                            <td style={{ textAlign: 'center' }}>{item.quantity}</td>
+                            <td style={{ textAlign: 'right' }}>{formatCurrency(item.unitPrice)}</td>
+                            <td style={{ textAlign: 'right', fontWeight: 'bold' }}>{formatCurrency(item.subTotal || item.quantity * item.unitPrice)}</td>
+                          </tr>
+                        )) : (
+                          <tr><td colSpan="5" className="ad-table-empty">Không có sản phẩm nào.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </>
               )}
             </div>
 
-            <div className="ad-dialog-actions" style={{ padding: '15px 20px', borderTop: '1px solid #e9ecef', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <div className="ad-dialog-actions" style={{ paddingTop: '16px', borderTop: '1px solid #e9ecef', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               {selectedReceipt && !selectedReceipt.loading && selectedReceipt.status === 'PENDING' && (
                 <>
-                  <button className="ad-button ad-button-primary" style={{ backgroundColor: '#28a745', borderColor: '#28a745' }} type="button" onClick={() => handleUpdateStatus('APPROVED')}>
+                  <button className="ad-button" style={{ backgroundColor: '#10b981', color: '#fff' }} type="button" onClick={() => handleUpdateStatus('APPROVED')}>
                     Duyệt phiếu
                   </button>
-                  <button className="ad-button ad-button-primary" style={{ backgroundColor: '#dc3545', borderColor: '#dc3545' }} type="button" onClick={() => handleUpdateStatus('REJECTED')}>
+                  <button className="ad-button" style={{ backgroundColor: '#ef4444', color: '#fff' }} type="button" onClick={() => handleUpdateStatus('REJECTED')}>
                     Từ chối
                   </button>
                 </>
               )}
-              <button className="ad-button ad-button-quiet" type="button" onClick={() => setSelectedReceipt(null)}>
+              <button className="ad-button ad-button-blue" type="button" onClick={() => setSelectedReceipt(null)}>
                 Đóng
               </button>
             </div>

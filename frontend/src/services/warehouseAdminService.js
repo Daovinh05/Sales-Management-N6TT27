@@ -6,13 +6,13 @@ export const warehouseAdminService = {
     return res.data;
   },
   
-  getWarehouseStaffs: async () => {
-    const res = await api.get('/admin/warehouses/staff');
+  getWarehouseStaffs: async (page = 0, size = 10, name = '', email = '') => {
+    const res = await api.get(`/admin/warehouses/staff?page=${page}&size=${size}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`);
     return res.data;
   },
 
-  getImportHistory: async (page = 0, size = 10) => {
-    const res = await api.get(`/admin/imports?page=${page}&size=${size}`);
+  getImportHistory: async (page = 0, size = 10, createdBy = '', supplierName = '', status = '', productKeyword = '') => {
+    const res = await api.get(`/admin/imports?page=${page}&size=${size}&createdBy=${encodeURIComponent(createdBy)}&supplierName=${encodeURIComponent(supplierName)}&status=${encodeURIComponent(status)}&productKeyword=${encodeURIComponent(productKeyword)}`);
     return res.data;
   },
 

@@ -44,17 +44,41 @@ public class WarehouseAdminServiceImpl implements WarehouseAdminService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<StaffResponse> getWarehouseStaffs() {
-        return userRepository.findByRoleName(ERole.ROLE_WAREHOUSE_STAFF).stream()
+    public PageResponse<StaffResponse> getWarehouseStaffs(String name, String email, int page, int size) {
+        Page<com.salemanagement.entity.User> pageResult = userRepository.findByRoleNameAndFilters(
+                ERole.ROLE_WAREHOUSE_STAFF, name, email, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+
+        List<StaffResponse> content = pageResult.getContent().stream()
                 .map(StaffResponse::from)
                 .collect(Collectors.toList());
+
+        return PageResponse.of(
+                content,
+                pageResult.getNumber(),
+                pageResult.getSize(),
+                pageResult.getTotalElements(),
+                pageResult.getTotalPages()
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ImportReceiptSummaryResponse> getImportHistory(int page, int size) {
-        Page<ImportReceipt> pageResult = importReceiptRepository.findAllWithDetails(
-                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+    public PageResponse<ImportReceiptSummaryResponse> getImportHistory(String createdBy, String supplierName, String status, String productKeyword, int page, int size) {
+        com.salemanagement.enums.EImportStatus eStatus = null;
+        if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("ALL")) {
+            try {
+                eStatus = com.salemanagement.enums.EImportStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Ignore invalid status or handle appropriately
+            }
+        }
+        
+        String createdByFilter = (createdBy != null && !createdBy.trim().isEmpty()) ? createdBy : null;
+        String supplierNameFilter = (supplierName != null && !supplierName.trim().isEmpty()) ? supplierName : null;
+        String productKeywordFilter = (productKeyword != null && !productKeyword.trim().isEmpty()) ? productKeyword : null;
+
+        Page<ImportReceipt> pageResult = importReceiptRepository.findAllWithFilters(
+                createdByFilter, supplierNameFilter, eStatus, productKeywordFilter, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
 
         List<ImportReceiptSummaryResponse> content = pageResult.getContent().stream()
                 .map(receipt -> ImportReceiptSummaryResponse.builder()

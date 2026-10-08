@@ -1,8 +1,13 @@
 import api from './api.js';
 
 export const warehouseStaffService = {
-  getMyImports: async () => {
-    const res = await api.get('/staff/imports');
+  getMyImports: async (page = 0, size = 10, productKeyword = '', status = '') => {
+    const res = await api.get(`/staff/imports?page=${page}&size=${size}&productKeyword=${encodeURIComponent(productKeyword)}&status=${encodeURIComponent(status)}`);
+    return res.data;
+  },
+  
+  getImportStats: async () => {
+    const res = await api.get('/staff/imports/stats');
     return res.data;
   },
   
