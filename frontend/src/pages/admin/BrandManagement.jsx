@@ -7,6 +7,7 @@ import {
 import api from '../../services/api.js';
 import Pagination from '../../components/admin/Pagination.jsx';
 import EmptyState from '../../components/admin/EmptyState.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 
 const formatDate = (value) => new Intl.DateTimeFormat('vi-VN', {
   dateStyle: 'short', timeStyle: 'medium'
@@ -24,13 +25,14 @@ function downloadCsv(brands) {
   URL.revokeObjectURL(link.href);
 }
 
-export default function BrandManagement() {
+export default function BrandManagement({ notify }) {
   const [brands, setBrands] = useState([]);
   const [codeQuery, setCodeQuery] = useState('');
   const [nameQuery, setNameQuery] = useState('');
   const [filters, setFilters] = useState({ code: '', name: '' });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState({ code: '', name: '' });
   const [error, setError] = useState('');
@@ -86,6 +88,7 @@ export default function BrandManagement() {
       }
       setDialog(null);
       await loadBrands();
+      notify?.('success', 'Đã lưu thương hiệu.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể lưu thương hiệu. Vui lòng kiểm tra lại dữ liệu.');
     } finally {
@@ -94,11 +97,12 @@ export default function BrandManagement() {
   };
 
   const removeBrand = async (brand) => {
-    if (!window.confirm(`Xóa thương hiệu ${brand.name} (${brand.code})?`)) return;
     setError('');
     try {
       await api.delete(`/brands/${encodeURIComponent(brand.code)}`);
+      setDeleteTarget(null);
       await loadBrands();
+      notify?.('success', 'Đã xóa thương hiệu.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể xóa thương hiệu.');
     }
@@ -188,7 +192,7 @@ export default function BrandManagement() {
                     <td>{brand.name}</td><td>{formatDate(brand.createdAt)}</td>
                     <td className="ad-brand-row-actions">
                       <button className="ad-button ad-button-edit" title="Sửa thương hiệu" onClick={() => openEdit(brand)}><FontAwesomeIcon icon={faPen} /><span>Sửa</span></button>
-                      <button className="ad-button ad-button-delete" title="Xóa thương hiệu" onClick={() => removeBrand(brand)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
+                      <button className="ad-button ad-button-delete" title="Xóa thương hiệu" onClick={() => setDeleteTarget(brand)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
                     </td>
                   </tr>
                 )) : <tr><td colSpan="5" className="ad-table-empty">Chưa có thương hiệu phù hợp.</td></tr>}
@@ -209,6 +213,13 @@ export default function BrandManagement() {
           onPageSize={(size) => { setPageSize(size); setPage(1); }}
           onRefresh={loadBrands}
         />
+        {deleteTarget && (
+          <ConfirmModal
+            message={<>Bạn có chắc muốn xóa thương hiệu <strong>{deleteTarget.name} ({deleteTarget.code})</strong>?</>}
+            onCancel={() => setDeleteTarget(null)}
+            onConfirm={() => removeBrand(deleteTarget)}
+          />
+        )}
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {
