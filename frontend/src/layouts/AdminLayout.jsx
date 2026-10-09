@@ -18,6 +18,7 @@ import ReviewManagement from '../pages/admin/ReviewManagement.jsx';
 import OrderManagement from '../pages/admin/OrderManagement.jsx';
 import SupplierManagement from '../pages/admin/SupplierManagement.jsx';
 import UserManagement from '../pages/admin/UserManagement.jsx';
+import ThongKe from '../pages/admin/ThongKe.jsx';
 
 const MENU = [
   { icon: faChartPie, label: 'Tổng quan', path: '/' },
@@ -108,7 +109,8 @@ export default function AdminLayout({ notify, toasts = [] }) {
             : activePage === 'Quản lý đánh giá' ? <ReviewManagement notify={notify} />
             : activePage === 'Quản lý sản phẩm' ? <ProductManagement notify={notify} />
             : activePage === 'Quản lý biến thể' ? <VariantManagement notify={notify} />
-            : activePage === 'Quản lý đơn hàng' ? <OrderManagement notify={notify} /> : <>
+            : activePage === 'Quản lý đơn hàng' ? <OrderManagement notify={notify} />
+            : activePage === 'Thống kê' ? <ThongKe notify={notify} /> : <>
           <div className="ad-welcome">
             <div>
               <h2>Xin chào, {user?.username}! 👋</h2>
