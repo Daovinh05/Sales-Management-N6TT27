@@ -1,6 +1,7 @@
 package com.salemanagement.repository;
 
 import com.salemanagement.entity.Order;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -32,4 +33,16 @@ public interface OrderRepository extends JpaRepository<Order, String> {
                        @Param("customer") String customer,
                        @Param("status") String status,
                        @Param("payment") String payment);
+
+    @Query("select o.status, count(o) from Order o"
+            + " where o.createdAt between :from and :to group by o.status")
+    List<Object[]> countByStatusBetween(@Param("from") LocalDateTime from,
+                                        @Param("to") LocalDateTime to);
+
+    @Query("select function('date', o.createdAt), sum(o.paymentAmount), count(o)"
+            + " from Order o where o.status = :status and o.createdAt between :from and :to"
+            + " group by function('date', o.createdAt) order by function('date', o.createdAt)")
+    List<Object[]> revenueByDay(@Param("status") String status,
+                                @Param("from") LocalDateTime from,
+                                @Param("to") LocalDateTime to);
 }
