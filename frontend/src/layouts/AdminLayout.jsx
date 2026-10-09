@@ -100,15 +100,15 @@ export default function AdminLayout({ notify, toasts = [] }) {
         </header>
         <div className="ad-content">
           {activePage === 'Quản lý kho hàng' ? <WarehouseDashboard notify={notify} />
-            : activePage === 'Quản lý danh mục' ? <CategoryManagement />
-            : activePage === 'Quản lý thương hiệu' ? <BrandManagement />
-            : activePage === 'Quản lý khuyến mãi' ? <PromotionManagement />
-            : activePage === 'Quản lý nhà cung cấp' ? <SupplierManagement />
-            : activePage === 'Quản lý người dùng' ? <UserManagement />
-            : activePage === 'Quản lý đánh giá' ? <ReviewManagement />
-            : activePage === 'Quản lý sản phẩm' ? <ProductManagement />
-            : activePage === 'Quản lý biến thể' ? <VariantManagement />
-            : activePage === 'Quản lý đơn hàng' ? <OrderManagement /> : <>
+            : activePage === 'Quản lý danh mục' ? <CategoryManagement notify={notify} />
+            : activePage === 'Quản lý thương hiệu' ? <BrandManagement notify={notify} />
+            : activePage === 'Quản lý khuyến mãi' ? <PromotionManagement notify={notify} />
+            : activePage === 'Quản lý nhà cung cấp' ? <SupplierManagement notify={notify} />
+            : activePage === 'Quản lý người dùng' ? <UserManagement notify={notify} />
+            : activePage === 'Quản lý đánh giá' ? <ReviewManagement notify={notify} />
+            : activePage === 'Quản lý sản phẩm' ? <ProductManagement notify={notify} />
+            : activePage === 'Quản lý biến thể' ? <VariantManagement notify={notify} />
+            : activePage === 'Quản lý đơn hàng' ? <OrderManagement notify={notify} /> : <>
           <div className="ad-welcome">
             <div>
               <h2>Xin chào, {user?.username}! 👋</h2>
