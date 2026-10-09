@@ -368,7 +368,9 @@ export default function OrderManagement({ notify }) {
                       }}
                     >
                       {[{ value: detail.status, label: STATUS_LABELS[detail.status] || detail.status },
-                        ...(NEXT_STATUSES[detail.status] || []).map((value) => ({ value, label: STATUS_LABELS[value] || value }))
+                        ...(NEXT_STATUSES[detail.status] || [])
+                          .filter((value) => value !== 'DA_XAC_NHAN' || detail.paymentMethod)
+                          .map((value) => ({ value, label: STATUS_LABELS[value] || value }))
                       ].map(({ value, label }) => (
                         <option key={value} value={value}>{label}</option>
                       ))}
