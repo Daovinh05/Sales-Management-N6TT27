@@ -9,6 +9,7 @@ import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
 import Pagination from '../../components/admin/Pagination.jsx';
 import EmptyState from '../../components/admin/EmptyState.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 
 const STATUS_LABELS = {
   CHO_DUYET: 'Chờ xác nhận',
@@ -48,19 +49,19 @@ const formatDateTime = (value) => value
   }).format(new Date(value)).replace(',', '')
   : '—';
 
-export default function OrderManagement() {
+export default function OrderManagement({ notify }) {
   const [orders, setOrders] = useState([]);
   const [queries, setQueries] = useState({ code: '', customer: '', status: '', payment: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [pendingStatus, setPendingStatus] = useState('');
   const [variantMap, setVariantMap] = useState({});
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const pageCount = Math.max(1, Math.ceil(orders.length / pageSize));
   const safePage = Math.min(Math.max(1, page), pageCount);
@@ -117,7 +118,7 @@ export default function OrderManagement() {
       const { data } = await api.patch(`/orders/${encodeURIComponent(code)}/status`, { status });
       setDetail(data);
       setOrders((list) => list.map((o) => (o.code === code ? { ...o, status: data.status } : o)));
-      setNotice(`Đã cập nhật đơn ${code} sang "${STATUS_LABELS[status]}".`);
+      notify?.('success', `Đã cập nhật đơn ${code} sang "${STATUS_LABELS[status]}".`);
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể cập nhật trạng thái đơn hàng.');
     } finally {
@@ -126,12 +127,12 @@ export default function OrderManagement() {
   };
 
   const removeOrder = async (order) => {
-    if (!window.confirm(`Xóa đơn hàng ${order.code} của ${order.customerName}?`)) return;
     setError('');
-    setNotice('');
     try {
       await api.delete(`/orders/${encodeURIComponent(order.code)}`);
-      setNotice(`Đã xóa đơn hàng ${order.code}.`);
+      notify?.('success', `Đã xóa đơn hàng ${order.code}.`);
+      setDeleteTarget(null);
+      setDetail(null);
       await loadOrders();
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể xóa đơn hàng.');
@@ -186,7 +187,6 @@ export default function OrderManagement() {
           </div>
         </form>
         {error && <p className="ad-brand-message" role="alert">{error}</p>}
-        {notice && <p className="ad-user-notice" role="status">{notice}</p>}
       </section>
 
       <section className="ad-brand-panel ad-brand-list">
@@ -272,7 +272,7 @@ export default function OrderManagement() {
                         </button>
                       </td>
                       <td>
-                        <button className="ad-button ad-button-delete" type="button" onClick={() => removeOrder(order)}>
+                        <button className="ad-button ad-button-delete" type="button" onClick={() => setDeleteTarget(order)}>
                           <FontAwesomeIcon icon={faTrash} /><span>Xóa</span>
                         </button>
                       </td>
@@ -294,6 +294,13 @@ export default function OrderManagement() {
           onPageSize={(size) => { setPageSize(size); setPage(1); }}
           onRefresh={() => loadOrders()}
         />
+        {deleteTarget && (
+          <ConfirmModal
+            message={<>Bạn có chắc muốn xóa đơn hàng <strong>{deleteTarget.code}</strong> của {deleteTarget.customerName}? Tồn kho đã trừ sẽ được hoàn lại.</>}
+            onCancel={() => setDeleteTarget(null)}
+            onConfirm={() => removeOrder(deleteTarget)}
+          />
+        )}
       </section>
 
       {detail && (
@@ -306,10 +313,7 @@ export default function OrderManagement() {
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <button
                   className="ad-button ad-button-delete" type="button"
-                  onClick={async () => {
-                    await removeOrder(detail);
-                    setDetail(null);
-                  }}
+                  onClick={() => setDeleteTarget(detail)}
                 >
                   <FontAwesomeIcon icon={faTrash} /><span>Xóa</span>
                 </button>
