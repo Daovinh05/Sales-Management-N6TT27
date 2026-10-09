@@ -8,6 +8,7 @@ import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
 import Pagination from '../../components/admin/Pagination.jsx';
 import EmptyState from '../../components/admin/EmptyState.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 
 const formatDate = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value))
@@ -16,18 +17,18 @@ const formatDate = (value) => value
 const normalizeHeader = (value) => String(value ?? '').normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-export default function SupplierManagement() {
+export default function SupplierManagement({ notify }) {
   const [suppliers, setSuppliers] = useState([]);
   const [queries, setQueries] = useState({ code: '', name: '' });
   const [filters, setFilters] = useState({ code: '', name: '' });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState({ code: '', name: '', address: '', phone: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
   const fileInput = useRef(null);
 
   const loadSuppliers = async () => {
@@ -58,21 +59,18 @@ export default function SupplierManagement() {
     setForm({ code: '', name: '', address: '', phone: '' });
     setDialog({ mode: 'create' });
     setError('');
-    setNotice('');
   };
 
   const openEdit = (supplier) => {
     setForm({ code: supplier.code, name: supplier.name, address: supplier.address || '', phone: supplier.phone || '' });
     setDialog({ mode: 'edit', code: supplier.code });
     setError('');
-    setNotice('');
   };
 
   const saveSupplier = async (event) => {
     event.preventDefault();
     setSaving(true);
     setError('');
-    setNotice('');
     try {
       if (dialog.mode === 'create') {
         await api.post('/suppliers', { ...form, code: form.code.trim(), name: form.name.trim() });
@@ -83,6 +81,7 @@ export default function SupplierManagement() {
       }
       setDialog(null);
       await loadSuppliers();
+      notify?.('success', 'Đã lưu nhà cung cấp.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể lưu nhà cung cấp. Vui lòng kiểm tra dữ liệu.');
     } finally {
@@ -91,12 +90,11 @@ export default function SupplierManagement() {
   };
 
   const removeSupplier = async (supplier) => {
-    if (!window.confirm(`Xóa nhà cung cấp ${supplier.name} (${supplier.code})?`)) return;
     setError('');
-    setNotice('');
     try {
       await api.delete(`/suppliers/${encodeURIComponent(supplier.code)}`);
-      setNotice(`Đã xóa nhà cung cấp ${supplier.name}.`);
+      notify?.('success', `Đã xóa nhà cung cấp ${supplier.name}.`);
+      setDeleteTarget(null);
       await loadSuppliers();
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể xóa nhà cung cấp.');
@@ -109,7 +107,6 @@ export default function SupplierManagement() {
     if (!file) return;
     setSaving(true);
     setError('');
-    setNotice('');
     try {
       const rows = await readXlsxFile(file, { sheet: 1 });
       if (rows.length < 2) {
@@ -147,7 +144,7 @@ export default function SupplierManagement() {
         }
       }
       await loadSuppliers();
-      setNotice(`Đã nhập ${imported}/${rows.length - 1} nhà cung cấp${failed ? `; ${failed} dòng lỗi hoặc bị bỏ qua` : ''}.`);
+      notify?.('success', `Đã nhập ${imported}/${rows.length - 1} nhà cung cấp${failed ? `; ${failed} dòng lỗi hoặc bị bỏ qua` : ''}.`);
     } catch {
       setError('Không đọc được tệp Excel. Vui lòng chọn tệp .xlsx hợp lệ.');
     } finally {
@@ -208,7 +205,6 @@ export default function SupplierManagement() {
           </div>
         </form>
         {error && <p className="ad-brand-message" role="alert">{error}</p>}
-        {notice && <p className="ad-user-notice" role="status">{notice}</p>}
       </section>
 
       <section className="ad-brand-panel ad-brand-list">
@@ -228,7 +224,7 @@ export default function SupplierManagement() {
                     <td>{supplier.phone || '—'}</td>
                     <td className="ad-brand-row-actions">
                       <button className="ad-button ad-button-edit" type="button" title="Sửa nhà cung cấp" onClick={() => openEdit(supplier)}><FontAwesomeIcon icon={faPen} /><span>Sửa</span></button>
-                      <button className="ad-button ad-button-delete" type="button" title="Xóa nhà cung cấp" onClick={() => removeSupplier(supplier)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
+                      <button className="ad-button ad-button-delete" type="button" title="Xóa nhà cung cấp" onClick={() => setDeleteTarget(supplier)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
                     </td>
                   </tr>
                 )) : <tr><td colSpan="6" className="ad-table-empty">Chưa có nhà cung cấp phù hợp.</td></tr>}
@@ -249,6 +245,13 @@ export default function SupplierManagement() {
           onPageSize={(size) => { setPageSize(size); setPage(1); }}
           onRefresh={loadSuppliers}
         />
+        {deleteTarget && (
+          <ConfirmModal
+            message={<>Bạn có chắc muốn xóa nhà cung cấp <strong>{deleteTarget.name} ({deleteTarget.code})</strong>?</>}
+            onCancel={() => setDeleteTarget(null)}
+            onConfirm={() => removeSupplier(deleteTarget)}
+          />
+        )}
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {
