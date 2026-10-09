@@ -8,6 +8,7 @@ import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
 import Pagination from '../../components/admin/Pagination.jsx';
 import EmptyState from '../../components/admin/EmptyState.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 
 const formatDate = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value))
@@ -16,18 +17,18 @@ const formatDate = (value) => value
 const normalizeHeader = (value) => String(value ?? '').normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-export default function CategoryManagement() {
+export default function CategoryManagement({ notify }) {
   const [categories, setCategories] = useState([]);
   const [queries, setQueries] = useState({ code: '', name: '' });
   const [filters, setFilters] = useState({ code: '', name: '' });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState({ code: '', name: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
   const fileInput = useRef(null);
 
   const loadCategories = async () => {
@@ -58,21 +59,18 @@ export default function CategoryManagement() {
     setForm({ code: '', name: '' });
     setDialog({ mode: 'create' });
     setError('');
-    setNotice('');
   };
 
   const openEdit = (category) => {
     setForm({ code: category.code, name: category.name });
     setDialog({ mode: 'edit', code: category.code });
     setError('');
-    setNotice('');
   };
 
   const saveCategory = async (event) => {
     event.preventDefault();
     setSaving(true);
     setError('');
-    setNotice('');
     try {
       if (dialog.mode === 'create') {
         await api.post('/categories', { code: form.code.trim(), name: form.name.trim() });
@@ -81,6 +79,7 @@ export default function CategoryManagement() {
       }
       setDialog(null);
       await loadCategories();
+      notify?.('success', 'Đã lưu danh mục.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể lưu danh mục. Vui lòng kiểm tra dữ liệu.');
     } finally {
@@ -89,12 +88,11 @@ export default function CategoryManagement() {
   };
 
   const removeCategory = async (category) => {
-    if (!window.confirm(`Xóa danh mục ${category.name} (${category.code})?`)) return;
     setError('');
-    setNotice('');
     try {
       await api.delete(`/categories/${encodeURIComponent(category.code)}`);
-      setNotice(`Đã xóa danh mục ${category.name}.`);
+      notify?.('success', `Đã xóa danh mục ${category.name}.`);
+      setDeleteTarget(null);
       await loadCategories();
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể xóa danh mục.');
@@ -106,7 +104,6 @@ export default function CategoryManagement() {
     event.target.value = '';
     if (!file) return;
     setError('');
-    setNotice('');
     setSaving(true);
     try {
       const rows = await readXlsxFile(file, { sheet: 1 });
@@ -135,7 +132,7 @@ export default function CategoryManagement() {
         }
       }
       await loadCategories();
-      setNotice(`Đã nhập ${imported}/${rows.length - 1} danh mục${failed ? `; ${failed} dòng lỗi hoặc bị bỏ qua` : ''}.`);
+      notify?.('success', `Đã nhập ${imported}/${rows.length - 1} danh mục${failed ? `; ${failed} dòng lỗi hoặc bị bỏ qua` : ''}.`);
     } catch {
       setError('Không đọc được tệp Excel. Vui lòng chọn tệp .xlsx hợp lệ.');
     } finally {
@@ -194,7 +191,6 @@ export default function CategoryManagement() {
           </div>
         </form>
         {error && <p className="ad-brand-message" role="alert">{error}</p>}
-        {notice && <p className="ad-user-notice" role="status">{notice}</p>}
       </section>
 
       <section className="ad-brand-panel ad-brand-list">
@@ -213,7 +209,7 @@ export default function CategoryManagement() {
                     <td>{formatDate(category.createdAt)}</td>
                     <td className="ad-brand-row-actions">
                       <button className="ad-button ad-button-edit" type="button" title="Sửa danh mục" onClick={() => openEdit(category)}><FontAwesomeIcon icon={faPen} /><span>Sửa</span></button>
-                      <button className="ad-button ad-button-delete" type="button" title="Xóa danh mục" onClick={() => removeCategory(category)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
+                      <button className="ad-button ad-button-delete" type="button" title="Xóa danh mục" onClick={() => setDeleteTarget(category)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
                     </td>
                   </tr>
                 )) : <tr><td colSpan="5" className="ad-table-empty">Chưa có danh mục phù hợp.</td></tr>}
@@ -234,6 +230,13 @@ export default function CategoryManagement() {
           onPageSize={(size) => { setPageSize(size); setPage(1); }}
           onRefresh={loadCategories}
         />
+        {deleteTarget && (
+          <ConfirmModal
+            message={<>Bạn có chắc muốn xóa danh mục <strong>{deleteTarget.name} ({deleteTarget.code})</strong>?</>}
+            onCancel={() => setDeleteTarget(null)}
+            onConfirm={() => removeCategory(deleteTarget)}
+          />
+        )}
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {
