@@ -102,6 +102,20 @@ button { cursor: pointer; border: none; background: none; }
 .tz-back { margin-top: 20px; text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 14px; color: #4b5563; cursor: pointer; }
 .tz-alert { border-left: 4px solid var(--danger); background: #fef2f2; color: #991b1b; font-size: 13px; padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; }
 
+/* Modal xác nhận xoá dùng chung */
+.cf-backdrop { position: fixed; inset: 0; z-index: 1000; background: rgba(15,23,42,.45); display: grid; place-items: center; padding: 16px; }
+.cf-box { background: #fff; width: 460px; max-width: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.cf-head { background: #1e3a8a; color: #fff; font-weight: 700; font-size: 16px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+.cf-head button { background: none; border: none; color: #fff; font-size: 16px; cursor: pointer; padding: 2px; }
+.cf-body { display: flex; gap: 12px; align-items: flex-start; padding: 22px 20px 8px; }
+.cf-icon { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: #dc2626; color: #fff; display: grid; place-items: center; font-size: 14px; }
+.cf-body p { margin: 4px 0 0; font-size: 14px; color: #1e293b; }
+.cf-body strong { background: #f1f5f9; border-radius: 4px; padding: 1px 6px; }
+.cf-actions { display: flex; gap: 12px; justify-content: center; padding: 16px 20px 22px; }
+.cf-cancel { min-width: 110px; padding: 9px 22px; border-radius: 8px; border: 1px solid #2563eb; background: #fff; color: #1d4ed8; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.cf-confirm { min-width: 110px; padding: 9px 22px; border-radius: 8px; border: none; background: #dc2626; color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.cf-cancel:disabled, .cf-confirm:disabled { opacity: .6; cursor: not-allowed; }
+
 /* Toast */
 .tz-toasts { position: fixed; top: 16px; right: 16px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
 .tz-toast { background: #fff; border: 1px solid var(--border); border-left: 4px solid var(--brand); border-radius: 8px; padding: 10px 14px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.12); display: flex; gap: 8px; align-items: center; min-width: 260px; }
