@@ -8,6 +8,19 @@
 .ad-menu a:hover, .ad-menu button:hover, .ad-menu a.active, .ad-menu button.active { background: #eff6ff; color: #4361ee; }
 .ad-menu a .fa-fw, .ad-menu button .fa-fw { width: 20px; text-align: center; }
 .ad-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+/* Nút tài khoản ghim chân sidebar, sổ ngược lên trên */
+.ad-side-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid #e2e8f0; position: relative; }
+.ad-account { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 0; border-radius: 12px; background: transparent; cursor: pointer; font: inherit; text-align: left; color: #1e293b; }
+.ad-account:hover { background: #f1f5f9; }
+.ad-account img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
+.ad-account-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ad-account-info strong { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ad-account-info small { font-size: 12px; color: #64748b; }
+.ad-account-chevron { color: #94a3b8; font-size: 12px; }
+.ad-account-pop { position: absolute; bottom: calc(100% + 8px); left: 0; right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 12px 30px rgba(15,23,42,.15); padding: 6px; z-index: 30; }
+.ad-account-pop button { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 0; border-radius: 8px; background: transparent; color: #dc2626; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.ad-account-pop button:hover { background: #fef2f2; }
 .ad-top { height: 70px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; }
 .ad-title { font-size: 20px; font-weight: 700; font-family: Nunito, Inter, sans-serif; }
 .ad-user { display: flex; align-items: center; gap: 10px; font-size: 14px; }

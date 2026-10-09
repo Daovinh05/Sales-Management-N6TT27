@@ -3,10 +3,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMobileScreen, faChartPie, faUsers, faList, faCopyright, faTruck,
   faStar, faSliders, faPercent, faCartShopping, faChartLine, faBolt,
-  faRightFromBracket, faCalendarDay, faBoxOpen, faWarehouse
+  faCalendarDay, faBoxOpen, faWarehouse
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../store/auth.jsx';
 import AppToast from '../components/common/AppToast.jsx';
+import AccountMenu from '../components/common/AccountMenu.jsx';
 import WarehouseDashboard from '../pages/admin/WarehouseDashboard.jsx';
 import BrandManagement from '../pages/admin/BrandManagement.jsx';
 import CategoryManagement from '../pages/admin/CategoryManagement.jsx';
@@ -85,18 +86,17 @@ export default function AdminLayout({ notify, toasts = [] }) {
               <FontAwesomeIcon icon={m.icon} className="fa-fw" /> {m.label}
             </button>
           ))}
-          <button type="button" onClick={logout}>
-            <FontAwesomeIcon icon={faRightFromBracket} className="fa-fw" /> Đăng xuất
-          </button>
         </nav>
+        <AccountMenu
+          avatar={avatar}
+          name={user?.fullName || user?.username}
+          role="Quản trị viên"
+          onLogout={logout}
+        />
       </aside>
       <div className="ad-main">
         <header className="ad-top">
           <div className="ad-title">{activePage === 'Tổng quan' ? 'Dashboard' : activePage}</div>
-          <div className="ad-user">
-            <span>Xin chào: <strong>{user?.username}</strong> (Quản trị viên)</span>
-            <img src={avatar} alt="admin" />
-          </div>
         </header>
         <div className="ad-content">
           {activePage === 'Quản lý kho hàng' ? <WarehouseDashboard notify={notify} />
