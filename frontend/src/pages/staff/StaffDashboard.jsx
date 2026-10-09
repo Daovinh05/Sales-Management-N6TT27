@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileInvoice, faClock, faCheckCircle, faTimesCircle, faHistory, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faFileInvoice, faClock, faCheckCircle, faTimesCircle, faHistory, faPlus, faBox } from '@fortawesome/free-solid-svg-icons';
 import warehouseStaffService from '../../services/warehouseStaffService.js';
 import { useAuth } from '../../store/auth.jsx';
 
@@ -80,7 +80,7 @@ export default function StaffDashboard({ notify }) {
         </div>
       </div>
 
-      <div className="ad-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', marginTop: '20px' }}>
+      <div className="ad-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', marginTop: '20px' }}>
         <div className="ad-brand-panel" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div className="ad-title" style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b' }}>
             <FontAwesomeIcon icon={faHistory} style={{ color: '#2563eb' }} /> Lịch sử nhập kho
@@ -105,6 +105,20 @@ export default function StaffDashboard({ notify }) {
           <div style={{ marginTop: '20px' }}>
             <button className="ad-button ad-button-blue" onClick={() => go('/staff/imports/create')}>
               Lập phiếu nhập
+            </button>
+          </div>
+        </div>
+
+        <div className="ad-brand-panel" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <div className="ad-title" style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b' }}>
+            <FontAwesomeIcon icon={faBox} style={{ color: '#f59e0b' }} /> Danh mục tồn kho
+          </div>
+          <p style={{ color: '#64748b', fontSize: '14px', marginTop: '12px', flex: 1, lineHeight: '1.5' }}>
+            Tra cứu nhanh số lượng hàng hóa, kiểm tra tình trạng tồn kho tổng và hàng đang giữ chỗ.
+          </p>
+          <div style={{ marginTop: '20px' }}>
+            <button className="ad-button ad-button-blue" onClick={() => go('/staff/inventory')}>
+              Xem tồn kho
             </button>
           </div>
         </div>

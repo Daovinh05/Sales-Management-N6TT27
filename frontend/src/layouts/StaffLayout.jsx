@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faRightFromBracket, faFileInvoice, faPlusCircle, faMobileScreen, faChartPie
+  faRightFromBracket, faFileInvoice, faPlusCircle, faMobileScreen, faChartPie, faBox
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../store/auth.jsx';
 import AppToast from '../components/common/AppToast.jsx';
 import ImportHistory from '../pages/staff/ImportHistory.jsx';
 import ImportCreate from '../pages/staff/ImportCreate.jsx';
 import StaffDashboard from '../pages/staff/StaffDashboard.jsx';
+import StaffInventory from '../pages/staff/StaffInventory.jsx';
 
 const MENU = [
   { icon: faChartPie, label: 'Bàn làm việc', path: '/' },
   { icon: faFileInvoice, label: 'Lịch sử nhập kho', path: '/staff/imports' },
-  { icon: faPlusCircle, label: 'Lập phiếu nhập mới', path: '/staff/imports/create' }
+  { icon: faPlusCircle, label: 'Lập phiếu nhập mới', path: '/staff/imports/create' },
+  { icon: faBox, label: 'Danh mục tồn kho', path: '/staff/inventory' }
 ];
 
 const PATH_TO_PAGE = Object.fromEntries(MENU.map((m) => [m.path, m.label]));
@@ -75,6 +77,8 @@ export default function StaffLayout({ notify, toasts = [] }) {
             <ImportHistory notify={notify} />
           ) : activePage === 'Lập phiếu nhập mới' ? (
             <ImportCreate notify={notify} onSuccess={() => go('Lịch sử nhập kho')} />
+          ) : activePage === 'Danh mục tồn kho' ? (
+            <StaffInventory />
           ) : null}
         </div>
       </div>
