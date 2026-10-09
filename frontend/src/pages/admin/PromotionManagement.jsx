@@ -8,6 +8,7 @@ import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
 import Pagination from '../../components/admin/Pagination.jsx';
 import EmptyState from '../../components/admin/EmptyState.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 
 const formatDateTime = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value))
@@ -46,7 +47,7 @@ function getStatus(promotion, now) {
   return 'Còn khuyến mãi';
 }
 
-export default function PromotionManagement() {
+export default function PromotionManagement({ notify }) {
   const [promotions, setPromotions] = useState([]);
   const [queries, setQueries] = useState({ code: '', name: '' });
   const [filters, setFilters] = useState({ code: '', name: '' });
@@ -56,9 +57,9 @@ export default function PromotionManagement() {
   const [saving, setSaving] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const fileInput = useRef(null);
 
   const loadPromotions = async () => {
@@ -94,7 +95,6 @@ export default function PromotionManagement() {
     setForm({ code: '', name: '', discountAmount: '', startsAt: '', endsAt: '' });
     setDialog({ mode: 'create' });
     setError('');
-    setNotice('');
   };
 
   const openEdit = (promotion) => {
@@ -107,14 +107,12 @@ export default function PromotionManagement() {
     });
     setDialog({ mode: 'edit', code: promotion.code });
     setError('');
-    setNotice('');
   };
 
   const savePromotion = async (event) => {
     event.preventDefault();
     setSaving(true);
     setError('');
-    setNotice('');
     const payload = {
       ...form,
       code: form.code.trim(),
@@ -128,6 +126,7 @@ export default function PromotionManagement() {
       else await api.put(`/promotions/${encodeURIComponent(dialog.code)}`, payload);
       setDialog(null);
       await loadPromotions();
+      notify?.('success', 'Đã lưu khuyến mãi.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể lưu khuyến mãi. Vui lòng kiểm tra dữ liệu.');
     } finally {
@@ -136,12 +135,11 @@ export default function PromotionManagement() {
   };
 
   const removePromotion = async (promotion) => {
-    if (!window.confirm(`Xóa khuyến mãi ${promotion.name} (${promotion.code})?`)) return;
     setError('');
-    setNotice('');
     try {
       await api.delete(`/promotions/${encodeURIComponent(promotion.code)}`);
-      setNotice(`Đã xóa khuyến mãi ${promotion.name}.`);
+      notify?.('success', `Đã xóa khuyến mãi ${promotion.name}.`);
+      setDeleteTarget(null);
       await loadPromotions();
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể xóa khuyến mãi.');
@@ -154,7 +152,6 @@ export default function PromotionManagement() {
     if (!file) return;
     setSaving(true);
     setError('');
-    setNotice('');
     try {
       const rows = await readXlsxFile(file, { sheet: 1 });
       if (rows.length < 2) {
@@ -194,7 +191,7 @@ export default function PromotionManagement() {
         }
       }
       await loadPromotions();
-      setNotice(`Đã nhập ${imported}/${rows.length - 1} khuyến mãi${failed ? `; ${failed} dòng lỗi hoặc bị bỏ qua` : ''}.`);
+      notify?.('success', `Đã nhập ${imported}/${rows.length - 1} khuyến mãi${failed ? `; ${failed} dòng lỗi hoặc bị bỏ qua` : ''}.`);
     } catch {
       setError('Không đọc được tệp Excel. Vui lòng chọn tệp .xlsx hợp lệ.');
     } finally {
@@ -260,7 +257,6 @@ export default function PromotionManagement() {
           </div>
         </form>
         {error && <p className="ad-brand-message" role="alert">{error}</p>}
-        {notice && <p className="ad-user-notice" role="status">{notice}</p>}
       </section>
 
       <section className="ad-brand-panel ad-brand-list">
@@ -284,7 +280,7 @@ export default function PromotionManagement() {
                     <td><span className={`ad-promotion-status ${statusClass}`}>{status}</span></td>
                     <td className="ad-brand-row-actions">
                       <button className="ad-button ad-button-edit" type="button" title="Sửa khuyến mãi" onClick={() => openEdit(promotion)}><FontAwesomeIcon icon={faPen} /><span>Sửa</span></button>
-                      <button className="ad-button ad-button-delete" type="button" title="Xóa khuyến mãi" onClick={() => removePromotion(promotion)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
+                      <button className="ad-button ad-button-delete" type="button" title="Xóa khuyến mãi" onClick={() => setDeleteTarget(promotion)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
                     </td>
                   </tr>;
                 }) : <tr><td colSpan="8" className="ad-table-empty">Chưa có khuyến mãi phù hợp.</td></tr>}
@@ -305,6 +301,13 @@ export default function PromotionManagement() {
           onPageSize={(size) => { setPageSize(size); setPage(1); }}
           onRefresh={loadPromotions}
         />
+        {deleteTarget && (
+          <ConfirmModal
+            message={<>Bạn có chắc muốn xóa khuyến mãi <strong>{deleteTarget.name} ({deleteTarget.code})</strong>?</>}
+            onCancel={() => setDeleteTarget(null)}
+            onConfirm={() => removePromotion(deleteTarget)}
+          />
+        )}
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {
