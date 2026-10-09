@@ -3,13 +3,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../store/auth.jsx';
 
-function PwField({ label, name, value, onChange, id }) {
+function PwField({ label, name, value, onChange, id, placeholder }) {
   const [show, setShow] = useState(false);
   return (
     <div className="tz-field">
       <label>{label}</label>
       <div className="tz-pw">
-        <input id={id} type={show ? 'text' : 'password'} name={name} value={value} onChange={onChange} required />
+        <input id={id} type={show ? 'text' : 'password'} name={name} value={value} onChange={onChange} placeholder={placeholder} required />
         <span className="tz-eye" onClick={() => setShow((s) => !s)}>
           <FontAwesomeIcon icon={show ? faEyeSlash : faEye} />
         </span>
@@ -46,7 +46,7 @@ export function LoginModal({ onClose, onSwitch, onCart }) {
             <label>Tài khoản</label>
             <input name="username" placeholder="Nhập tài khoản" value={form.username} onChange={set} required />
           </div>
-          <PwField label="MẬT KHẨU" name="password" id="loginPw" value={form.password} onChange={set} />
+          <PwField label="MẬT KHẨU" name="password" id="loginPw" value={form.password} onChange={set} placeholder="Nhập mật khẩu" />
           <div style={{ display: 'flex', gap: 8, fontSize: 13, marginBottom: 20, color: '#666' }}>
             <input type="checkbox" name="remember" checked={form.remember} onChange={set} />
             <label>Ghi nhớ đăng nhập</label>
