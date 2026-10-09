@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faRightFromBracket, faFileInvoice, faPlusCircle, faMobileScreen, faChartPie
+  faFileInvoice, faPlusCircle, faMobileScreen, faChartPie
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../store/auth.jsx';
 import AppToast from '../components/common/AppToast.jsx';
+import AccountMenu from '../components/common/AccountMenu.jsx';
 import ImportHistory from '../pages/staff/ImportHistory.jsx';
 import ImportCreate from '../pages/staff/ImportCreate.jsx';
 import StaffDashboard from '../pages/staff/StaffDashboard.jsx';
@@ -55,18 +56,17 @@ export default function StaffLayout({ notify, toasts = [] }) {
               <FontAwesomeIcon icon={m.icon} className="fa-fw" /> {m.label}
             </button>
           ))}
-          <button type="button" onClick={logout}>
-            <FontAwesomeIcon icon={faRightFromBracket} className="fa-fw" /> Đăng xuất
-          </button>
         </nav>
+        <AccountMenu
+          avatar={avatar}
+          name={user?.fullName || user?.username}
+          role="Nhân viên kho"
+          onLogout={logout}
+        />
       </aside>
       <div className="ad-main">
         <header className="ad-top">
           <div className="ad-title">{activePage}</div>
-          <div className="ad-user">
-            <span>Xin chào: <strong>{user?.username}</strong> (Nhân viên kho)</span>
-            <img src={avatar} alt="staff" />
-          </div>
         </header>
         <div className="ad-content">
           {activePage === 'Bàn làm việc' ? (
