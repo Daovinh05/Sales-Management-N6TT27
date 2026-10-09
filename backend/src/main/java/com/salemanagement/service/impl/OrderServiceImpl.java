@@ -149,6 +149,13 @@ public class OrderServiceImpl implements OrderService {
                     HttpStatus.BAD_REQUEST);
         }
 
+        // Không duyệt đơn chưa chọn phương thức thanh toán.
+        if (Order.STATUS_CONFIRMED.equals(status)
+                && (order.getPaymentMethod() == null || order.getPaymentMethod().isBlank())) {
+            throw new BusinessException("Đơn chưa chọn phương thức thanh toán, không thể xác nhận",
+                    HttpStatus.BAD_REQUEST);
+        }
+
         if (Order.STATUS_CANCELLED.equals(status)) {
             // Hủy đơn đang xử lý: trả chỗ đã giữ; đơn đã trừ kho (VietQR)
             // thì cộng trả quantity để không mất tồn.
