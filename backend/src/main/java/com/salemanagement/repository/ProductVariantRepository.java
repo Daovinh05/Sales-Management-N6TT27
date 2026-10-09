@@ -22,6 +22,12 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
             + "order by v.createdAt desc")
     List<ProductVariant> search(@Param("code") String code, @Param("name") String name);
 
+    @Query(value = "select v from ProductVariant v join fetch v.product where "
+            + "(:keyword is null or :keyword = '' or lower(v.code) like lower(concat('%', :keyword, '%')) or lower(coalesce(v.product.name, '')) like lower(concat('%', :keyword, '%')) or lower(coalesce(v.name, '')) like lower(concat('%', :keyword, '%')))",
+           countQuery = "select count(v) from ProductVariant v where "
+            + "(:keyword is null or :keyword = '' or lower(v.code) like lower(concat('%', :keyword, '%')) or lower(coalesce(v.product.name, '')) like lower(concat('%', :keyword, '%')) or lower(coalesce(v.name, '')) like lower(concat('%', :keyword, '%')))")
+    org.springframework.data.domain.Page<ProductVariant> searchPaginated(@Param("keyword") String keyword, org.springframework.data.domain.Pageable pageable);
+
     boolean existsByProduct(Product product);
 
     @Query("select min(v.price), max(v.price) from ProductVariant v where v.product.code = :code")

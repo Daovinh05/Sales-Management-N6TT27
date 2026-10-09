@@ -76,8 +76,13 @@ public class StorefrontServiceImpl implements StorefrontService {
 
     private ProductVariantResponse toVariant(ProductVariant variant) {
         Product product = variant.getProduct();
-        int quantity = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode())
-                .map(inv -> Math.max(0, inv.getQuantity() - inv.getReservedQuantity())).orElse(0);
+        int stockQty = 0;
+        int reservedQty = 0;
+        var inventoryOpt = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode());
+        if (inventoryOpt.isPresent()) {
+            stockQty = inventoryOpt.get().getQuantity();
+            reservedQty = inventoryOpt.get().getReservedQuantity();
+        }
         return ProductVariantResponse.of(
                 variant.getCode(),
                 product == null ? null : product.getCode(),
@@ -88,7 +93,8 @@ public class StorefrontServiceImpl implements StorefrontService {
                 variant.getRam(),
                 variant.getStorage(),
                 variant.getPrice(),
-                quantity,
+                stockQty,
+                reservedQty,
                 variant.getCreatedAt());
     }
 

@@ -197,9 +197,8 @@ public class OrderServiceImpl implements OrderService {
         String method = paymentMethod.trim().toUpperCase();
         order.setPaymentMethod(method);
         if ("VIETQR".equals(method)) {
-            // QR demo: khách tự xác nhận đã chuyển khoản -> xuất kho ngay,
+            // QR demo: khách tự xác nhận đã chuyển khoản -> đã thanh toán,
             // nhưng đơn vẫn ở CHO_DUYET chờ shop duyệt như COD.
-            deductStockIfNeeded(order);
         }
         // COD: giữ CHO_DUYET chờ shop xác nhận, trừ kho ở HOAN_THANH.
         return OrderResponse.from(orderRepository.save(order));

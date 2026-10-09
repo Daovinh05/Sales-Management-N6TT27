@@ -29,6 +29,11 @@ export const warehouseAdminService = {
   updateWarehouse: async (id, payload) => {
     const res = await api.put(`/admin/warehouses/${id}`, payload);
     return res.data;
+  },
+
+  getInventory: async (page = 0, size = 10, keyword = '') => {
+    const res = await api.get(`/variants/paginated?page=${page}&size=${size}&keyword=${encodeURIComponent(keyword)}`);
+    return res.data;
   }
 };
 
