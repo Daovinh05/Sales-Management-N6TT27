@@ -407,5 +407,15 @@
 .pm-copy { background: none; border: none; color: #2563eb; cursor: pointer; font-size: 14px; margin-left: 6px; padding: 2px; }
 .pm-copied { font-size: 11px; color: #2e7d32; margin-left: 6px; font-weight: 700; }
 .pm-note { background: #fef9e7; border: 1px solid #f0d955; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-top: 12px; color: #555; }
+.pm-total-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 6px 18px; margin-bottom: 14px; }
+.pm-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 14px; color: #475569; border-bottom: 1px solid #eef2f7; }
+.pm-row:last-child { border-bottom: none; }
+.pm-row .pm-discount { color: #dc2626; }
+.pm-row-total { font-weight: 800; color: #111; font-size: 15px; }
+.pm-row-total strong { color: #d70018; font-size: 18px; }
+.pm-foot { flex-direction: row !important; justify-content: space-between !important; align-items: center; }
+.pm-icon-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e2e8f0; background: #fff; color: #64748b; cursor: pointer; display: inline-grid; place-items: center; font-size: 13px; }
+.pm-icon-btn:hover { background: #f1f5f9; color: #1e293b; }
+.pm-dl-link { font-size: 13px; color: #2563eb; font-weight: 600; }
 .pm-status { margin-top: 14px; color: #555; font-size: 14px; }
 @media (max-width: 700px) { .pm-paycols { grid-template-columns: 1fr; } }

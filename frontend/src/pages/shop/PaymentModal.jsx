@@ -30,6 +30,7 @@ export default function PaymentModal({ order, notify, onPaid, onCancelled, onClo
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState('');
+  const [showDl, setShowDl] = useState(false);
 
   const amount = Math.max(0, Math.round(Number(order?.paymentAmount || 0)));
 
@@ -125,13 +126,31 @@ export default function PaymentModal({ order, notify, onPaid, onCancelled, onClo
 
           {tab === 'COD' ? (
             <>
+              <div className="pm-summary">
+                <div className="pm-summary-item">
+                  <div className="pm-label">MÃ ĐƠN</div>
+                  <div className="pm-value">#{order?.code}</div>
+                </div>
+                <div className="pm-summary-item">
+                  <div className="pm-label">NGÀY ĐẶT</div>
+                  <div className="pm-value">{formatDateTime(order?.createdAt)}</div>
+                </div>
+                <div className="pm-summary-item">
+                  <div className="pm-label">PHƯƠNG THỨC</div>
+                  <div className="pm-value">Tiền mặt (COD)</div>
+                </div>
+              </div>
+
+              <div className="pm-total-box">
+                <div className="pm-row"><span>Tạm tính</span><span>{formatMoney(order?.totalAmount)}</span></div>
+                <div className="pm-row"><span>Khuyến mãi</span><span className="pm-discount">-{formatMoney(order?.discountAmount)}</span></div>
+                <div className="pm-row pm-row-total"><span>Tổng thanh toán</span><strong>{formatMoney(amount)}</strong></div>
+              </div>
+
               <p className="co-item-sub">
                 Thanh toán <strong>{formatMoney(amount)}</strong> bằng tiền mặt
                 khi nhận được hàng. Đơn sẽ được shop xác nhận và giao đi.
               </p>
-              <button type="button" className="tz-btn tz-btn-dark" disabled={saving} onClick={() => confirm('COD')}>
-                {saving ? 'ĐANG XỬ LÝ...' : 'Xác nhận đặt hàng (COD)'}
-              </button>
             </>
           ) : (
             <>
@@ -161,14 +180,21 @@ export default function PaymentModal({ order, notify, onPaid, onCancelled, onClo
                     <p className="pm-way">Cách 1: Mở app ngân hàng/Ví và <strong>quét mã QR</strong></p>
                     {qrUrl && <img src={qrUrl} alt={`VietQR ${order?.code}`} className="pm-qr" />}
                     <div className="pm-center">
-                      <a className="oh-detail-btn" href={qrUrl} download={`VietQR-${order?.code}.png`}>
-                        <FontAwesomeIcon icon={faDownload} /> Tải ảnh QR
-                      </a>
+                      <button
+                        type="button" className="pm-icon-btn" aria-label="Tải ảnh QR"
+                        title="Tải ảnh QR" onClick={() => setShowDl((v) => !v)}
+                      >
+                        <FontAwesomeIcon icon={faDownload} />
+                      </button>
                     </div>
+                    {showDl && (
+                      <div className="pm-center">
+                        <a className="pm-dl-link" href={qrUrl} download={`VietQR-${order?.code}.png`}>
+                          Tải ảnh QR về máy
+                        </a>
+                      </div>
+                    )}
                     <p className="pm-status">Trạng thái: Chờ thanh toán...</p>
-                    <button type="button" className="tz-btn tz-btn-dark" disabled={saving} onClick={() => confirm('VIETQR')}>
-                      {saving ? 'ĐANG XỬ LÝ...' : 'Tôi đã chuyển khoản'}
-                    </button>
                   </div>
                   <div>
                     <p className="pm-way">Cách 2: Chuyển khoản <strong>thủ công</strong> theo thông tin</p>
@@ -205,10 +231,19 @@ export default function PaymentModal({ order, notify, onPaid, onCancelled, onClo
           )}
           {error && <p className="tz-alert">{error}</p>}
         </div>
-        <div className="oh-modal-foot">
-          <button type="button" className="oh-detail-btn" disabled={saving} onClick={cancelOrder}>
+        <div className="oh-modal-foot pm-foot">
+          <button type="button" className="oh-detail-btn oh-btn-red" disabled={saving} onClick={cancelOrder}>
             Hủy đơn hàng
           </button>
+          {tab === 'COD' ? (
+            <button type="button" className="tz-btn tz-btn-dark" disabled={saving} onClick={() => confirm('COD')}>
+              {saving ? 'ĐANG XỬ LÝ...' : 'Xác nhận đặt hàng (COD)'}
+            </button>
+          ) : (
+            <button type="button" className="tz-btn tz-btn-dark" disabled={saving} onClick={() => confirm('VIETQR')}>
+              {saving ? 'ĐANG XỬ LÝ...' : 'Tôi đã chuyển khoản'}
+            </button>
+          )}
         </div>
       </div>
     </div>
