@@ -31,6 +31,12 @@ export default function PaymentModal({ order, notify, onPaid, onCancelled, onClo
   const [error, setError] = useState('');
   const [copied, setCopied] = useState('');
   const [showDl, setShowDl] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+
+  const requestClose = () => {
+    if (saving) return;
+    setConfirmLeave(true);
+  };
 
   const amount = Math.max(0, Math.round(Number(order?.paymentAmount || 0)));
 
@@ -101,12 +107,12 @@ export default function PaymentModal({ order, notify, onPaid, onCancelled, onClo
 
   return (
     <div className="ad-dialog-backdrop" onMouseDown={(event) => {
-      if (event.target === event.currentTarget) onClose?.();
+      if (event.target === event.currentTarget) requestClose();
     }}>
       <div className="oh-modal">
         <div className="oh-modal-head">
           <span>Thanh toán đơn hàng #{order?.code} — {formatMoney(amount)}</span>
-          <button type="button" aria-label="Đóng" onClick={onClose} disabled={saving}>
+          <button type="button" aria-label="Đóng" onClick={requestClose} disabled={saving}>
             <FontAwesomeIcon icon={faXmark} />
           </button>
         </div>
@@ -246,6 +252,24 @@ export default function PaymentModal({ order, notify, onPaid, onCancelled, onClo
           )}
         </div>
       </div>
+      {confirmLeave && (
+        <div className="pm-leave-backdrop" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setConfirmLeave(false);
+        }}>
+          <div className="pm-leave-box">
+            <p>Bạn có chắc muốn rời khỏi thanh toán?</p>
+            <span>Đơn <strong>#{order?.code}</strong> vẫn giữ hàng chờ bạn.</span>
+            <div className="pm-leave-actions">
+              <button type="button" className="tz-btn tz-btn-dark" onClick={() => setConfirmLeave(false)}>
+                Ở lại thanh toán
+              </button>
+              <button type="button" className="oh-detail-btn" onClick={onClose}>
+                Rời đi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
