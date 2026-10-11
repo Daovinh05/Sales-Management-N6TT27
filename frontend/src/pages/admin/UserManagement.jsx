@@ -4,6 +4,7 @@ import { faDownload, faFileExcel, faMagnifyingGlass, faPen, faPlus, faTrash, faU
 import api from '../../services/api.js';
 import Pagination from '../../components/admin/Pagination.jsx';
 import EmptyState from '../../components/admin/EmptyState.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 import readXlsxFile from 'read-excel-file/browser';
 import { useAuth } from '../../store/auth.jsx';
 
@@ -41,7 +42,7 @@ function downloadCsv(users) {
   URL.revokeObjectURL(link.href);
 }
 
-export default function UserManagement() {
+export default function UserManagement({ notify }) {
   const { user: currentUser, logout } = useAuth();
   const [users, setUsers] = useState([]);
   const [idQuery, setIdQuery] = useState('');
@@ -49,6 +50,7 @@ export default function UserManagement() {
   const [filters, setFilters] = useState({ id: '', name: '' });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [addingUser, setAddingUser] = useState(false);
   const [role, setRole] = useState('ROLE_CUSTOMER');
@@ -60,7 +62,6 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
   const fileInput = useRef(null);
   const avatarInput = useRef(null);
 
@@ -97,7 +98,6 @@ export default function UserManagement() {
     setForm({ username: '', password: '', fullName: '', email: '', phone: '', role: 'ROLE_CUSTOMER' });
     setAddingUser(true);
     setError('');
-    setNotice('');
   };
 
   const openEdit = (user) => {
@@ -108,7 +108,6 @@ export default function UserManagement() {
     setAvatarPreview(avatarFor(user));
     setRemoveAvatar(false);
     setError('');
-    setNotice('');
   };
 
   const saveUser = async (event) => {
@@ -134,7 +133,7 @@ export default function UserManagement() {
         return;
       }
       await loadUsers();
-      setNotice('Đã cập nhật tài khoản.');
+      notify?.('success', 'Đã cập nhật tài khoản.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể cập nhật tài khoản. Vui lòng thử lại.');
     } finally {
@@ -150,6 +149,7 @@ export default function UserManagement() {
       await api.post('/users', { ...form, username: form.username.trim(), email: form.email.trim() || null });
       setAddingUser(false);
       await loadUsers();
+      notify?.('success', 'Đã tạo tài khoản.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể tạo tài khoản. Vui lòng kiểm tra dữ liệu.');
     } finally {
@@ -158,12 +158,11 @@ export default function UserManagement() {
   };
 
   const deleteUser = async (user) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa tài khoản "${user.username}"?`)) return;
     setError('');
-    setNotice('');
     try {
       await api.delete(`/users/${user.id}`);
-      setNotice(`Đã xóa tài khoản ${user.username}.`);
+      notify?.('success', `Đã xóa tài khoản ${user.username}.`);
+      setDeleteTarget(null);
       await loadUsers();
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể xóa tài khoản.');
@@ -175,7 +174,6 @@ export default function UserManagement() {
     event.target.value = '';
     if (!file) return;
     setError('');
-    setNotice('');
     setSaving(true);
     try {
       const rows = await readXlsxFile(file, { sheet: 1 });
@@ -216,7 +214,7 @@ export default function UserManagement() {
         }
       }
       await loadUsers();
-      setNotice(`Đã nhập ${imported} tài khoản${failed ? `, ${failed} dòng bị bỏ qua hoặc lỗi` : ''}.`);
+      notify?.('success', `Đã nhập ${imported} tài khoản${failed ? `, ${failed} dòng bị bỏ qua hoặc lỗi` : ''}.`);
     } catch {
       setError('Không đọc được tệp Excel. Vui lòng chọn tệp .xlsx hợp lệ.');
     } finally {
@@ -265,7 +263,6 @@ export default function UserManagement() {
           </div>
         </form>
         {error && <p className="ad-brand-message" role="alert">{error}</p>}
-        {notice && <p className="ad-user-notice" role="status">{notice}</p>}
       </section>
 
       <section className="ad-brand-panel ad-brand-list">
@@ -289,7 +286,7 @@ export default function UserManagement() {
                     <td>{formatDate(user.createdAt)}</td>
                     <td className="ad-brand-row-actions">
                       <button className="ad-button ad-button-edit" type="button" title="Sửa vai trò" onClick={() => openEdit(user)}><FontAwesomeIcon icon={faPen} /><span>Sửa</span></button>
-                      <button className="ad-button ad-button-delete" type="button" title="Xóa tài khoản" onClick={() => deleteUser(user)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
+                      <button className="ad-button ad-button-delete" type="button" title="Xóa tài khoản" onClick={() => setDeleteTarget(user)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
                     </td>
                   </tr>;
                 }) : <tr><td colSpan="9" className="ad-table-empty">Không tìm thấy tài khoản phù hợp.</td></tr>}
@@ -310,6 +307,13 @@ export default function UserManagement() {
           onPageSize={(size) => { setPageSize(size); setPage(1); }}
           onRefresh={loadUsers}
         />
+        {deleteTarget && (
+          <ConfirmModal
+            message={<>Bạn có chắc muốn xóa tài khoản <strong>{deleteTarget.username}</strong>?</>}
+            onCancel={() => setDeleteTarget(null)}
+            onConfirm={() => deleteUser(deleteTarget)}
+          />
+        )}
       </section>
 
       {(editingUser || addingUser) && <div className="ad-dialog-backdrop" onMouseDown={(event) => {

@@ -7,17 +7,19 @@ import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
 import Pagination from '../../components/admin/Pagination.jsx';
 import EmptyState from '../../components/admin/EmptyState.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 
 const formatDate = (value) => value
   ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value))
   : '—';
 
-export default function ReviewManagement() {
+export default function ReviewManagement({ notify }) {
   const [reviews, setReviews] = useState([]);
   const [queries, setQueries] = useState({ code: '', customer: '', product: '' });
   const [filters, setFilters] = useState({ code: '', customer: '', product: '' });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState({ customerName: '', productName: '', rating: '5', content: '', reply: '' });
   const [loading, setLoading] = useState(true);
@@ -77,6 +79,7 @@ export default function ReviewManagement() {
       else await api.put(`/reviews/${dialog.id}`, payload);
       setDialog(null);
       await loadReviews();
+      notify?.('success', 'Đã lưu đánh giá.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể lưu đánh giá. Vui lòng kiểm tra dữ liệu.');
     } finally {
@@ -85,11 +88,12 @@ export default function ReviewManagement() {
   };
 
   const removeReview = async (review) => {
-    if (!window.confirm(`Xóa đánh giá ${review.code} của ${review.customerName}?`)) return;
     setError('');
     try {
       await api.delete(`/reviews/${review.id}`);
+      setDeleteTarget(null);
       await loadReviews();
+      notify?.('success', 'Đã xóa đánh giá.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể xóa đánh giá.');
     }
@@ -165,7 +169,7 @@ export default function ReviewManagement() {
                     <td className="ad-review-text">{review.content}</td><td className="ad-review-text">{review.reply || '—'}</td>
                     <td className="ad-brand-row-actions">
                       <button className="ad-button ad-button-edit" type="button" title="Sửa đánh giá" onClick={() => openEdit(review)}><FontAwesomeIcon icon={faPen} /><span>Sửa</span></button>
-                      <button className="ad-button ad-button-delete" type="button" title="Xóa đánh giá" onClick={() => removeReview(review)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
+                      <button className="ad-button ad-button-delete" type="button" title="Xóa đánh giá" onClick={() => setDeleteTarget(review)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
                     </td>
                   </tr>
                 )) : <tr><td colSpan="8" className="ad-table-empty">Chưa có đánh giá phù hợp.</td></tr>}
@@ -184,6 +188,13 @@ export default function ReviewManagement() {
           onPageSize={(size) => { setPageSize(size); setPage(1); }}
           onRefresh={loadReviews}
         />
+        {deleteTarget && (
+          <ConfirmModal
+            message={<>Bạn có chắc muốn xóa đánh giá <strong>{deleteTarget.code}</strong> của {deleteTarget.customerName}?</>}
+            onCancel={() => setDeleteTarget(null)}
+            onConfirm={() => removeReview(deleteTarget)}
+          />
+        )}
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {

@@ -8,6 +8,7 @@ import api from '../../services/api.js';
 import { resolveImage } from '../../services/shop.js';
 import Pagination from '../../components/admin/Pagination.jsx';
 import EmptyState from '../../components/admin/EmptyState.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 
 const formatPrice = (value) => {
   if (value === null || value === undefined || value === '') return '0';
@@ -16,13 +17,14 @@ const formatPrice = (value) => {
 
 const emptyForm = { code: '', productCode: '', name: '', color: '', ram: '', storage: '', price: '' };
 
-export default function VariantManagement() {
+export default function VariantManagement({ notify }) {
   const [variants, setVariants] = useState([]);
   const [codeQuery, setCodeQuery] = useState('');
   const [nameQuery, setNameQuery] = useState('');
   const [stockFilter, setStockFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [products, setProducts] = useState([]);
   const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -114,6 +116,7 @@ export default function VariantManagement() {
       }
       setDialog(null);
       await loadAll();
+      notify?.('success', 'Đã lưu biến thể.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể lưu biến thể. Vui lòng kiểm tra lại dữ liệu.');
     } finally {
@@ -122,11 +125,12 @@ export default function VariantManagement() {
   };
 
   const removeVariant = async (variant) => {
-    if (!window.confirm(`Xóa biến thể ${variant.code}?`)) return;
     setError('');
     try {
       await api.delete(`/variants/${encodeURIComponent(variant.code)}`);
+      setDeleteTarget(null);
       await loadAll();
+      notify?.('success', 'Đã xóa biến thể.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể xóa biến thể.');
     }
@@ -248,7 +252,7 @@ export default function VariantManagement() {
                       : <span className="ad-role-badge">Hết hàng</span>}</td>
                     <td className="ad-brand-row-actions">
                       <button className="ad-button ad-button-edit" onClick={() => openEdit(variant)}><FontAwesomeIcon icon={faPen} /><span>Sửa</span></button>
-                      <button className="ad-button ad-button-delete" onClick={() => removeVariant(variant)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
+                      <button className="ad-button ad-button-delete" onClick={() => setDeleteTarget(variant)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
                     </td>
                   </tr>
                 )) : <tr><td colSpan="11" className="ad-table-empty">Chưa có biến thể phù hợp.</td></tr>}
@@ -269,6 +273,13 @@ export default function VariantManagement() {
           onPageSize={(size) => { setPageSize(size); setPage(1); }}
           onRefresh={() => loadAll()}
         />
+        {deleteTarget && (
+          <ConfirmModal
+            message={<>Bạn có chắc muốn xóa biến thể <strong>{deleteTarget.code}</strong>?</>}
+            onCancel={() => setDeleteTarget(null)}
+            onConfirm={() => removeVariant(deleteTarget)}
+          />
+        )}
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {

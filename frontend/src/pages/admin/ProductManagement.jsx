@@ -8,6 +8,7 @@ import api from '../../services/api.js';
 import { resolveImage } from '../../services/shop.js';
 import Pagination from '../../components/admin/Pagination.jsx';
 import EmptyState from '../../components/admin/EmptyState.jsx';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 
 const formatCurrency = (value) => {
   if (value === null || value === undefined || value === '') return 'N/A';
@@ -16,13 +17,14 @@ const formatCurrency = (value) => {
 
 export const imageBaseUrl = () => (api.defaults.baseURL || '').replace(/\/api$/, '');
 
-export default function ProductManagement() {
+export default function ProductManagement({ notify }) {
   const [products, setProducts] = useState([]);
   const [codeQuery, setCodeQuery] = useState('');
   const [nameQuery, setNameQuery] = useState('');
   const [stockFilter, setStockFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
@@ -106,8 +108,10 @@ export default function ProductManagement() {
       } else {
         await api.put(`/products/${encodeURIComponent(dialog.code)}`, payload);
       }
+      const isCreate = dialog.mode === 'create';
       setDialog(null);
       await loadAll();
+      notify?.('success', isCreate ? 'Đã thêm sản phẩm.' : 'Đã cập nhật sản phẩm.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể lưu sản phẩm. Vui lòng kiểm tra lại dữ liệu.');
     } finally {
@@ -116,11 +120,12 @@ export default function ProductManagement() {
   };
 
   const removeProduct = async (product) => {
-    if (!window.confirm(`Xóa sản phẩm ${product.name} (${product.code})? Các biến thể liên quan cũng bị xóa.`)) return;
     setError('');
     try {
       await api.delete(`/products/${encodeURIComponent(product.code)}`);
+      setDeleteTarget(null);
       await loadAll();
+      notify?.('success', 'Đã xóa sản phẩm.');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể xóa sản phẩm.');
     }
@@ -154,7 +159,7 @@ export default function ProductManagement() {
       formData.append('file', file);
       const { data } = await api.post('/products/import', formData);
       await loadAll();
-      setError(`Import hoàn tất: tạo mới ${data.created}, trùng ${data.duplicatedCount}, lỗi ${data.failedCount}.`);
+      notify?.('success', `Import hoàn tất: tạo mới ${data.created}, trùng ${data.duplicatedCount}, lỗi ${data.failedCount}.`);
     } catch (requestError) {
       const data = requestError.response?.data;
       setError(data?.message || 'Import thất bại. Kiểm tra định dạng file (A-E: Mã, Tên, Mã DM, Mã TH, Mã NCC).');
@@ -243,7 +248,7 @@ export default function ProductManagement() {
                     <td>{product.supplierName || 'N/A'}</td>
                     <td className="ad-brand-row-actions">
                       <button className="ad-button ad-button-edit" onClick={() => openEdit(product)}><FontAwesomeIcon icon={faPen} /><span>Sửa</span></button>
-                      <button className="ad-button ad-button-delete" onClick={() => removeProduct(product)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
+                      <button className="ad-button ad-button-delete" onClick={() => setDeleteTarget(product)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
                     </td>
                   </tr>
                 )) : <tr><td colSpan="11" className="ad-table-empty">Chưa có sản phẩm phù hợp.</td></tr>}
@@ -264,6 +269,13 @@ export default function ProductManagement() {
           onPageSize={(size) => { setPageSize(size); setPage(1); }}
           onRefresh={() => loadAll()}
         />
+        {deleteTarget && (
+          <ConfirmModal
+            message={<>Bạn có chắc muốn xóa sản phẩm <strong>{deleteTarget.name} ({deleteTarget.code})</strong>? Các biến thể liên quan cũng bị xóa.</>}
+            onCancel={() => setDeleteTarget(null)}
+            onConfirm={() => removeProduct(deleteTarget)}
+          />
+        )}
       </section>
 
       {dialog && <div className="ad-dialog-backdrop" onMouseDown={(event) => {

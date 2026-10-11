@@ -14,6 +14,7 @@ export default function Checkout({ items, notify, onPlaced, onBack }) {
   const [error, setError] = useState('');
   const [variantMap, setVariantMap] = useState({});
   const [createdOrder, setCreatedOrder] = useState(null);
+  const [pendingOrder, setPendingOrder] = useState(null);
 
   useEffect(() => {
     api.get('/users/me').then(({ data }) => {
@@ -76,6 +77,7 @@ export default function Checkout({ items, notify, onPlaced, onBack }) {
       });
       // Đơn ở CHO_DUYET + giữ chỗ kho, mở modal để khách chọn COD / VietQR.
       setCreatedOrder(data);
+      setPendingOrder(data);
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Không thể đặt hàng. Vui lòng thử lại.');
     } finally {
@@ -87,7 +89,19 @@ export default function Checkout({ items, notify, onPlaced, onBack }) {
     return (
       <div className="kh-body">
         <div className="tz-container">
-          <div className="kh-crumb">Trang chủ / Thanh toán</div>
+        <div className="kh-crumb">Trang chủ / Thanh toán</div>
+        {pendingOrder && !createdOrder && (
+          <div className="tz-alert" style={{ borderLeftColor: '#d97706', background: '#fffbeb', color: '#92400e' }}>
+            Đơn <strong>#{pendingOrder.code}</strong> ({formatMoney(pendingOrder.paymentAmount)}) đang chờ thanh toán.
+            Bạn có muốn thanh toán ngay?{' '}
+            <button type="button" className="oh-detail-btn oh-btn-green" style={{ marginLeft: 8 }} onClick={() => setCreatedOrder(pendingOrder)}>
+              Thanh toán ngay
+            </button>{' '}
+            <button type="button" className="oh-detail-btn" style={{ background: 'transparent', color: '#92400e', padding: '9px 8px' }} onClick={() => setPendingOrder(null)}>
+              Để sau
+            </button>
+          </div>
+        )}
           <div className="co-empty">
             <p>Không có sản phẩm nào để thanh toán.</p>
             <button className="tz-btn tz-btn-dark" type="button" onClick={onBack}>← Tiếp tục mua sắm</button>
@@ -178,9 +192,12 @@ export default function Checkout({ items, notify, onPlaced, onBack }) {
         <PaymentModal
           order={createdOrder}
           notify={notify}
-          onPaid={(paid) => { setCreatedOrder(null); onPlaced?.(paid); }}
-          onCancelled={() => { setCreatedOrder(null); onBack?.(); }}
-          onClose={() => setCreatedOrder(null)}
+          onPaid={(paid) => { setCreatedOrder(null); setPendingOrder(null); onPlaced?.(paid); }}
+          onCancelled={() => { setCreatedOrder(null); setPendingOrder(null); onBack?.(); }}
+          onClose={() => {
+            setCreatedOrder(null);
+            notify?.('warning', `Đơn #${createdOrder.code} đang chờ thanh toán, hàng đã được giữ chỗ.`);
+          }}
         />
       )}
     </div>

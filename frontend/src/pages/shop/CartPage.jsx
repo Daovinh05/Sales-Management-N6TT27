@@ -3,12 +3,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { clearCart, fetchCart, removeCartItem, updateCartQty } from '../../services/cart.js';
 import { fmt } from '../../services/catalog.js';
+import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 
 export default function CartPage({ notify, onBack, onChanged, onCheckout }) {
   const [items, setItems] = useState([]);
   const [checked, setChecked] = useState({});
   const [loading, setLoading] = useState(true);
   const [coupon, setCoupon] = useState('');
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -67,22 +69,29 @@ export default function CartPage({ notify, onBack, onChanged, onCheckout }) {
           {!loading && items.length > 0 && (
             <button
               type="button" className="kh-cart-clear"
-              onClick={async () => {
-                if (!window.confirm('Xóa tất cả sản phẩm trong giỏ?')) return;
-                try {
-                  await clearCart();
-                  setItems([]);
-                  onChanged?.([]);
-                  setChecked({});
-                } catch {
-                  notify?.('error', 'Không xóa được giỏ hàng');
-                }
-              }}
+              onClick={() => setConfirmClear(true)}
             >
               Xóa tất cả
             </button>
           )}
         </div>
+        {confirmClear && (
+          <ConfirmModal
+            message={<>Bạn có chắc muốn xóa <strong>tất cả sản phẩm</strong> trong giỏ?</>}
+            onCancel={() => setConfirmClear(false)}
+            onConfirm={async () => {
+              try {
+                await clearCart();
+                setItems([]);
+                onChanged?.([]);
+                setChecked({});
+                setConfirmClear(false);
+              } catch {
+                notify?.('error', 'Không xóa được giỏ hàng');
+              }
+            }}
+          />
+        )}
 
         {loading ? (
           <div className="kh-count">Đang tải giỏ hàng...</div>

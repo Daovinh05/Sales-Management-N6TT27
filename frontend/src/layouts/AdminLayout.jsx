@@ -3,10 +3,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMobileScreen, faChartPie, faUsers, faList, faCopyright, faTruck,
   faStar, faSliders, faPercent, faCartShopping, faChartLine, faBolt,
-  faRightFromBracket, faCalendarDay, faBoxOpen, faWarehouse
+  faCalendarDay, faBoxOpen, faWarehouse
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../store/auth.jsx';
 import AppToast from '../components/common/AppToast.jsx';
+import AccountMenu from '../components/common/AccountMenu.jsx';
 import WarehouseDashboard from '../pages/admin/WarehouseDashboard.jsx';
 import BrandManagement from '../pages/admin/BrandManagement.jsx';
 import CategoryManagement from '../pages/admin/CategoryManagement.jsx';
@@ -17,6 +18,7 @@ import ReviewManagement from '../pages/admin/ReviewManagement.jsx';
 import OrderManagement from '../pages/admin/OrderManagement.jsx';
 import SupplierManagement from '../pages/admin/SupplierManagement.jsx';
 import UserManagement from '../pages/admin/UserManagement.jsx';
+import ThongKe from '../pages/admin/ThongKe.jsx';
 
 const MENU = [
   { icon: faChartPie, label: 'Tổng quan', path: '/' },
@@ -85,30 +87,30 @@ export default function AdminLayout({ notify, toasts = [] }) {
               <FontAwesomeIcon icon={m.icon} className="fa-fw" /> {m.label}
             </button>
           ))}
-          <button type="button" onClick={logout}>
-            <FontAwesomeIcon icon={faRightFromBracket} className="fa-fw" /> Đăng xuất
-          </button>
         </nav>
+        <AccountMenu
+          avatar={avatar}
+          name={user?.fullName || user?.username}
+          role="Quản trị viên"
+          onLogout={logout}
+        />
       </aside>
       <div className="ad-main">
         <header className="ad-top">
           <div className="ad-title">{activePage === 'Tổng quan' ? 'Dashboard' : activePage}</div>
-          <div className="ad-user">
-            <span>Xin chào: <strong>{user?.username}</strong> (Quản trị viên)</span>
-            <img src={avatar} alt="admin" />
-          </div>
         </header>
         <div className="ad-content">
           {activePage === 'Quản lý kho hàng' ? <WarehouseDashboard notify={notify} />
-            : activePage === 'Quản lý danh mục' ? <CategoryManagement />
-            : activePage === 'Quản lý thương hiệu' ? <BrandManagement />
-            : activePage === 'Quản lý khuyến mãi' ? <PromotionManagement />
-            : activePage === 'Quản lý nhà cung cấp' ? <SupplierManagement />
-            : activePage === 'Quản lý người dùng' ? <UserManagement />
-            : activePage === 'Quản lý đánh giá' ? <ReviewManagement />
-            : activePage === 'Quản lý sản phẩm' ? <ProductManagement />
-            : activePage === 'Quản lý biến thể' ? <VariantManagement />
-            : activePage === 'Quản lý đơn hàng' ? <OrderManagement /> : <>
+            : activePage === 'Quản lý danh mục' ? <CategoryManagement notify={notify} />
+            : activePage === 'Quản lý thương hiệu' ? <BrandManagement notify={notify} />
+            : activePage === 'Quản lý khuyến mãi' ? <PromotionManagement notify={notify} />
+            : activePage === 'Quản lý nhà cung cấp' ? <SupplierManagement notify={notify} />
+            : activePage === 'Quản lý người dùng' ? <UserManagement notify={notify} />
+            : activePage === 'Quản lý đánh giá' ? <ReviewManagement notify={notify} />
+            : activePage === 'Quản lý sản phẩm' ? <ProductManagement notify={notify} />
+            : activePage === 'Quản lý biến thể' ? <VariantManagement notify={notify} />
+            : activePage === 'Quản lý đơn hàng' ? <OrderManagement notify={notify} />
+            : activePage === 'Thống kê' ? <ThongKe notify={notify} /> : <>
           <div className="ad-welcome">
             <div>
               <h2>Xin chào, {user?.username}! 👋</h2>
