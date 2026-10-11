@@ -29,6 +29,11 @@ export const warehouseStaffService = {
   getVariants: async () => {
     const res = await api.get('/variants');
     return res.data;
+  },
+  
+  getInventory: async (page = 0, size = 10, keyword = '') => {
+    const res = await api.get(`/variants/paginated?page=${page}&size=${size}&keyword=${encodeURIComponent(keyword)}`);
+    return res.data;
   }
 };
 

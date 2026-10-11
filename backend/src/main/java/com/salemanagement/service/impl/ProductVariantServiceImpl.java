@@ -50,8 +50,13 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     private ProductVariantResponse toResponse(ProductVariant variant) {
         Product product = variant.getProduct();
-        int quantity = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode())
-                .map(inv -> Math.max(0, inv.getQuantity() - inv.getReservedQuantity())).orElse(0);
+        int stockQty = 0;
+        int reservedQty = 0;
+        var inventoryOpt = inventoryRepository.findByWarehouseIdAndProductVariant_Code(1L, variant.getCode());
+        if (inventoryOpt.isPresent()) {
+            stockQty = inventoryOpt.get().getQuantity();
+            reservedQty = inventoryOpt.get().getReservedQuantity();
+        }
         return ProductVariantResponse.of(
                 variant.getCode(),
                 product == null ? null : product.getCode(),
@@ -62,7 +67,8 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                 variant.getRam(),
                 variant.getStorage(),
                 variant.getPrice(),
-                quantity,
+                stockQty,
+                reservedQty,
                 variant.getCreatedAt());
     }
 
@@ -81,6 +87,23 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         return variantRepository.search(code, name).stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public com.salemanagement.dto.response.PageResponse<ProductVariantResponse> getVariantsPaginated(String keyword, int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+        org.springframework.data.domain.Page<ProductVariant> variantPage = variantRepository.searchPaginated(keyword, pageable);
+        List<ProductVariantResponse> content = variantPage.getContent().stream()
+                .map(this::toResponse)
+                .toList();
+        return com.salemanagement.dto.response.PageResponse.of(
+                content,
+                variantPage.getNumber(),
+                variantPage.getSize(),
+                variantPage.getTotalElements(),
+                variantPage.getTotalPages()
+        );
     }
 
     @Override

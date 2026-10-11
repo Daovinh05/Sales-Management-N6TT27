@@ -54,6 +54,14 @@ public class ProductVariantController {
         return variants;
     }
 
+    @GetMapping("/paginated")
+    public com.salemanagement.dto.response.PageResponse<ProductVariantResponse> getVariantsPaginated(
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return variantService.getVariantsPaginated(keyword, page, size);
+    }
+
     @GetMapping("/{code}")
     public ProductVariantResponse getDetail(@PathVariable String code) {
         return variantService.getDetail(code);

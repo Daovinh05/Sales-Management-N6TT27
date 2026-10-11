@@ -11,6 +11,8 @@ import org.springframework.web.multipart.MultipartFile;
 public interface ProductVariantService {
     List<ProductVariantResponse> list(String code, String name);
 
+    com.salemanagement.dto.response.PageResponse<ProductVariantResponse> getVariantsPaginated(String keyword, int page, int size);
+
     List<ProductVariantResponse> listByProduct(String productCode);
 
     ProductVariantResponse getDetail(String code);

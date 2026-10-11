@@ -18,5 +18,6 @@ public class ProductVariantResponse {
     private String storage;
     private BigDecimal price;
     private Integer stockQuantity;
+    private Integer reservedQuantity;
     private LocalDateTime createdAt;
 }
