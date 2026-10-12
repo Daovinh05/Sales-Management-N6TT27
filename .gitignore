@@ -1,4 +1,4 @@
-.vscode/settings.json
+.vscode/
 
 # Secrets (root .env chứa JWT_SECRET, không commit)
 .env
