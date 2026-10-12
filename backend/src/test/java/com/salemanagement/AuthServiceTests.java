@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.salemanagement.dto.request.LoginRequest;
 import com.salemanagement.dto.request.RegisterRequest;
 import com.salemanagement.dto.response.JwtResponse;
+import com.salemanagement.entity.PasswordResetToken;
 import com.salemanagement.entity.Role;
 import com.salemanagement.entity.User;
 import com.salemanagement.enums.ERole;
@@ -16,6 +17,10 @@ import com.salemanagement.repository.RoleRepository;
 import com.salemanagement.repository.UserRepository;
 import com.salemanagement.security.CustomUserDetails;
 import com.salemanagement.security.JwtProvider;
+import com.salemanagement.service.AuthService;
+import com.salemanagement.service.MailService;
+import com.salemanagement.service.MailService;
+import com.salemanagement.service.PasswordResetService;
 import com.salemanagement.service.RefreshTokenService;
 import com.salemanagement.service.impl.AuthServiceImpl;
 import java.util.Optional;
@@ -39,6 +44,10 @@ class AuthServiceTests {
     @Mock
     private RefreshTokenService refreshTokenService;
     @Mock
+    private PasswordResetService passwordResetService;
+    @Mock
+    private MailService mailService;
+    @Mock
     private UserRepository userRepository;
     @Mock
     private RoleRepository roleRepository;
@@ -50,7 +59,7 @@ class AuthServiceTests {
     @BeforeEach
     void setUp() {
         authService = new AuthServiceImpl(authenticationManager, jwtProvider, refreshTokenService,
-                userRepository, roleRepository, passwordEncoder);
+                passwordResetService, mailService, userRepository, roleRepository, passwordEncoder);
         lenient().when(userRepository.save(any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
     }
@@ -116,5 +125,50 @@ class AuthServiceTests {
         assertThat(saved.getStatus()).isEqualTo("ACTIVE");
         assertThat(saved.getRoles()).extracting(role -> role.getName())
                 .contains(ERole.ROLE_CUSTOMER);
+    }
+
+    @Test
+    void quenMatKhau_userKhongTonTai_khongLoThongTin() {
+        when(userRepository.findByUsername("la")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("la")).thenReturn(Optional.empty());
+
+        AuthService.ForgotPasswordResult result = authService.forgotPassword("la");
+
+        assertThat(result.resetToken()).isNull();
+        assertThat(result.mailSent()).isFalse();
+    }
+
+    @Test
+    void quenMatKhau_chuaCauHinhMail_traMaDemo() {
+        User u = user();
+        u.setEmail("khach1@shop.com");
+        when(userRepository.findByUsername("kho1")).thenReturn(Optional.of(u));
+        when(passwordResetService.create(u)).thenReturn(PasswordResetToken.builder()
+                .user(u).token("ma-demo")
+                .expiresAt(java.time.LocalDateTime.now().plusMinutes(15)).build());
+        when(mailService.isConfigured()).thenReturn(false);
+
+        AuthService.ForgotPasswordResult result = authService.forgotPassword("kho1");
+
+        assertThat(result.resetToken()).isEqualTo("ma-demo");
+        assertThat(result.mailSent()).isFalse();
+    }
+
+    @Test
+    void quenMatKhau_daCauHinhMail_guiMailVaAnMa() {
+        User u = user();
+        u.setEmail("khach1@shop.com");
+        when(userRepository.findByUsername("kho1")).thenReturn(Optional.of(u));
+        when(passwordResetService.create(u)).thenReturn(PasswordResetToken.builder()
+                .user(u).token("ma-that")
+                .expiresAt(java.time.LocalDateTime.now().plusMinutes(15)).build());
+        when(mailService.isConfigured()).thenReturn(true);
+
+        AuthService.ForgotPasswordResult result = authService.forgotPassword("kho1");
+
+        assertThat(result.resetToken()).isEqualTo("ma-that");
+        assertThat(result.mailSent()).isTrue();
+        org.mockito.Mockito.verify(mailService)
+                .sendPasswordResetEmail("khach1@shop.com", "kho1", "ma-that");
     }
 }

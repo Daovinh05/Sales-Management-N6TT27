@@ -4,6 +4,7 @@ import com.salemanagement.dto.request.LoginRequest;
 import com.salemanagement.dto.request.RefreshRequest;
 import com.salemanagement.dto.request.RegisterRequest;
 import com.salemanagement.dto.response.JwtResponse;
+import com.salemanagement.entity.PasswordResetToken;
 import com.salemanagement.entity.RefreshToken;
 import com.salemanagement.entity.Role;
 import com.salemanagement.enums.ERole;
@@ -13,8 +14,11 @@ import com.salemanagement.repository.UserRepository;
 import com.salemanagement.security.CustomUserDetails;
 import com.salemanagement.security.JwtProvider;
 import com.salemanagement.service.AuthService;
+import com.salemanagement.service.MailService;
+import com.salemanagement.service.PasswordResetService;
 import com.salemanagement.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,11 +32,14 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
     private final RefreshTokenService refreshTokenService;
+    private final PasswordResetService passwordResetService;
+    private final MailService mailService;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -94,5 +101,46 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void logout(String refreshToken) {
         refreshTokenService.revoke(refreshToken);
+    }
+
+    @Override
+    @Transactional
+    public ForgotPasswordResult forgotPassword(String usernameOrEmail) {
+        String key = usernameOrEmail == null ? "" : usernameOrEmail.trim();
+        var userOpt = userRepository.findByUsername(key);
+        if (userOpt.isEmpty()) {
+            userOpt = userRepository.findByEmail(key);
+        }
+        if (userOpt.isEmpty()) {
+            // Chống dò tài khoản: không báo lỗi, không tạo token
+            return new ForgotPasswordResult(null, false);
+        }
+        User user = userOpt.get();
+        PasswordResetToken resetToken = passwordResetService.create(user);
+        String token = resetToken.getToken();
+        log.info("Đã tạo mã đặt lại mật khẩu cho '{}'", key);
+
+        // Gửi mail thật qua Gmail cố định nếu đã cấu hình SMTP và user có email.
+        // Gửi lỗi thì chỉ warn (không fail request) để vẫn test được bằng mã demo.
+        boolean mailSent = false;
+        if (user.getEmail() != null && !user.getEmail().isBlank() && mailService.isConfigured()) {
+            try {
+                mailService.sendPasswordResetEmail(user.getEmail(), user.getUsername(), token);
+                mailSent = true;
+            } catch (Exception e) {
+                log.warn("Gửi mail đặt lại mật khẩu thất bại cho '{}': {}", key, e.getMessage());
+            }
+        }
+        return new ForgotPasswordResult(token, mailSent);
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = passwordResetService.verify(token);
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        passwordResetService.markUsed(resetToken);
     }
 }
