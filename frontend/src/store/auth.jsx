@@ -55,6 +55,17 @@ export function AuthProvider({ children, notify }) {
     notify?.('success', 'Đăng ký thành công, mời đăng nhập');
   };
 
+  const forgotPassword = async (username) => {
+    const { data } = await api.post('/auth/forgot-password', { username });
+    return data;
+  };
+
+  const resetPassword = async (token, newPassword) => {
+    const { data } = await api.post('/auth/reset-password', { token, newPassword });
+    notify?.('success', 'Đặt lại mật khẩu thành công, mời đăng nhập lại');
+    return data;
+  };
+
   const updateProfile = async (payload, avatarFile) => {
     const formData = new FormData();
     formData.append('data', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
@@ -79,5 +90,5 @@ export function AuthProvider({ children, notify }) {
     setUser(null);
   };
 
-  return <AuthCtx.Provider value={{ user, login, register, updateProfile, syncProfile, logout }}>{children}</AuthCtx.Provider>;
+  return <AuthCtx.Provider value={{ user, login, register, forgotPassword, resetPassword, updateProfile, syncProfile, logout }}>{children}</AuthCtx.Provider>;
 }
