@@ -11,4 +11,13 @@ public interface AuthService {
     User register(RegisterRequest request);
     JwtResponse refresh(RefreshRequest request);
     void logout(String refreshToken);
+    /**
+     * Tạo mã đặt lại mật khẩu và gửi mail nếu cấu hình.
+     * {@code resetToken} null khi user không tồn tại (chống dò tài khoản).
+     */
+    ForgotPasswordResult forgotPassword(String usernameOrEmail);
+    void resetPassword(String token, String newPassword);
+
+    record ForgotPasswordResult(String resetToken, boolean mailSent) {
+    }
 }
