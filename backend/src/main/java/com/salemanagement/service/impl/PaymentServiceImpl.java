@@ -48,7 +48,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (amount <= 0) {
             throw new BusinessException("Số tiền đơn hàng không hợp lệ", HttpStatus.BAD_REQUEST);
         }
-        long payosOrderCode = System.currentTimeMillis();
+        long payosOrderCode = generatePayosOrderCode();
         String description = payosDescription(order.getCode());
         String base = frontendUrl + "/?orderCode=" + order.getCode();
         try {
@@ -93,7 +93,9 @@ public class PaymentServiceImpl implements PaymentService {
             }
             long payosOrderCode = toLong(data.get("orderCode"));
             long amount = toLong(data.get("amount"));
-            Order order = orderRepository.findByPayosOrderCode(payosOrderCode).orElse(null);
+            // Đọc kèm khóa ghi: webhook tới đồng thời thì luồng sau đợi
+            // luồng trước commit rồi mới đọc, không thể cùng lọt qua check paid.
+            Order order = orderRepository.findByPayosOrderCodeForUpdate(payosOrderCode).orElse(null);
             if (order == null) {
                 // Gồm cả lần PayOS bấm "xác thực webhook" bằng dữ liệu mẫu.
                 log.info("Webhook PayOS cho mã lạ {}, bỏ qua", payosOrderCode);
@@ -117,6 +119,12 @@ public class PaymentServiceImpl implements PaymentService {
             log.warn("Xử lý webhook PayOS lỗi: {}", e.getMessage());
             return new WebhookOutcome(false, "Lỗi xử lý");
         }
+    }
+
+    /** Mã link PayOS: mili-giây + 3 số ngẫu nhiên để 2 lần bấm cùng lúc không trùng. */
+    static long generatePayosOrderCode() {
+        return System.currentTimeMillis() * 1000L
+                + java.util.concurrent.ThreadLocalRandom.current().nextInt(1000);
     }
 
     /** Nội dung chuyển khoản: ngắn gọn, chỉ chữ/số để ngân hàng không cắt. */

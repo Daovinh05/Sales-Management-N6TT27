@@ -126,7 +126,7 @@ class PaymentServiceTest {
         Order order = pendingOrder();
         order.setPayosOrderCode(999L);
         when(payosApiClient.verifyWebhookSignature(any(), any())).thenReturn(true);
-        when(orderRepository.findByPayosOrderCode(999L)).thenReturn(Optional.of(order));
+        when(orderRepository.findByPayosOrderCodeForUpdate(999L)).thenReturn(Optional.of(order));
 
         PaymentService.WebhookOutcome outcome =
                 paymentService.handlePayosWebhook(webhookBody(999L, 50000L, "00"));
@@ -143,7 +143,7 @@ class PaymentServiceTest {
         order.setPayosOrderCode(999L);
         order.setPaid(true);
         when(payosApiClient.verifyWebhookSignature(any(), any())).thenReturn(true);
-        when(orderRepository.findByPayosOrderCode(999L)).thenReturn(Optional.of(order));
+        when(orderRepository.findByPayosOrderCodeForUpdate(999L)).thenReturn(Optional.of(order));
 
         PaymentService.WebhookOutcome outcome =
                 paymentService.handlePayosWebhook(webhookBody(999L, 50000L, "00"));
@@ -157,7 +157,7 @@ class PaymentServiceTest {
         Order order = pendingOrder();
         order.setPayosOrderCode(999L);
         when(payosApiClient.verifyWebhookSignature(any(), any())).thenReturn(true);
-        when(orderRepository.findByPayosOrderCode(999L)).thenReturn(Optional.of(order));
+        when(orderRepository.findByPayosOrderCodeForUpdate(999L)).thenReturn(Optional.of(order));
 
         PaymentService.WebhookOutcome outcome =
                 paymentService.handlePayosWebhook(webhookBody(999L, 10000L, "00"));
@@ -169,7 +169,7 @@ class PaymentServiceTest {
     @Test
     void webhook_maLa_boQuaNhungVan200() {
         when(payosApiClient.verifyWebhookSignature(any(), any())).thenReturn(true);
-        when(orderRepository.findByPayosOrderCode(888L)).thenReturn(Optional.empty());
+        when(orderRepository.findByPayosOrderCodeForUpdate(888L)).thenReturn(Optional.empty());
 
         PaymentService.WebhookOutcome outcome =
                 paymentService.handlePayosWebhook(webhookBody(888L, 50000L, "00"));
