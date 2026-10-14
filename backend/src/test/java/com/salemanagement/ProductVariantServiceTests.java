@@ -8,15 +8,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.salemanagement.dto.request.ProductVariantRequest;
-import com.salemanation.dto.request.ProductVariantUpdateRequest;
-import com.salemanation.dto.response.ProductVariantResponse;
+import com.salemanagement.dto.request.ProductVariantUpdateRequest;
+import com.salemanagement.dto.response.ProductVariantResponse;
 import com.salemanagement.entity.Product;
 import com.salemanagement.entity.ProductVariant;
 import com.salemanagement.exception.BusinessException;
 import com.salemanagement.repository.ProductVariantRepository;
 import com.salemanagement.repository.ProductRepository;
 import com.salemanagement.repository.CartItemRepository;
-import com.salemanation.repository.OrderRepository;
+import com.salemanagement.repository.OrderRepository;
 import com.salemanagement.service.FileStorageService;
 import com.salemanagement.service.impl.ProductVariantServiceImpl;
 
