@@ -69,7 +69,9 @@ export default function UserManagement({ notify }) {
   const [editingUser, setEditingUser] = useState(null);
   const [addingUser, setAddingUser] = useState(false);
   const [role, setRole] = useState('ROLE_CUSTOMER');
-  const [editForm, setEditForm] = useState({ username: '', email: '' });
+  const [editForm, setEditForm] = useState({
+    username: '', fullName: '', email: '', phone: '', address: '', password: '', status: 'ACTIVE'
+  });
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState('');
   const [removeAvatar, setRemoveAvatar] = useState(false);
@@ -118,7 +120,15 @@ export default function UserManagement({ notify }) {
   const openEdit = (user) => {
     setEditingUser(user);
     setRole(getUserRole(user));
-    setEditForm({ username: user.username, email: user.email || '' });
+    setEditForm({
+      username: user.username,
+      fullName: user.fullName || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      address: user.address || '',
+      password: '',
+      status: user.status || 'ACTIVE'
+    });
     setAvatarFile(null);
     setAvatarPreview(avatarFor(user));
     setRemoveAvatar(false);
@@ -134,16 +144,23 @@ export default function UserManagement({ notify }) {
       data.append('data', new Blob([JSON.stringify({
         username: editForm.username.trim(),
         email: editForm.email.trim() || null,
+        fullName: editForm.fullName.trim() || null,
+        phone: editForm.phone || null,
+        address: editForm.address.trim() || null,
         role,
+        status: editForm.status,
+        password: editForm.password || null,
         removeAvatar
       })], { type: 'application/json' }));
       if (avatarFile) data.append('avatar', avatarFile);
       await api.put(`/users/${editingUser.id}`, data);
-      const usernameChangedForCurrentUser = Number(currentUser?.id) === editingUser.id
-        && currentUser.username !== editForm.username.trim();
+      const currentUserNeedsLogout = Number(currentUser?.id) === editingUser.id
+        && (currentUser.username !== editForm.username.trim()
+          || Boolean(editForm.password)
+          || editForm.status !== 'ACTIVE');
       setEditingUser(null);
-      if (usernameChangedForCurrentUser) {
-        window.alert('Tên đăng nhập đã thay đổi. Vui lòng đăng nhập lại bằng tên mới.');
+      if (currentUserNeedsLogout) {
+        window.alert('Thông tin đăng nhập hoặc trạng thái tài khoản đã thay đổi. Vui lòng đăng nhập lại.');
         logout();
         return;
       }
@@ -334,7 +351,7 @@ export default function UserManagement({ notify }) {
       {(editingUser || addingUser) && <div className="ad-dialog-backdrop" onMouseDown={(event) => {
         if (event.target === event.currentTarget) { setEditingUser(null); setAddingUser(false); }
       }}>
-        <form className="ad-brand-dialog" onSubmit={addingUser ? saveNewUser : saveUser}>
+        <form className={`ad-brand-dialog${editingUser ? ' ad-user-edit-dialog' : ''}`} onSubmit={addingUser ? saveNewUser : saveUser}>
           <div className="ad-dialog-heading">
             <h2>{addingUser ? 'Thêm người dùng' : 'Sửa tài khoản'}</h2>
             <button className="ad-icon-button" type="button" aria-label="Đóng" onClick={() => { setEditingUser(null); setAddingUser(false); }}><FontAwesomeIcon icon={faXmark} /></button>
@@ -374,11 +391,20 @@ export default function UserManagement({ notify }) {
               </div>
             </div>
             <label>Tên đăng nhập<input required minLength="3" maxLength="50" value={editForm.username} onChange={(event) => setEditForm({ ...editForm, username: event.target.value })} /></label>
+            <label>Họ và tên<input maxLength="100" value={editForm.fullName} onChange={(event) => setEditForm({ ...editForm, fullName: event.target.value })} /></label>
             <label>Email<input type="email" maxLength="100" value={editForm.email} onChange={(event) => setEditForm({ ...editForm, email: event.target.value })} /></label>
+            <label>Số điện thoại<input type="tel" inputMode="numeric" maxLength="20" value={editForm.phone} onChange={(event) => setEditForm({ ...editForm, phone: event.target.value.replace(/\D/g, '') })} /></label>
+            <label>Địa chỉ<input maxLength="255" value={editForm.address} onChange={(event) => setEditForm({ ...editForm, address: event.target.value })} /></label>
+            <label>Mật khẩu mới<input type="password" minLength="6" autoComplete="new-password" value={editForm.password} onChange={(event) => setEditForm({ ...editForm, password: event.target.value })} placeholder="Để trống nếu không đổi" /></label>
             <label>Vai trò<select value={role} onChange={(event) => setRole(event.target.value)}>
               <option value="ROLE_CUSTOMER">Người dùng</option>
               <option value="ROLE_ADMIN">Quản trị viên</option>
               <option value="ROLE_WAREHOUSE_STAFF">Nhân viên kho</option>
+            </select></label>
+            <label>Trạng thái<select value={editForm.status} onChange={(event) => setEditForm({ ...editForm, status: event.target.value })}>
+              <option value="ACTIVE">Đang hoạt động</option>
+              <option value="INACTIVE">Ngừng hoạt động</option>
+              <option value="LOCKED">Đã khóa</option>
             </select></label>
           </>}
           {error && <p className="ad-brand-message" role="alert">{error}</p>}
