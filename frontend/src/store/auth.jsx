@@ -88,6 +88,9 @@ export function AuthProvider({ children, notify }) {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     setUser(null);
+    if (window.location.hash) {
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+    }
   };
 
   return <AuthCtx.Provider value={{ user, login, register, forgotPassword, resetPassword, updateProfile, syncProfile, logout }}>{children}</AuthCtx.Provider>;
