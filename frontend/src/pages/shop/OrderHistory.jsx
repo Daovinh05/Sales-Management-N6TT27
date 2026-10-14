@@ -32,6 +32,10 @@ const formatDateTime = (value) => value
   }).format(new Date(value)).replace(',', '')
   : '—';
 
+// COD thu tiền mặt lúc giao hàng nên chỉ coi là đã trả khi đơn hoàn thành;
+// VietQR coi là đã trả ngay khi webhook xác nhận (cờ paid).
+const isPaidOrder = (o) => !!o && (!!o.paid || (o.paymentMethod === 'COD' && o.status === 'HOAN_THANH'));
+
 const resolveImage = (url) => {
   if (!url) return '';
   if (/^https?:\/\//i.test(url)) return url;
@@ -46,7 +50,7 @@ export default function OrderHistory({ notify, onBack }) {
   const [variantMap, setVariantMap] = useState({});
   const [detail, setDetail] = useState(null);
   const [payingOrder, setPayingOrder] = useState(null);
-  const [justPaidCode, setJustPaidCode] = useState(null);
+  const [justPaid, setJustPaid] = useState(null);
 
   const refreshOrder = (updated) => {
     setOrders((list) => list.map((o) => (o.code === updated.code ? updated : o)));
@@ -90,12 +94,13 @@ export default function OrderHistory({ notify, onBack }) {
     return '';
   };
 
-  if (justPaidCode && !payingOrder) {
+  if (justPaid && !payingOrder) {
     return (
       <OrderSuccess
-        code={justPaidCode}
-        onHome={() => { setJustPaidCode(null); onBack?.(); }}
-        onHistory={() => setJustPaidCode(null)}
+        code={justPaid.code}
+        order={justPaid}
+        onHome={() => { setJustPaid(null); onBack?.(); }}
+        onHistory={() => setJustPaid(null)}
       />
     );
   }
@@ -134,7 +139,7 @@ export default function OrderHistory({ notify, onBack }) {
                     <div className="oh-date">Đặt ngày: {formatDateTime(o.createdAt)}</div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    {o.paid && o.status === 'CHO_DUYET' && (
+                    {isPaidOrder(o) && (
                       <span className="oh-badge" style={{ background: '#e8f5e9', color: '#2e7d32' }}>
                         Đã thanh toán
                       </span>
@@ -211,9 +216,11 @@ export default function OrderHistory({ notify, onBack }) {
                   </div>
                   <div className="oh-kv"><span>Thanh toán:</span><strong className="oh-red">{formatMoney(detail.paymentAmount)}</strong></div>
                   <div className="oh-kv"><span>Trạng thái tiền:</span>
-                    {detail.paid
+                    {isPaidOrder(detail)
                       ? <strong style={{ color: '#2e7d32' }}>Đã thanh toán{detail.paidAt ? ` (${formatDateTime(detail.paidAt)})` : ''}</strong>
-                      : <strong>Chưa thanh toán</strong>}
+                      : detail.paymentMethod === 'COD'
+                        ? <strong>Thanh toán khi nhận hàng</strong>
+                        : <strong>Chưa thanh toán</strong>}
                   </div>
                 </div>
                 <div>
@@ -255,7 +262,7 @@ export default function OrderHistory({ notify, onBack }) {
         <PaymentModal
           order={payingOrder}
           notify={notify}
-          onPaid={(paid) => { refreshOrder(paid); setPayingOrder(null); setJustPaidCode(paid?.code || payingOrder.code); }}
+          onPaid={(paid) => { refreshOrder(paid); setPayingOrder(null); setJustPaid(paid || payingOrder); }}
           onCancelled={(cancelled) => { refreshOrder(cancelled); setPayingOrder(null); }}
           onClose={() => setPayingOrder(null)}
         />
