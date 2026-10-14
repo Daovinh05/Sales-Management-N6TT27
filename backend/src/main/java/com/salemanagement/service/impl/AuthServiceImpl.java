@@ -61,11 +61,15 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public User register(RegisterRequest request) {
+        String username = request.getUsername().trim();
+        String email = request.getEmail() == null || request.getEmail().isBlank()
+                ? null
+                : request.getEmail().trim();
         List<String> duplicateFields = new ArrayList<>();
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByNormalizedUsername(username)) {
             duplicateFields.add("Tên đăng nhập đã được sử dụng");
         }
-        if (request.getEmail() != null && userRepository.existsByEmail(request.getEmail())) {
+        if (email != null && userRepository.existsByEmail(email)) {
             duplicateFields.add("Email đã được sử dụng");
         }
         if (!duplicateFields.isEmpty()) {
@@ -77,9 +81,9 @@ public class AuthServiceImpl implements AuthService {
                         .description("Khách hàng mua hàng")
                         .build()));
         User user = User.builder()
-                .username(request.getUsername())
+                .username(username)
                 .password(passwordEncoder.encode(request.getPassword()))
-                .email(request.getEmail())
+                .email(email)
                 .fullName(request.getFullName())
                 .phone(request.getPhone())
                 .address(request.getAddress())

@@ -49,7 +49,7 @@ public class UserManagementServiceImpl implements UserManagementService {
             throw new BusinessException("Mật khẩu phải có ít nhất 6 ký tự", HttpStatus.BAD_REQUEST);
         }
         List<String> duplicateFields = new ArrayList<>();
-        if (userRepository.existsByUsernameAndIdNot(username, id)) {
+        if (userRepository.existsByNormalizedUsernameAndIdNot(username, id)) {
             duplicateFields.add("Tên đăng nhập đã được sử dụng");
         }
         if (email != null && userRepository.existsByEmailAndIdNot(email, id)) {

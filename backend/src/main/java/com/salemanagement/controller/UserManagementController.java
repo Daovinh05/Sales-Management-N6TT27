@@ -75,7 +75,7 @@ public class UserManagementController {
                 String username = request.username().trim();
                 String email = request.email() == null || request.email().isBlank() ? null : request.email().trim();
                 List<String> duplicateFields = new ArrayList<>();
-                if (userRepository.existsByUsername(username)) {
+                if (userRepository.existsByNormalizedUsername(username)) {
                         duplicateFields.add("Tên đăng nhập đã được sử dụng");
                 }
                 if (email != null && userRepository.existsByEmail(email)) {

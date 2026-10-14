@@ -96,7 +96,7 @@ class AuthServiceTests {
 
     @Test
     void dangKyTrungUsername_biChan() {
-        when(userRepository.existsByUsername("kho1")).thenReturn(true);
+        when(userRepository.existsByNormalizedUsername("kho1")).thenReturn(true);
 
         RegisterRequest request = new RegisterRequest();
         request.setUsername("kho1");
@@ -108,8 +108,22 @@ class AuthServiceTests {
     }
 
     @Test
+    void dangKyUsernameCoKhoangTrangDauCuoi_vanNhanDienTrung() {
+        when(userRepository.existsByNormalizedUsername("kho1")).thenReturn(true);
+
+        RegisterRequest request = new RegisterRequest();
+        request.setUsername("  kho1  ");
+        request.setPassword("123456");
+
+        assertThatThrownBy(() -> authService.register(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Tên đăng nhập đã được sử dụng");
+        org.mockito.Mockito.verify(userRepository, org.mockito.Mockito.never()).save(any(User.class));
+    }
+
+    @Test
     void dangKyTrungUsernameVaEmail_baoRoCaHaiTruong() {
-        when(userRepository.existsByUsername("kho1")).thenReturn(true);
+        when(userRepository.existsByNormalizedUsername("kho1")).thenReturn(true);
         when(userRepository.existsByEmail("kho1@shop.com")).thenReturn(true);
 
         RegisterRequest request = new RegisterRequest();
@@ -125,7 +139,7 @@ class AuthServiceTests {
 
     @Test
     void dangKyMoi_ganRoleKhachHang() {
-        when(userRepository.existsByUsername("moi")).thenReturn(false);
+        when(userRepository.existsByNormalizedUsername("moi")).thenReturn(false);
         when(roleRepository.findByName(ERole.ROLE_CUSTOMER))
                 .thenReturn(Optional.of(Role.builder().name(ERole.ROLE_CUSTOMER).build()));
         when(passwordEncoder.encode("123456")).thenReturn("ma-hoa");
@@ -141,6 +155,24 @@ class AuthServiceTests {
         assertThat(saved.getStatus()).isEqualTo("ACTIVE");
         assertThat(saved.getRoles()).extracting(role -> role.getName())
                 .contains(ERole.ROLE_CUSTOMER);
+    }
+
+    @Test
+    void dangKyUsernameMoi_loaiBoKhoangTrangDauCuoiTruocKhiLuu() {
+        when(userRepository.existsByNormalizedUsername("moi")).thenReturn(false);
+        when(roleRepository.findByName(ERole.ROLE_CUSTOMER))
+                .thenReturn(Optional.of(Role.builder().name(ERole.ROLE_CUSTOMER).build()));
+        when(passwordEncoder.encode("123456")).thenReturn("ma-hoa");
+
+        RegisterRequest request = new RegisterRequest();
+        request.setUsername("  moi  ");
+        request.setPassword("123456");
+
+        User saved = authService.register(request);
+
+        assertThat(saved.getUsername()).isEqualTo("moi");
+        org.mockito.Mockito.verify(userRepository).existsByNormalizedUsername("moi");
+        org.mockito.Mockito.verify(userRepository).save(any(User.class));
     }
 
     @Test

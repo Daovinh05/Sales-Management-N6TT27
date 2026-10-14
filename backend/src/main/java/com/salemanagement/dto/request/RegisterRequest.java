@@ -25,4 +25,20 @@ public class RegisterRequest {
     @Pattern(regexp = "[0-9]*", message = "Số điện thoại chỉ được chứa chữ số")
     private String phone;
     private String address;
+
+    public void setUsername(String username) {
+        this.username = trimToNull(username);
+    }
+
+    public void setEmail(String email) {
+        this.email = trimToNull(email);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
 }
