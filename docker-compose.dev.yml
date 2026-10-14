@@ -3,6 +3,10 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
+    # Ép giờ Việt Nam kể cả khi chạy bản dev (mặc định image là UTC)
+    environment:
+      TZ: Asia/Ho_Chi_Minh
+      JAVA_TOOL_OPTIONS: -Duser.timezone=Asia/Ho_Chi_Minh
     volumes:
       - ./backend:/app
       - maven-cache:/root/.m2

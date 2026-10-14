@@ -1,9 +1,12 @@
 package com.salemanagement.repository;
 
 import com.salemanagement.entity.Order;
+import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,6 +18,14 @@ public interface OrderRepository extends JpaRepository<Order, String> {
             String code, String customerName);
 
     List<Order> findByUsernameOrderByCreatedAtDesc(String username);
+
+    Optional<Order> findByPayosOrderCode(Long payosOrderCode);
+
+    // Webhook có thể tới 2 lần cùng lúc: khóa ghi bi quan để luồng sau
+    // phải đợi luồng trước commit, thấy paid=true là dừng (idempotent).
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select o from Order o where o.payosOrderCode = :payosOrderCode")
+    Optional<Order> findByPayosOrderCodeForUpdate(@Param("payosOrderCode") Long payosOrderCode);
 
     // Kiểm tra biến thể đã phát sinh đơn hàng chưa (OrderDetail chỉ lưu variantCode dạng String).
     @Query("select count(d) from Order o join o.details d where upper(d.variantCode) = upper(:variantCode)")

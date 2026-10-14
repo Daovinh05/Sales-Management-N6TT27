@@ -6,6 +6,7 @@ services:
     environment:
       MYSQL_DATABASE: banhang
       MYSQL_ROOT_PASSWORD: banhang123
+      TZ: Asia/Ho_Chi_Minh
     ports:
       - "3307:3306"
     volumes:
@@ -44,6 +45,10 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       MAIL_FROM: ${MAIL_FROM}
+      PAYOS_CLIENT_ID: ${PAYOS_CLIENT_ID}
+      PAYOS_API_KEY: ${PAYOS_API_KEY}
+      PAYOS_CHECKSUM_KEY: ${PAYOS_CHECKSUM_KEY}
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL:-http://localhost:5173}
     volumes:
       - uploads-data:/app/uploads
     depends_on:
