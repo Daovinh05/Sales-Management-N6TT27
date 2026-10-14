@@ -30,6 +30,21 @@ const getRoleLabel = (role) => ({
   ROLE_CUSTOMER: 'Người dùng'
 }[role] || 'Người dùng');
 
+const getApiErrorMessage = (requestError, fallback) => {
+  const responseData = requestError.response?.data;
+  if (responseData?.message || responseData?.detail) {
+    return responseData.message || responseData.detail;
+  }
+  if (responseData && typeof responseData === 'object') {
+    const fieldLabels = { username: 'Tên đăng nhập', email: 'Email', phone: 'Số điện thoại', password: 'Mật khẩu' };
+    const fieldErrors = Object.entries(responseData)
+      .filter(([, message]) => typeof message === 'string')
+      .map(([field, message]) => `${fieldLabels[field] || field}: ${message}`);
+    if (fieldErrors.length) return fieldErrors.join('. ');
+  }
+  return fallback;
+};
+
 function downloadCsv(users) {
   const rows = [['Mã tài khoản', 'Tài khoản', 'Họ và tên', 'Email', 'Số điện thoại', 'Vai trò', 'Trạng thái', 'Ngày tạo'],
     ...users.map((user) => [user.id, user.username, user.fullName, user.email, user.phone,
@@ -135,7 +150,7 @@ export default function UserManagement({ notify }) {
       await loadUsers();
       notify?.('success', 'Đã cập nhật tài khoản.');
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'Không thể cập nhật tài khoản. Vui lòng thử lại.');
+      setError(getApiErrorMessage(requestError, 'Không thể cập nhật tài khoản. Vui lòng thử lại.'));
     } finally {
       setSaving(false);
     }
@@ -151,7 +166,7 @@ export default function UserManagement({ notify }) {
       await loadUsers();
       notify?.('success', 'Đã tạo tài khoản.');
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'Không thể tạo tài khoản. Vui lòng kiểm tra dữ liệu.');
+      setError(getApiErrorMessage(requestError, 'Không thể tạo tài khoản. Vui lòng kiểm tra dữ liệu.'));
     } finally {
       setSaving(false);
     }
@@ -165,7 +180,7 @@ export default function UserManagement({ notify }) {
       setDeleteTarget(null);
       await loadUsers();
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'Không thể xóa tài khoản.');
+      setError(getApiErrorMessage(requestError, 'Không thể xóa tài khoản.'));
     }
   };
 
@@ -330,7 +345,7 @@ export default function UserManagement({ notify }) {
               <label>Mật khẩu<input required type="password" minLength="6" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></label>
               <label>Họ và tên<input value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} /></label>
               <label>Email<input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
-              <label>Số điện thoại<input value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></label>
+              <label>Số điện thoại<input type="tel" inputMode="numeric" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value.replace(/\D/g, '') })} /></label>
               <label>Quyền<select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>
                 <option value="ROLE_CUSTOMER">Người dùng</option>
                 <option value="ROLE_ADMIN">Quản trị viên</option>

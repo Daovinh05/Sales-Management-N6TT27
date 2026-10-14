@@ -152,7 +152,10 @@ export function RegisterModal({ onClose, onSwitch, notify }) {
   const { register } = useAuth();
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', username: '', password: '', confirm: '' });
   const [error, setError] = useState('');
-  const set = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const set = (e) => setForm({
+    ...form,
+    [e.target.name]: e.target.name === 'phone' ? e.target.value.replace(/\D/g, '') : e.target.value
+  });
 
   const submit = async (e) => {
     e.preventDefault();
@@ -162,7 +165,7 @@ export function RegisterModal({ onClose, onSwitch, notify }) {
       await register({ username: form.username, password: form.password, email: form.email || undefined, fullName: form.fullName, phone: form.phone });
       onSwitch();
     } catch (err) {
-      setError(err?.response?.data?.message || 'Đăng ký thất bại');
+      setError(err?.response?.data?.message || err?.response?.data?.detail || 'Đăng ký thất bại');
     }
   };
 
@@ -175,7 +178,7 @@ export function RegisterModal({ onClose, onSwitch, notify }) {
         <form onSubmit={submit}>
           <div className="tz-field"><label>Họ và tên</label><input name="fullName" value={form.fullName} onChange={set} /></div>
           <div className="tz-field"><label>Email</label><input name="email" value={form.email} onChange={set} /></div>
-          <div className="tz-field"><label>Số điện thoại</label><input name="phone" value={form.phone} onChange={set} /></div>
+          <div className="tz-field"><label>Số điện thoại</label><input name="phone" type="tel" inputMode="numeric" value={form.phone} onChange={set} /></div>
           <div className="tz-field"><label>Tài khoản</label><input name="username" value={form.username} onChange={set} required /></div>
           <PwField label="MẬT KHẨU" name="password" id="regPw" value={form.password} onChange={set} />
           <PwField label="NHẬP LẠI MẬT KHẨU" name="confirm" id="regPw2" value={form.confirm} onChange={set} />
