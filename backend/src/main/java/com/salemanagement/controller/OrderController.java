@@ -4,8 +4,10 @@ import com.salemanagement.dto.request.OrderRequest;
 import com.salemanagement.dto.request.OrderStatusRequest;
 import com.salemanagement.dto.request.PaymentConfirmRequest;
 import com.salemanagement.dto.response.OrderResponse;
+import com.salemanagement.dto.response.VietQrLinkResponse;
 import com.salemanagement.security.CustomUserDetails;
 import com.salemanagement.service.OrderService;
+import com.salemanagement.service.PaymentService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
 
     private final OrderService orderService;
+    private final PaymentService paymentService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -80,6 +83,14 @@ public class OrderController {
             @Valid @RequestBody PaymentConfirmRequest request,
             @AuthenticationPrincipal CustomUserDetails principal) {
         return orderService.confirmPayment(code, request.paymentMethod(),
+                principal == null ? null : principal.getUsername());
+    }
+
+    @PostMapping("/{code}/vietqr-link")
+    public VietQrLinkResponse vietQrLink(
+            @PathVariable String code,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return paymentService.createVietQrLink(code,
                 principal == null ? null : principal.getUsername());
     }
 
