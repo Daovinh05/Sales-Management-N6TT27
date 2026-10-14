@@ -19,6 +19,8 @@ function Stars({ value }) {
 function ReviewModal({ onClose, onSubmit, sending }) {
   const [rating, setRating] = useState(5);
   const [content, setContent] = useState('');
+  const len = content.trim().length;
+  const invalid = len === 0 || content.trim().length > 2000;
   return (
     <div className="kh-detail-modal-overlay" onClick={onClose}>
       <div className="kh-detail-modal" onClick={(e) => e.stopPropagation()}>
@@ -33,13 +35,15 @@ function ReviewModal({ onClose, onSubmit, sending }) {
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..."
+          placeholder="Chia sẻ cảm nhận của bạn về sản phẩm (tối đa 2000 ký tự)..."
           rows={4}
+          maxLength={2000}
         />
+        <div className="kh-count">{content.trim().length}/2000 ký tự</div>
         <div className="kh-detail-modal-actions">
           <button type="button" className="kh-detail-back" onClick={onClose}>Hủy</button>
           <button
-            type="button" className="kh-buy" disabled={sending}
+            type="button" className="kh-detail-review-btn" disabled={sending || invalid}
             onClick={() => onSubmit({ rating, content })}
           >
             {sending ? 'Đang gửi...' : 'Gửi đánh giá'}
@@ -50,6 +54,15 @@ function ReviewModal({ onClose, onSubmit, sending }) {
   );
 }
 
+const REVIEW_PAGE_SIZE = 5;
+
+const formatReviewDate = (value) => {
+  if (!value) return '';
+  try {
+    return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value));
+  } catch { return ''; }
+};
+
 export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, notify }) {
   const [detail, setDetail] = useState(null);
   const [selected, setSelected] = useState(0);
@@ -59,11 +72,15 @@ export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, n
   const [reviewData, setReviewData] = useState({ average: 0, total: 0, distribution: [], reviews: [] });
   const [reviewModal, setReviewModal] = useState(false);
   const [sending, setSending] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const [visibleCount, setVisibleCount] = useState(REVIEW_PAGE_SIZE);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError('');
+    setReviewError('');
+    setVisibleCount(REVIEW_PAGE_SIZE);
     setSelected(0);
     setQty(1);
     setReviewModal(false);
@@ -72,6 +89,7 @@ export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, n
         if (cancelled) return;
         setDetail(d);
         if (r) setReviewData(r);
+        else setReviewError('Không tải được đánh giá. Vui lòng thử lại.');
       })
       .catch(() => { if (!cancelled) setError('Không tải được sản phẩm.'); })
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -110,20 +128,31 @@ export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, n
 
   const reloadReviews = async () => {
     try {
+      setReviewError('');
       setReviewData(await fetchReviews(code));
-    } catch { /* giữ dữ liệu cũ */ }
+    } catch {
+      setReviewError('Không tải được đánh giá. Vui lòng thử lại.');
+    }
   };
 
   const submitReview = async ({ rating, content }) => {
-    if (!content.trim()) { notify?.('warning', 'Vui lòng nhập nội dung đánh giá'); return; }
+    const text = (content || '').trim();
+    if (!text) { notify?.('warning', 'Vui lòng nhập nội dung đánh giá'); return; }
+    if (text.length > 2000) { notify?.('warning', 'Nội dung tối đa 2000 ký tự'); return; }
+    if (!rating || rating < 1 || rating > 5) { notify?.('warning', 'Vui lòng chọn số sao 1-5'); return; }
     setSending(true);
     try {
-      await postReview(code, { rating, content: content.trim() });
+      await postReview(code, { rating, content: text });
       setReviewModal(false);
       notify?.('success', 'Gửi đánh giá thành công');
       await reloadReviews();
     } catch (e) {
-      notify?.('error', e.response?.data?.message || e.response?.data?.content || 'Không gửi được đánh giá');
+      const status = e.response?.status;
+      if (status === 401 || status === 403) {
+        notify?.('warning', 'Phiên đăng nhập hết hạn, vui lòng đăng nhập lại');
+      } else {
+        notify?.('error', e.response?.data?.message || 'Không gửi được đánh giá');
+      }
     } finally {
       setSending(false);
     }
@@ -134,7 +163,7 @@ export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, n
     return (
       <div className="kh-body"><div className="tz-container">
         <div className="kh-count">{error || 'Không tìm thấy sản phẩm.'}</div>
-        <button className="kh-buy" onClick={onBack}>Quay lại</button>
+        <button className="kh-detail-back" onClick={onBack}>Quay lại</button>
       </div></div>
     );
   }
@@ -287,11 +316,12 @@ export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, n
           </div>
         </div>
         <div className="kh-detail-review-list">
-          {(reviewData.reviews || []).map((r) => (
+          {(reviewData.reviews || []).slice(0, visibleCount).map((r) => (
             <div className="kh-detail-review-item" key={r.id}>
               <div className="kh-detail-avatar">{(r.customerName || '?').charAt(0).toUpperCase()}</div>
               <div>
                 <span className="kh-detail-reviewer">{r.customerName}</span>
+                {r.createdAt && <span className="kh-count"> · {formatReviewDate(r.createdAt)}</span>}
                 <div className="kh-detail-stars small"><Stars value={r.rating} /></div>
                 <p>{r.content}</p>
                 {r.reply && (
@@ -303,7 +333,15 @@ export default function ProductDetail({ code, onAdd, onBuyNow, onBack, onView, n
               </div>
             </div>
           ))}
-          {totalReviews === 0 && <p className="kh-detail-no-review">Chưa có đánh giá nào cho sản phẩm này.</p>}
+          {reviewError && (
+            <p className="kh-count">{reviewError} <button type="button" className="kh-detail-back" onClick={reloadReviews}>Tải lại</button></p>
+          )}
+          {totalReviews === 0 && !reviewError && <p className="kh-detail-no-review">Chưa có đánh giá nào cho sản phẩm này.</p>}
+          {totalReviews > visibleCount && (
+            <button type="button" className="kh-detail-back" onClick={() => setVisibleCount((c) => c + REVIEW_PAGE_SIZE)}>
+              Xem thêm {(reviewData.reviews || []).length - visibleCount} đánh giá
+            </button>
+          )}
         </div>
         </div>
 

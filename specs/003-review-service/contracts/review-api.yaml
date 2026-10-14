@@ -1,0 +1,61 @@
+openapi: 3.0.3
+info:
+  title: Review API (giữ nguyên hợp đồng)
+  version: 1.0.0
+paths:
+  /api/reviews:
+    get:
+      summary: Liệt kê đánh giá mới nhất trước (ADMIN)
+      responses:
+        '200':
+          description: Danh sách ReviewResponse
+    post:
+      summary: Tạo đánh giá (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+      responses:
+        '201':
+          description: ReviewResponse vừa tạo
+        '400':
+          description: Dữ liệu không hợp lệ (tiếng Việt)
+  /api/reviews/{id}:
+    put:
+      summary: Sửa đánh giá (ADMIN)
+      responses:
+        '200':
+          description: ReviewResponse sau sửa
+        '404':
+          description: Không tìm thấy đánh giá
+    delete:
+      summary: Xóa đánh giá (ADMIN)
+      responses:
+        '204':
+          description: Xóa thành công
+        '404':
+          description: Không tìm thấy đánh giá
+components:
+  schemas:
+    ReviewRequest:
+      type: object
+      required: [customerName, productName, rating, content]
+      properties:
+        customerName: { type: string, maxLength: 100 }
+        productName: { type: string, maxLength: 150 }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        content: { type: string, maxLength: 2000 }
+        reply: { type: string, maxLength: 2000 }
+    ReviewResponse:
+      type: object
+      properties:
+        id: { type: integer }
+        code: { type: string, example: DG03 }
+        customerName: { type: string }
+        productName: { type: string }
+        rating: { type: integer }
+        content: { type: string }
+        reply: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
