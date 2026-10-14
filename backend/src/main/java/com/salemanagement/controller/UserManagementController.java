@@ -54,7 +54,7 @@ public class UserManagementController {
         return userRepository.findAll().stream()
                 .map(user -> new UserResponse(
                         user.getId(), user.getUsername(), user.getFullName(), user.getEmail(),
-                        user.getPhone(), user.getStatus(), user.getRoles().stream().map(r -> r.getName().name()).toList(),
+                        user.getPhone(), user.getAddress(), user.getStatus(), user.getRoles().stream().map(r -> r.getName().name()).toList(),
                         user.getCreatedAt(), user.getAvatarUrl()))
                 .toList();
     }
@@ -150,7 +150,7 @@ public class UserManagementController {
         private UserResponse toResponse(User user) {
                 return new UserResponse(
                                 user.getId(), user.getUsername(), user.getFullName(), user.getEmail(),
-                                user.getPhone(), user.getStatus(), user.getRoles().stream().map(r -> r.getName().name()).toList(),
+                                user.getPhone(), user.getAddress(), user.getStatus(), user.getRoles().stream().map(r -> r.getName().name()).toList(),
                                 user.getCreatedAt(), user.getAvatarUrl());
     }
 
@@ -170,6 +170,7 @@ public class UserManagementController {
             String fullName,
             String email,
             String phone,
+            String address,
             String status,
             List<String> roles,
             LocalDateTime createdAt,
