@@ -112,8 +112,8 @@
 .ad-icon-button { width: 34px; height: 34px; border: 0; border-radius: 7px; background: #f1f5f9; color: #475569; cursor: pointer; }
 .ad-user-filter { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(180px, 1fr) auto; align-items: end; gap: 12px; padding: 16px; background: #f8fafc; border: 1px dashed #d8e2ef; border-radius: 9px; }
 .ad-user-filter label, .ad-brand-dialog label { display: grid; gap: 7px; color: #334155; font-size: 12px; font-weight: 700; }
-.ad-user-filter input, .ad-brand-dialog input, .ad-brand-dialog select { width: 100%; min-width: 0; height: 38px; border: 1px solid #dfe6ef; border-radius: 8px; outline: none; padding: 0 11px; background: #fff; color: #1e293b; font: inherit; font-size: 13px; }
-.ad-user-filter input:focus, .ad-brand-dialog input:focus, .ad-brand-dialog select:focus { border-color: #3b72ef; box-shadow: 0 0 0 3px rgba(59, 114, 239, .12); }
+.ad-user-filter input, .ad-user-filter select, .ad-brand-dialog input, .ad-brand-dialog select { width: 100%; min-width: 0; height: 38px; border: 1px solid #dfe6ef; border-radius: 8px; outline: none; padding: 0 11px; background: #fff; color: #1e293b; font: inherit; font-size: 13px; }
+.ad-user-filter input:focus, .ad-user-filter select:focus, .ad-brand-dialog input:focus, .ad-brand-dialog select:focus { border-color: #3b72ef; box-shadow: 0 0 0 3px rgba(59, 114, 239, .12); }
 .ad-user-table { min-width: 1120px; }
 .ad-user-table th, .ad-user-table td { white-space: nowrap; }
 .ad-user-avatar { width: 32px; height: 32px; display: block; border-radius: 50%; object-fit: cover; }

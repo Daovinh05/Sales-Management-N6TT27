@@ -60,9 +60,9 @@ function downloadCsv(users) {
 export default function UserManagement({ notify }) {
   const { user: currentUser, logout } = useAuth();
   const [users, setUsers] = useState([]);
-  const [idQuery, setIdQuery] = useState('');
+  const [roleQuery, setRoleQuery] = useState('');
   const [nameQuery, setNameQuery] = useState('');
-  const [filters, setFilters] = useState({ id: '', name: '' });
+  const [filters, setFilters] = useState({ role: '', name: '' });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -103,7 +103,7 @@ export default function UserManagement({ notify }) {
 
   const filteredUsers = useMemo(() => {
     const name = filters.name.toLocaleLowerCase('vi');
-    return users.filter((user) => String(user.id).includes(filters.id)
+    return users.filter((user) => (!filters.role || getUserRole(user) === filters.role)
       && `${user.username} ${user.fullName || ''}`.toLocaleLowerCase('vi').includes(name));
   }, [users, filters]);
 
@@ -279,10 +279,15 @@ export default function UserManagement({ notify }) {
         <form className="ad-user-filter" onSubmit={(event) => {
           event.preventDefault();
           setPage(1);
-          setFilters({ id: idQuery.trim(), name: nameQuery.trim() });
+          setFilters({ role: roleQuery, name: nameQuery.trim() });
         }}>
-          <label>MÃ USER
-            <input value={idQuery} onChange={(event) => setIdQuery(event.target.value)} placeholder="Nhập mã user..." inputMode="numeric" />
+          <label>QUYỀN
+            <select value={roleQuery} onChange={(event) => setRoleQuery(event.target.value)}>
+              <option value="">Tất cả quyền</option>
+              <option value="ROLE_ADMIN">Quản trị viên</option>
+              <option value="ROLE_CUSTOMER">Người dùng</option>
+              <option value="ROLE_WAREHOUSE_STAFF">Nhân viên kho</option>
+            </select>
           </label>
           <label>TÊN USER
             <input value={nameQuery} onChange={(event) => setNameQuery(event.target.value)} placeholder="Nhập tên user..." />
@@ -290,7 +295,7 @@ export default function UserManagement({ notify }) {
           <div className="ad-filter-actions">
             <button className="ad-button ad-button-blue" type="submit"><FontAwesomeIcon icon={faMagnifyingGlass} /> Tìm kiếm</button>
             <button className="ad-button ad-button-quiet" type="button" onClick={() => {
-              setIdQuery(''); setNameQuery(''); setFilters({ id: '', name: '' }); setPage(1);
+              setRoleQuery(''); setNameQuery(''); setFilters({ role: '', name: '' }); setPage(1);
             }}>Làm mới</button>
           </div>
         </form>
@@ -302,9 +307,9 @@ export default function UserManagement({ notify }) {
         <p className="ad-brand-count"><strong>Kết quả:</strong> {loading ? 'Đang tải...' : `${filteredUsers.length} tài khoản`}</p>
         <div className="ad-table-wrap">
           <table className="ad-brand-table ad-user-table">
-            <thead><tr><th>STT</th><th>AVATAR</th><th>MÃ USER</th><th>HỌ TÊN</th><th>ACCOUNT</th><th>EMAIL</th><th>QUYỀN</th><th>NGÀY TẠO</th><th>THAO TÁC</th></tr></thead>
+            <thead><tr><th>STT</th><th>AVATAR</th><th>HỌ TÊN</th><th>ACCOUNT</th><th>EMAIL</th><th>QUYỀN</th><th>NGÀY TẠO</th><th>THAO TÁC</th></tr></thead>
             <tbody>
-              {loading ? <tr><td colSpan="9" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
+              {loading ? <tr><td colSpan="8" className="ad-table-empty">Đang tải dữ liệu...</td></tr>
                 : pageUsers.length ? pageUsers.map((user, index) => {
                   const isAdmin = user.roles.includes('ROLE_ADMIN');
                   return <tr key={user.id}>
@@ -312,7 +317,7 @@ export default function UserManagement({ notify }) {
                     <td><img className="ad-user-avatar" src={avatarFor(user)} alt="" onError={(event) => {
                       event.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username)}&background=e8eef9&color=334155&size=64`;
                     }} /></td>
-                    <td>{user.id}</td><td>{user.fullName || '—'}</td><td className="ad-user-name">{user.username}</td>
+                    <td>{user.fullName || '—'}</td><td className="ad-user-name">{user.username}</td>
                     <td>{user.email || '—'}</td>
                     <td><span className={`ad-role-badge ${isAdmin ? 'admin' : ''}`}>{getRoleLabel(getUserRole(user))}</span></td>
                     <td>{formatDate(user.createdAt)}</td>
@@ -321,7 +326,7 @@ export default function UserManagement({ notify }) {
                       <button className="ad-button ad-button-delete" type="button" title="Xóa tài khoản" onClick={() => setDeleteTarget(user)}><FontAwesomeIcon icon={faTrash} /><span>Xóa</span></button>
                     </td>
                   </tr>;
-                }) : <tr><td colSpan="9" className="ad-table-empty">Không tìm thấy tài khoản phù hợp.</td></tr>}
+                }) : <tr><td colSpan="8" className="ad-table-empty">Không tìm thấy tài khoản phù hợp.</td></tr>}
             </tbody>
           </table>
           {!loading && !filteredUsers.length && (
