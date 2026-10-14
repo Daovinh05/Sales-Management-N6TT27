@@ -17,7 +17,7 @@
 .kh-action { position: relative; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px; }
 .kh-action img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #eee; }
 .kh-badge { position: absolute; top: -2px; right: -8px; background: #d70018; color: #fff; font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
-.kh-account-menu { position: absolute; top: 45px; right: -10px; width: 200px; background: #fff; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.15); display: none; overflow: hidden; z-index: 950; }
+.kh-account-menu { position: absolute; top: 100%; right: 0; width: 200px; background: #fff; background-clip: padding-box; border-top: 5px solid transparent; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.15); display: none; overflow: hidden; z-index: 950; }
 .kh-account-menu.active { display: block; }
 .kh-account-menu a { display: flex; gap: 10px; align-items: center; padding: 12px 16px; font-size: 13px; font-weight: 400; color: #333; cursor: pointer; }
 .kh-account-menu a:hover { background: #f4f4f4; }
@@ -25,7 +25,7 @@
 .kh-account-menu .divider { height: 1px; background: #eee; }
 .kh-account { gap: 2px; }
 .kh-account-trigger, .kh-account-toggle { display: inline-flex; align-items: center; background: transparent; color: inherit; cursor: pointer; }
-.kh-account-trigger { gap: 8px; padding: 0; font-size: 14px; font-weight: 600; }
+.kh-account-trigger { gap: 2px; padding: 0; font-size: 12px; font-weight: 600; flex-direction: column; }
 .kh-account-trigger img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #eee; }
 .kh-account-toggle { justify-content: center; width: 26px; height: 32px; color: #666; font-size: 11px; }
 .kh-profile-page { min-height: 70vh; padding-bottom: 48px; }

@@ -187,7 +187,11 @@ export function CustomerHeader({ cartCount, onCart, onSearch, onAccount, onSubmi
           )}
         </form>
         <div className="kh-actions">
-          <div className="kh-action kh-account">
+          <div
+            className="kh-action kh-account"
+            onMouseEnter={() => setOpen(true)}
+            onMouseLeave={() => setOpen(false)}
+          >
             <button type="button" className="kh-account-trigger" onClick={toggleAccountMenu} aria-label="Mở menu tài khoản" aria-expanded={open}>
               <img src={avatar} alt="" />
               <span>{user?.fullName || user?.username}</span>
