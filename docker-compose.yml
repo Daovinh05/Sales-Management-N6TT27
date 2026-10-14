@@ -6,6 +6,7 @@ services:
     environment:
       MYSQL_DATABASE: banhang
       MYSQL_ROOT_PASSWORD: banhang123
+      TZ: Asia/Ho_Chi_Minh
     ports:
       - "3307:3306"
     volumes:

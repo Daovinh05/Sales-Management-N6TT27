@@ -13,6 +13,7 @@ import com.salemanagement.repository.OrderRepository;
 import com.salemanagement.repository.ProductVariantRepository;
 import com.salemanagement.service.OrderService;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -168,6 +169,13 @@ public class OrderServiceImpl implements OrderService {
         } else if (Order.STATUS_COMPLETED.equals(status)) {
             // Hoàn thành: xuất kho thực tế nếu trước đó chưa trừ (đơn COD).
             deductStockIfNeeded(order);
+            // Đơn COD thu tiền mặt lúc giao hàng: hoàn thành tức đã thu,
+            // đóng dấu đã trả kèm giờ để lịch sử hiển thị. VietQR giữ
+            // nguyên theo webhook, không tự đánh dấu để khỏi che mất tiền chưa về.
+            if ("COD".equals(order.getPaymentMethod()) && !order.isPaid()) {
+                order.setPaid(true);
+                order.setPaidAt(LocalDateTime.now());
+            }
         }
 
         order.setStatus(status);

@@ -136,6 +136,23 @@ class OrderServiceTests {
     }
 
     @Test
+    void hoanThanhDonCOD_danhDauDaThuTienKemGio() {
+        Order order = orderWithDetail("DH94", Order.STATUS_SHIPPING, "BT01", 1);
+        order.setPaymentMethod("COD");
+        when(orderRepository.findById("DH94")).thenReturn(Optional.of(order));
+        Inventory stock = inventory(10, 1);
+        when(inventoryRepository.findByWarehouseIdAndProductVariant_CodeForUpdate(1L, "BT01"))
+                .thenReturn(Optional.of(stock));
+
+        OrderResponse response = orderService.updateStatus("DH94", Order.STATUS_COMPLETED);
+
+        assertThat(response.status()).isEqualTo(Order.STATUS_COMPLETED);
+        assertThat(response.paid()).isTrue();
+        assertThat(response.paidAt()).isNotNull();
+        assertThat(order.isPaid()).isTrue();
+    }
+
+    @Test
     void duyetDonChuaChonPhuongThuc_biChan() {
         Order order = orderWithDetail("DH92", Order.STATUS_PENDING, "BT01", 1);
         when(orderRepository.findById("DH92")).thenReturn(Optional.of(order));
