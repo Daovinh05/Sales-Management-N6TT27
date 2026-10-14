@@ -61,6 +61,12 @@
 * **Dùng skill Graphify / Dependency Mapping:** Quét cây thư mục, lập sơ đồ phụ thuộc giữa các tầng để phát hiện sớm lỗi phụ thuộc vòng (Circular Dependency) hoặc vi phạm kiến trúc (Controller gọi thẳng Repository).
 * **Dùng Mermaid trực tiếp trong IDE:** Mở sequence diagram để soi thứ tự thực thi (ví dụ: mở transaction -> lock tồn kho -> tạo order detail -> tính tổng tiền) trước khi code.
 * **Dùng Rules / Context Engineering cho AI:** Đặt các quy tắc ràng buộc AI (luôn dùng thông báo tiếng Việt có dấu, quy chuẩn Conventional Commits, giữ nguyên mô hình 1 kho trung tâm id=1).
+* **Dùng skill Spec-Kit để làm tính năng theo quy trình (ví dụ module Review):**
+  * `speckit-specify` — viết đặc tả `specs/003-review-service/spec.md` (user story, yêu cầu chức năng, tiêu chí đo được) + checklist chất lượng.
+  * `speckit-plan` — sinh `plan.md`, `research.md`, `data-model.md`, `contracts/review-api.yaml`, `quickstart.md`; kiểm tra constitution (Controller → Service → Repository).
+  * `speckit-tasks` — sinh `tasks.md` chia việc theo user story theo định dạng `- [ ] T00x [P?] [USx]`.
+  * `speckit-implement` — code theo từng task: tách `ReviewService`/`ReviewServiceImpl` + DTO ngoài, gọn `ReviewController`, viết `ReviewServiceTest` (6/6 xanh), đánh `[X]` từng task.
+  * Kết quả: phát hiện và sửa lỗi controller gọi thẳng repository, nút gửi đánh giá bị CSS `opacity: 0` che mất; chia 5 commit nguyên tử (`docs(spec)`, `feat(backend)`, `test(backend)`, `fix(backend)`, `feat(frontend)`).
 
 ### c) Phân tích qua Log, Diff & Góc nhìn Leader đánh giá hiệu quả nhóm:
 * **Ý hiểu về công cụ:**
