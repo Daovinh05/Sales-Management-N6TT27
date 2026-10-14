@@ -62,6 +62,18 @@ public class Order {
     @Column(length = 30)
     private String paymentMethod;
 
+    @Column(name = "payos_order_code", unique = true)
+    private Long payosOrderCode;
+
+    @Column(name = "payment_link_id", length = 100)
+    private String paymentLinkId;
+
+    @Column(nullable = false, columnDefinition = "bit default 0")
+    private boolean paid = false;
+
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
     @Column(name = "stock_deducted", nullable = false, columnDefinition = "bit default 0")
     private boolean stockDeducted = false;
 
