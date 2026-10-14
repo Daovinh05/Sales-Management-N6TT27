@@ -162,7 +162,13 @@ export function RegisterModal({ onClose, onSwitch, notify }) {
     setError('');
     if (form.password !== form.confirm) { setError('Nhập lại mật khẩu chưa khớp'); return; }
     try {
-      await register({ username: form.username, password: form.password, email: form.email || undefined, fullName: form.fullName, phone: form.phone });
+      await register({
+        username: form.username.trim(),
+        password: form.password,
+        email: form.email.trim() || undefined,
+        fullName: form.fullName,
+        phone: form.phone
+      });
       onSwitch();
     } catch (err) {
       setError(err?.response?.data?.message || err?.response?.data?.detail || 'Đăng ký thất bại');
