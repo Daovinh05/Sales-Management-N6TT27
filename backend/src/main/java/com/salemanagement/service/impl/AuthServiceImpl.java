@@ -27,6 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -60,11 +61,15 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public User register(RegisterRequest request) {
+        List<String> duplicateFields = new ArrayList<>();
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("Username đã tồn tại");
+            duplicateFields.add("Tên đăng nhập đã được sử dụng");
         }
         if (request.getEmail() != null && userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email đã tồn tại");
+            duplicateFields.add("Email đã được sử dụng");
+        }
+        if (!duplicateFields.isEmpty()) {
+            throw new IllegalArgumentException(String.join(". ", duplicateFields));
         }
         Role customerRole = roleRepository.findByName(ERole.ROLE_CUSTOMER)
                 .orElseGet(() -> roleRepository.save(Role.builder()

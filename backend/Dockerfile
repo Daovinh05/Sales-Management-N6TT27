@@ -5,7 +5,7 @@ COPY pom.xml mvnw ./
 COPY .mvn .mvn
 RUN chmod +x mvnw
 COPY src src
-RUN ./mvnw -q package -DskipTests
+RUN ./mvnw -q package -Dmaven.test.skip=true
 
 # Runtime stage: chỉ JRE 21, nhẹ để chạy
 FROM eclipse-temurin:21-jre-alpine

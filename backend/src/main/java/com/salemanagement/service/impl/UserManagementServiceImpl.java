@@ -10,6 +10,8 @@ import com.salemanagement.repository.RoleRepository;
 import com.salemanagement.repository.UserRepository;
 import com.salemanagement.service.FileStorageService;
 import com.salemanagement.service.UserManagementService;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -37,11 +39,15 @@ public class UserManagementServiceImpl implements UserManagementService {
         if (!"ROLE_ADMIN".equals(roleName) && !"ROLE_CUSTOMER".equals(roleName) && !"ROLE_WAREHOUSE_STAFF".equals(roleName)) {
             throw new BusinessException("Vai trò không hợp lệ", HttpStatus.BAD_REQUEST);
         }
+        List<String> duplicateFields = new ArrayList<>();
         if (userRepository.existsByUsernameAndIdNot(username, id)) {
-            throw new BusinessException("Tên tài khoản đã tồn tại", HttpStatus.CONFLICT);
+            duplicateFields.add("Tên đăng nhập đã được sử dụng");
         }
         if (email != null && userRepository.existsByEmailAndIdNot(email, id)) {
-            throw new BusinessException("Email đã được sử dụng", HttpStatus.CONFLICT);
+            duplicateFields.add("Email đã được sử dụng");
+        }
+        if (!duplicateFields.isEmpty()) {
+            throw new BusinessException(String.join(". ", duplicateFields), HttpStatus.CONFLICT);
         }
 
         boolean isAdmin = user.getRoles().stream().anyMatch(role -> ERole.ROLE_ADMIN.equals(role.getName()));
