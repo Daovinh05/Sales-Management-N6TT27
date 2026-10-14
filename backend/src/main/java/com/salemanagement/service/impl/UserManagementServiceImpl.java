@@ -10,6 +10,9 @@ import com.salemanagement.repository.RoleRepository;
 import com.salemanagement.repository.UserRepository;
 import com.salemanagement.service.FileStorageService;
 import com.salemanagement.service.UserManagementService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,6 +27,7 @@ public class UserManagementServiceImpl implements UserManagementService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final FileStorageService fileStorageService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -33,15 +37,26 @@ public class UserManagementServiceImpl implements UserManagementService {
         String username = request.username().trim();
         String email = request.email() == null || request.email().isBlank() ? null : request.email().trim();
         String roleName = request.role();
+        String status = request.status();
 
         if (!"ROLE_ADMIN".equals(roleName) && !"ROLE_CUSTOMER".equals(roleName) && !"ROLE_WAREHOUSE_STAFF".equals(roleName)) {
             throw new BusinessException("Vai trò không hợp lệ", HttpStatus.BAD_REQUEST);
         }
+        if (!"ACTIVE".equals(status) && !"INACTIVE".equals(status) && !"LOCKED".equals(status)) {
+            throw new BusinessException("Trạng thái tài khoản không hợp lệ", HttpStatus.BAD_REQUEST);
+        }
+        if (request.password() != null && !request.password().isBlank() && request.password().length() < 6) {
+            throw new BusinessException("Mật khẩu phải có ít nhất 6 ký tự", HttpStatus.BAD_REQUEST);
+        }
+        List<String> duplicateFields = new ArrayList<>();
         if (userRepository.existsByUsernameAndIdNot(username, id)) {
-            throw new BusinessException("Tên tài khoản đã tồn tại", HttpStatus.CONFLICT);
+            duplicateFields.add("Tên đăng nhập đã được sử dụng");
         }
         if (email != null && userRepository.existsByEmailAndIdNot(email, id)) {
-            throw new BusinessException("Email đã được sử dụng", HttpStatus.CONFLICT);
+            duplicateFields.add("Email đã được sử dụng");
+        }
+        if (!duplicateFields.isEmpty()) {
+            throw new BusinessException(String.join(". ", duplicateFields), HttpStatus.CONFLICT);
         }
 
         boolean isAdmin = user.getRoles().stream().anyMatch(role -> ERole.ROLE_ADMIN.equals(role.getName()));
@@ -59,6 +74,13 @@ public class UserManagementServiceImpl implements UserManagementService {
         String newAvatar = avatar == null || avatar.isEmpty() ? null : fileStorageService.storeUserAvatar(avatar);
         user.setUsername(username);
         user.setEmail(email);
+        user.setFullName(normalize(request.fullName()));
+        user.setPhone(normalize(request.phone()));
+        user.setAddress(normalize(request.address()));
+        user.setStatus(status);
+        if (request.password() != null && !request.password().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.password()));
+        }
         user.getRoles().clear();
         user.getRoles().add(role);
         if (newAvatar != null) {
@@ -77,5 +99,9 @@ public class UserManagementServiceImpl implements UserManagementService {
             fileStorageService.deleteUserAvatar(newAvatar);
             throw exception;
         }
+    }
+
+    private String normalize(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

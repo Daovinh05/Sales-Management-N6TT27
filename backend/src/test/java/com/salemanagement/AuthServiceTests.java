@@ -104,7 +104,23 @@ class AuthServiceTests {
 
         assertThatThrownBy(() -> authService.register(request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Username đã tồn tại");
+                .hasMessageContaining("Tên đăng nhập đã được sử dụng");
+    }
+
+    @Test
+    void dangKyTrungUsernameVaEmail_baoRoCaHaiTruong() {
+        when(userRepository.existsByUsername("kho1")).thenReturn(true);
+        when(userRepository.existsByEmail("kho1@shop.com")).thenReturn(true);
+
+        RegisterRequest request = new RegisterRequest();
+        request.setUsername("kho1");
+        request.setEmail("kho1@shop.com");
+        request.setPassword("123456");
+
+        assertThatThrownBy(() -> authService.register(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Tên đăng nhập đã được sử dụng")
+                .hasMessageContaining("Email đã được sử dụng");
     }
 
     @Test

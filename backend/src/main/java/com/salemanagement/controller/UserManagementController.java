@@ -4,6 +4,7 @@ import com.salemanagement.entity.Role;
 import com.salemanagement.enums.ERole;
 import com.salemanagement.entity.User;
 import com.salemanagement.dto.request.UpdateManagedUserRequest;
+import com.salemanagement.exception.BusinessException;
 import com.salemanagement.repository.RefreshTokenRepository;
 import com.salemanagement.repository.RoleRepository;
 import com.salemanagement.repository.UserRepository;
@@ -11,6 +12,7 @@ import com.salemanagement.service.UserManagementService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -51,7 +54,7 @@ public class UserManagementController {
         return userRepository.findAll().stream()
                 .map(user -> new UserResponse(
                         user.getId(), user.getUsername(), user.getFullName(), user.getEmail(),
-                        user.getPhone(), user.getStatus(), user.getRoles().stream().map(r -> r.getName().name()).toList(),
+                        user.getPhone(), user.getAddress(), user.getStatus(), user.getRoles().stream().map(r -> r.getName().name()).toList(),
                         user.getCreatedAt(), user.getAvatarUrl()))
                 .toList();
     }
@@ -71,11 +74,15 @@ public class UserManagementController {
         public UserResponse createUser(@Valid @RequestBody CreateUserRequest request) {
                 String username = request.username().trim();
                 String email = request.email() == null || request.email().isBlank() ? null : request.email().trim();
+                List<String> duplicateFields = new ArrayList<>();
                 if (userRepository.existsByUsername(username)) {
-                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Tên tài khoản đã tồn tại");
+                        duplicateFields.add("Tên đăng nhập đã được sử dụng");
                 }
                 if (email != null && userRepository.existsByEmail(email)) {
-                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Email đã được sử dụng");
+                        duplicateFields.add("Email đã được sử dụng");
+                }
+                if (!duplicateFields.isEmpty()) {
+                        throw new BusinessException(String.join(". ", duplicateFields), HttpStatus.CONFLICT);
                 }
 
                 String roleName = request.role() == null || request.role().isBlank() ? "ROLE_CUSTOMER" : request.role();
@@ -143,7 +150,7 @@ public class UserManagementController {
         private UserResponse toResponse(User user) {
                 return new UserResponse(
                                 user.getId(), user.getUsername(), user.getFullName(), user.getEmail(),
-                                user.getPhone(), user.getStatus(), user.getRoles().stream().map(r -> r.getName().name()).toList(),
+                                user.getPhone(), user.getAddress(), user.getStatus(), user.getRoles().stream().map(r -> r.getName().name()).toList(),
                                 user.getCreatedAt(), user.getAvatarUrl());
     }
 
@@ -152,7 +159,7 @@ public class UserManagementController {
                         @NotBlank @Size(min = 6) String password,
                         @Email String email,
                         String fullName,
-                        String phone,
+                        @Pattern(regexp = "[0-9]*", message = "Số điện thoại chỉ được chứa chữ số") String phone,
                         String role) {}
 
     public record RoleUpdateRequest(String role) {}
@@ -163,6 +170,7 @@ public class UserManagementController {
             String fullName,
             String email,
             String phone,
+            String address,
             String status,
             List<String> roles,
             LocalDateTime createdAt,

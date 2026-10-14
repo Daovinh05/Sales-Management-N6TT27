@@ -3,7 +3,7 @@
 **Người thực hiện:** Đỗ Quang Anh  
 **Thời gian tổng hợp:** 27/09/2026 – 02/10/2026
 
-## 1. Xây dựng hệ thống với sự hỗ trợ của Agent (3 điểm)
+## 1. Xây dựng hệ thống với sự hỗ trợ của Agent
 
 ### 1.1. Tổng quan hệ thống
 
@@ -51,7 +51,7 @@ Một số vị trí khác có thể tra theo chức năng:
 
 ### 2.2. Kỹ năng dùng skill và công cụ hỗ trợ code
 
-Khi có skill phù hợp (ví dụ Graphify hoặc skill điều hướng/phân tích code), có thể dùng để hiểu quan hệ giữa màn hình, API, service và dữ liệu trước khi sửa. Không nên chỉ dựa vào kết quả phân tích tự động: cần đối chiếu với mã nguồn và chạy kiểm tra sau thay đổi. Dự án cũng có các sơ đồ trong `mermaid/` làm nguồn ngữ cảnh để người phát triển và Agent thống nhất cách hiểu kiến trúc, dữ liệu và luồng nghiệp vụ.
+Có thể dùng để hiểu quan hệ giữa màn hình, API, service và dữ liệu trước khi sửa. Không nên chỉ dựa vào kết quả phân tích tự động: cần đối chiếu với mã nguồn và chạy kiểm tra sau thay đổi. Dự án cũng có các sơ đồ trong `mermaid/` làm nguồn ngữ cảnh để người phát triển và Agent thống nhất cách hiểu kiến trúc, dữ liệu và luồng nghiệp vụ.
 
 Quy trình áp dụng skill: xác định câu hỏi cần trả lời → dùng skill tìm thành phần liên quan → kiểm tra các file nguồn → yêu cầu thay đổi nhỏ, có tiêu chí kiểm thử → xem diff và xác minh. Không dùng skill để tạo thay đổi hàng loạt nếu chưa hiểu tác động đến các màn hình/API đang dùng chung.
 
@@ -80,8 +80,6 @@ Với vai trò leader, không đánh giá hiệu quả chỉ bằng số dòng c
 
 ## 3. Kết hợp công cụ kiểm thử tính năng
 
-Nên kiểm tra ở nhiều mức thay vì chỉ xác nhận màn hình mở được:
-
 1. **Kiểm tra đầu vào:** xác minh dữ liệu hợp lệ và không hợp lệ, bao gồm các ràng buộc ở giao diện và backend.
 2. **Kiểm tra API/backend:** chạy các kiểm thử tự động hiện có và kiểm tra endpoint, phản hồi lỗi, phân quyền, cùng các thay đổi dữ liệu trong cơ sở dữ liệu.
 3. **Kiểm tra tích hợp giao diện:** thao tác trên trình duyệt, xác minh frontend gọi đúng API và trạng thái hiển thị đúng khi thành công/thất bại.
@@ -89,16 +87,6 @@ Nên kiểm tra ở nhiều mức thay vì chỉ xác nhận màn hình mở đ�
 5. **Kiểm tra khi đóng gói:** build frontend/backend hoặc chạy Docker Compose; nếu lỗi thì đối chiếu kết quả build, `docker compose ps` và log dịch vụ để khoanh vùng.
 
 Trong repository hiện có các bài kiểm thử backend như `SaleManagementApplicationTests`, `CatalogRepositoryTests`, `StorefrontRepositoryTests` và `CartServiceTests`. Có thể chạy backend tests từ thư mục `backend`:
-
-```powershell
-.\mvnw.cmd test
-```
-
-Build frontend từ thư mục `frontend`:
-
-```powershell
-npm run build
-```
 
 Các phiên làm việc trước đã ghi nhận kiểm tra thủ công một số luồng trên trình duyệt và Docker. Chưa có kết quả được ghi nhận cho một lượt chạy toàn bộ kiểm thử tự động sau tất cả thay đổi; cần chạy lại các lệnh trên và kiểm tra các luồng trọng yếu trước khi kết luận toàn hệ thống đã đạt.
 

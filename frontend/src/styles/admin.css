@@ -104,6 +104,9 @@
 .ad-table-empty { height: 90px !important; color: #64748b; text-align: center; }
 .ad-dialog-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(15, 23, 42, .38); }
 .ad-brand-dialog { width: min(440px, 100%); display: grid; gap: 16px; padding: 22px; border-radius: 10px; background: #fff; box-shadow: 0 20px 60px rgba(15, 23, 42, .22); }
+.ad-user-edit-dialog { width: min(640px, 100%); max-height: min(90vh, 760px); overflow-y: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ad-user-edit-dialog .ad-dialog-heading, .ad-user-edit-dialog .ad-user-avatar-editor,
+.ad-user-edit-dialog .ad-brand-message, .ad-user-edit-dialog .ad-dialog-actions { grid-column: 1 / -1; }
 .ad-dialog-heading { display: flex; justify-content: space-between; align-items: center; }
 .ad-dialog-heading h2 { margin: 0; font-size: 18px; }
 .ad-icon-button { width: 34px; height: 34px; border: 0; border-radius: 7px; background: #f1f5f9; color: #475569; cursor: pointer; }
@@ -152,6 +155,9 @@
 	.ad-brand-actions { flex-wrap: wrap; }
 	.ad-brand-filter, .ad-category-filter, .ad-promotion-filter, .ad-supplier-filter { grid-template-columns: 1fr; }
 	.ad-user-filter { grid-template-columns: 1fr; }
+	.ad-user-edit-dialog { grid-template-columns: 1fr; }
+	.ad-user-edit-dialog .ad-dialog-heading, .ad-user-edit-dialog .ad-user-avatar-editor,
+	.ad-user-edit-dialog .ad-brand-message, .ad-user-edit-dialog .ad-dialog-actions { grid-column: auto; }
 	.ad-review-filter { grid-template-columns: 1fr; }
 	.ad-user-form-grid { grid-template-columns: 1fr; }
 	.ad-filter-actions { grid-column: auto; flex-wrap: wrap; }
