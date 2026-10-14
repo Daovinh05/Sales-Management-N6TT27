@@ -327,11 +327,13 @@
 .co-empty { background: #fff; border-radius: 12px; padding: 40px; text-align: center; margin: 16px 0 40px; display: flex; flex-direction: column; gap: 16px; align-items: center; }
 
 /* Order success + history */
-.co-success { max-width: 640px; padding: 48px 16px 80px; }
+.co-success { padding: 48px 16px 80px; }
+.co-success-head { max-width: 640px; margin: 0 auto 20px; text-align: center; }
+.co-success-note { text-align: center; }
 .co-success-icon { font-size: 64px; color: #333; margin-bottom: 20px; }
 .co-success h2 { font-size: 28px; font-weight: 800; margin-bottom: 16px; }
 .co-success p { color: #444; margin-bottom: 6px; }
-.co-success-actions { display: flex; gap: 12px; margin-top: 20px; }
+.co-success-actions { display: flex; gap: 12px; margin-top: 20px; justify-content: center; }
 .co-outline-btn { border: 1px solid #93c5fd; color: #2563eb; background: #fff; border-radius: 6px; padding: 10px 18px; font: inherit; font-size: 13px; font-weight: 600; }
 .co-history { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 40px; }
 .co-history-row { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 16px; }

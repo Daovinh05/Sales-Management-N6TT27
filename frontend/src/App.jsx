@@ -72,6 +72,7 @@ function Shop({ notify, toasts }) {
   const [showSuccess, setShowSuccess] = useState(() => parseHash().success);
   const [showHistory, setShowHistory] = useState(() => parseHash().history);
   const [lastOrderCode, setLastOrderCode] = useState(() => sessionStorage.getItem('last-order') || '');
+  const [lastOrder, setLastOrder] = useState(null);
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState('');
 
@@ -259,6 +260,7 @@ function Shop({ notify, toasts }) {
       sessionStorage.setItem('last-order', order.code);
       setLastOrderCode(order.code);
     }
+    setLastOrder(order || null);
     await reloadCart();
     if (window.location.hash === '#/dat-hang-thanh-cong') setShowSuccess(true);
     else window.location.hash = '/dat-hang-thanh-cong';
@@ -284,7 +286,7 @@ function Shop({ notify, toasts }) {
           : showCheckout
             ? <Checkout items={readCheckoutItems()} notify={notify} onPlaced={handlePlaced} onBack={backHome} />
             : showSuccess
-              ? <OrderSuccess code={lastOrderCode} onHome={backHome} onHistory={() => { window.location.hash = '/lich-su-don-hang'; }} />
+              ? <OrderSuccess code={lastOrderCode} order={lastOrder} onHome={backHome} onHistory={() => { window.location.hash = '/lich-su-don-hang'; }} />
               : showHistory
                 ? <OrderHistory notify={notify} onBack={backHome} />
                 : productCode
