@@ -1,0 +1,108 @@
+openapi: 3.0.3
+info:
+  title: Sales Management PayOS VietQR Payment API
+  version: 1.0.0
+paths:
+  /api/orders/{code}/vietqr-link:
+    post:
+      summary: Tạo link thanh toán PayOS cho đơn (cần đăng nhập, đúng chủ đơn)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+          example: DH1
+      responses:
+        '200':
+          description: Link PayOS, hoặc cờ fallback demo khi chưa cấu hình key.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - payosConfigured
+                properties:
+                  payosConfigured:
+                    type: boolean
+                  checkoutUrl:
+                    type: string
+                    example: https://pay.payos.vn/web/abc
+                  qrCode:
+                    type: string
+                  paymentLinkId:
+                    type: string
+                  payosOrderCode:
+                    type: integer
+                    format: int64
+                  amount:
+                    type: integer
+                    format: int64
+                  accountNumber:
+                    type: string
+                    example: '0389783619'
+                  accountName:
+                    type: string
+                    example: DAO VAN VINH
+                  description:
+                    type: string
+                    example: DH1
+        '400':
+          description: Đơn không còn chờ thanh toán / đã trả / số tiền không hợp lệ
+        '403':
+          description: Không phải chủ đơn
+        '404':
+          description: Không tìm thấy đơn
+        '503':
+          description: Gọi PayOS thất bại
+  /api/payments/payos-webhook:
+    post:
+      summary: Webhook nhận kết quả từ PayOS (public, xác thực bằng chữ ký HMAC)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  example: '00'
+                desc:
+                  type: string
+                success:
+                  type: boolean
+                data:
+                  type: object
+                  properties:
+                    orderCode:
+                      type: integer
+                      format: int64
+                    amount:
+                      type: integer
+                      format: int64
+                signature:
+                  type: string
+      responses:
+        '200':
+          description: Luôn 200 để PayOS không retry; kết quả thật trong body.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
