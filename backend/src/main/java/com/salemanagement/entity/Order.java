@@ -24,6 +24,7 @@ public class Order {
 
     public static final String STATUS_PENDING = "CHO_DUYET";
     public static final String STATUS_CONFIRMED = "DA_XAC_NHAN";
+    public static final String STATUS_PREPARING = "DANG_CHUAN_BI";
     public static final String STATUS_SHIPPING = "DANG_GIAO";
     public static final String STATUS_COMPLETED = "HOAN_THANH";
     public static final String STATUS_CANCELLED = "DA_HUY";

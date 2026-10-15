@@ -177,4 +177,55 @@ class OrderServiceTests {
         assertThat(stock.getQuantity()).isEqualTo(10);
         assertThat(order.getNote()).contains("hoàn tiền");
     }
+
+    @Test
+    void chuanBiHang_diTungBuoc_thanhCong() {
+        Order order = orderWithDetail("DH95", Order.STATUS_PENDING, "BT01", 1);
+        order.setPaymentMethod("COD");
+        when(orderRepository.findById("DH95")).thenReturn(Optional.of(order));
+
+        assertThat(orderService.updateStatus("DH95", Order.STATUS_CONFIRMED).status())
+                .isEqualTo(Order.STATUS_CONFIRMED);
+        assertThat(orderService.updateStatus("DH95", Order.STATUS_PREPARING).status())
+                .isEqualTo(Order.STATUS_PREPARING);
+        assertThat(orderService.updateStatus("DH95", Order.STATUS_SHIPPING).status())
+                .isEqualTo(Order.STATUS_SHIPPING);
+    }
+
+    @Test
+    void nhayCoc_boQuaChuanBiHang_biChan() {
+        Order order = orderWithDetail("DH96", Order.STATUS_CONFIRMED, "BT01", 1);
+        order.setPaymentMethod("COD");
+        when(orderRepository.findById("DH96")).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.updateStatus("DH96", Order.STATUS_SHIPPING))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Không thể chuyển đơn từ trạng thái hiện tại");
+    }
+
+    @Test
+    void khachHuyDonDangChuanBi_biChan() {
+        Order order = orderWithDetail("DH97", Order.STATUS_PREPARING, "BT01", 1);
+        when(orderRepository.findById("DH97")).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.cancelByOwner("DH97", "customer"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("vui lòng liên hệ shop để hủy");
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    @Test
+    void adminHuyDonDangChuanBi_nhaChoGiu() {
+        Order order = orderWithDetail("DH98", Order.STATUS_PREPARING, "BT01", 2);
+        order.setPaymentMethod("COD");
+        when(orderRepository.findById("DH98")).thenReturn(Optional.of(order));
+        Inventory stock = inventory(10, 2);
+        when(inventoryRepository.findByWarehouseIdAndProductVariant_CodeForUpdate(1L, "BT01"))
+                .thenReturn(Optional.of(stock));
+
+        OrderResponse response = orderService.updateStatus("DH98", Order.STATUS_CANCELLED);
+
+        assertThat(response.status()).isEqualTo(Order.STATUS_CANCELLED);
+        assertThat(stock.getReservedQuantity()).isZero();
+    }
 }

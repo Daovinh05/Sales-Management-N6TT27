@@ -14,6 +14,7 @@ import ConfirmModal from '../../components/common/ConfirmModal.jsx';
 const STATUS_LABELS = {
   CHO_DUYET: 'Chờ xác nhận',
   DA_XAC_NHAN: 'Đã xác nhận',
+  DANG_CHUAN_BI: 'Đang chuẩn bị hàng',
   DANG_GIAO: 'Đang giao',
   HOAN_THANH: 'Hoàn thành',
   DA_HUY: 'Đã hủy'
@@ -22,6 +23,7 @@ const STATUS_LABELS = {
 const STATUS_COLORS = {
   CHO_DUYET: { background: '#fef3c7', color: '#92400e' },
   DA_XAC_NHAN: { background: '#dbeafe', color: '#1d4ed8' },
+  DANG_CHUAN_BI: { background: '#ffedd5', color: '#9a3412' },
   DANG_GIAO: { background: '#e0f2fe', color: '#0369a1' },
   HOAN_THANH: { background: '#f1f5f9', color: '#475569' },
   DA_HUY: { background: '#fee2e2', color: '#b91c1c' }
@@ -36,7 +38,8 @@ const paymentLabel = (method) => method === 'COD'
 // Trạng thái chỉ đi tiến, khớp NEXT_STATUSES ở OrderServiceImpl.
 const NEXT_STATUSES = {
   CHO_DUYET: ['DA_XAC_NHAN', 'DA_HUY'],
-  DA_XAC_NHAN: ['DANG_GIAO', 'DA_HUY'],
+  DA_XAC_NHAN: ['DANG_CHUAN_BI', 'DA_HUY'],
+  DANG_CHUAN_BI: ['DANG_GIAO', 'DA_HUY'],
   DANG_GIAO: ['HOAN_THANH', 'DA_HUY'],
   HOAN_THANH: [],
   DA_HUY: []
