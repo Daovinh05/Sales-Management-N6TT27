@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderServiceImpl implements OrderService {
 
     private static final Set<String> STATUSES = Set.of(
-            Order.STATUS_PENDING, Order.STATUS_CONFIRMED, Order.STATUS_SHIPPING,
+            Order.STATUS_PENDING, Order.STATUS_CONFIRMED, Order.STATUS_PREPARING, Order.STATUS_SHIPPING,
             Order.STATUS_COMPLETED, Order.STATUS_CANCELLED);
 
     private static final Set<String> PAYMENT_METHODS = Set.of("COD", "VIETQR");
@@ -36,7 +36,8 @@ public class OrderServiceImpl implements OrderService {
     // Đơn kết thúc (HOAN_THANH / DA_HUY) không đổi nữa.
     private static final Map<String, Set<String>> NEXT_STATUSES = Map.of(
             Order.STATUS_PENDING, Set.of(Order.STATUS_CONFIRMED, Order.STATUS_CANCELLED),
-            Order.STATUS_CONFIRMED, Set.of(Order.STATUS_SHIPPING, Order.STATUS_CANCELLED),
+            Order.STATUS_CONFIRMED, Set.of(Order.STATUS_PREPARING, Order.STATUS_CANCELLED),
+            Order.STATUS_PREPARING, Set.of(Order.STATUS_SHIPPING, Order.STATUS_CANCELLED),
             Order.STATUS_SHIPPING, Set.of(Order.STATUS_COMPLETED, Order.STATUS_CANCELLED),
             Order.STATUS_COMPLETED, Set.of(),
             Order.STATUS_CANCELLED, Set.of());
@@ -226,6 +227,7 @@ public class OrderServiceImpl implements OrderService {
         checkOwner(order, username);
         // Khách được hủy khi đơn chưa giao: CHO_DUYET (nhả chỗ giữ)
         // hoặc DA_XAC_NHAN (cộng trả tồn đã trừ, shop hoàn tiền thủ công).
+        // Từ DANG_CHUAN_BI trở đi khách liên hệ shop; admin hủy qua updateStatus.
         if (!Order.STATUS_PENDING.equals(order.getStatus())
                 && !Order.STATUS_CONFIRMED.equals(order.getStatus())) {
             throw new BusinessException("Đơn đang giao hoặc đã kết thúc, vui lòng liên hệ shop để hủy", HttpStatus.BAD_REQUEST);
