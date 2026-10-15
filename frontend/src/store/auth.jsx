@@ -91,7 +91,17 @@ export function AuthProvider({ children, notify }) {
     setUser(updatedUser);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Thu hồi refresh token trên server trước (chống dùng lại token cũ),
+    // lỗi mạng/server thì vẫn xóa local để người dùng thoát được.
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (refreshToken) {
+      try {
+        await api.post('/auth/logout', { refreshToken });
+      } catch {
+        // best-effort: đã đăng xuất local ở finally bên dưới
+      }
+    }
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
