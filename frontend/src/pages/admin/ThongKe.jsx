@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCartShopping, faCircleCheck, faTruckFast, faClock, faMagnifyingGlass,
-  faDownload, faTriangleExclamation, faListUl
+  faDownload, faTriangleExclamation, faListUl, faBoxOpen
 } from '@fortawesome/free-solid-svg-icons';
 import writeXlsxFile from 'write-excel-file/browser';
 import api from '../../services/api.js';
@@ -12,6 +12,7 @@ import Pagination from '../../components/admin/Pagination.jsx';
 const STATUS_LABELS = {
   CHO_DUYET: 'Chờ xác nhận',
   DA_XAC_NHAN: 'Đã xác nhận',
+  DANG_CHUAN_BI: 'Đang chuẩn bị hàng',
   DANG_GIAO: 'Đang giao',
   HOAN_THANH: 'Hoàn thành',
   DA_HUY: 'Đã hủy'
@@ -20,6 +21,7 @@ const STATUS_LABELS = {
 const STATUS_COLORS = {
   CHO_DUYET: '#f59e0b',
   DA_XAC_NHAN: '#3b82f6',
+  DANG_CHUAN_BI: '#fb923c',
   DANG_GIAO: '#06b6d4',
   HOAN_THANH: '#10b981',
   DA_HUY: '#ef4444'
@@ -126,6 +128,7 @@ export default function ThongKe({ notify }) {
   const statCards = [
     { icon: faCartShopping, label: 'Tổng Đơn Hàng', value: detailOrders.length, color: '#93c5fd' },
     { icon: faCircleCheck, label: 'Đơn Hoàn Thành', value: statusMap.HOAN_THANH || 0, color: '#4ade80' },
+    { icon: faBoxOpen, label: 'Chuẩn Bị Hàng', value: statusMap.DANG_CHUAN_BI || 0, color: '#fdba74' },
     { icon: faTruckFast, label: 'Đang Giao', value: statusMap.DANG_GIAO || 0, color: '#60a5fa' },
     { icon: faClock, label: 'Chờ Duyệt', value: statusMap.CHO_DUYET || 0, color: '#fbbf24' }
   ];
