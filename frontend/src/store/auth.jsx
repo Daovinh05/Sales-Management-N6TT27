@@ -20,6 +20,7 @@ export function AuthProvider({ children, notify }) {
 
   useEffect(() => {
     if (!user?.id) return undefined;
+    if (!localStorage.getItem('accessToken')) return undefined;
     let active = true;
     api.get('/users/me').then(({ data }) => {
       if (!active) return;

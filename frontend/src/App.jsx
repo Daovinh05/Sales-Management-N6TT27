@@ -91,6 +91,7 @@ function Shop({ notify, toasts }) {
   }, []);
 
   const reloadCart = useCallback(async () => {
+    if (!localStorage.getItem('accessToken')) return;
     try {
       setItems((await fetchCart()).items);
     } catch {
