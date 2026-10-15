@@ -20,7 +20,14 @@ export function AuthProvider({ children, notify }) {
 
   useEffect(() => {
     if (!user?.id) return undefined;
-    if (!localStorage.getItem('accessToken')) return undefined;
+    if (!localStorage.getItem('accessToken')) {
+      // Còn user nhưng mất token (hết phiên, bị xóa ở tab khác): đăng xuất + báo rõ cho người dùng.
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      setUser(null);
+      notify?.('error', 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
+      return undefined;
+    }
     let active = true;
     api.get('/users/me').then(({ data }) => {
       if (!active) return;
@@ -38,7 +45,7 @@ export function AuthProvider({ children, notify }) {
       });
     }).catch(() => {});
     return () => { active = false; };
-  }, [user?.id]);
+  }, [user?.id, notify]);
 
   const login = async (username, password) => {
     const { data } = await api.post('/auth/login', { username, password });
