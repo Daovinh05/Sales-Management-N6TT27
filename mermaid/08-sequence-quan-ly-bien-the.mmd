@@ -1,0 +1,252 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'actorBkg': '#DBEAFE', 'actorTextColor': '#111827', 'actorBorder': '#2563EB', 'actorLineColor': '#2563EB', 'signalColor': '#334155', 'signalTextColor': '#111827', 'labelBoxBkgColor': '#FEF9C3', 'labelBoxBorderColor': '#CA8A04', 'labelTextColor': '#111827', 'noteBkgColor': '#FEF9C3', 'noteTextColor': '#111827', 'noteBorderColor': '#CA8A04', 'activationBkgColor': '#DBEAFE', 'activationBorderColor': '#2563EB', 'sequenceNumberColor': '#FFFFFF', 'textColor': '#111827', 'fontSize': '14px'}}}%%
+%% ============================================================
+%% SEQUENCE - QUẢN LÝ BIẾN THỂ
+%% Đối chiếu code: ProductVariantController + ProductVariantServiceImpl
+%% ============================================================
+sequenceDiagram
+
+    autonumber
+
+    actor Admin as Admin
+    participant UI as React Admin<br/>(VariantManagement.jsx)
+    participant JW as JwtFilter<br/>+ @PreAuthorize
+    participant API as ProductVariantController
+    participant SVC as ProductVariantService
+    participant REPO as Repository (JPA)
+    participant FS as FileStorageService
+    participant XL as ExcelHelper
+    participant DB as MySQL
+
+    %% ==========================================
+    %% 1. XEM DANH SACH / TIM KIEM
+    %% ==========================================
+
+    Admin->>UI: Mở trang Quản lý biến thể
+    UI->>API: GET /api/variants?code=&name=
+    Note over API: GET permitAll (đọc công khai)
+    API->>SVC: list(code, name)
+    SVC->>REPO: variantRepository.search(code, name)
+    REPO->>DB: SELECT product_variants JOIN products
+    DB-->>REPO: Danh sách biến thể
+    REPO-->>SVC: List ProductVariant
+    loop Với mỗi biến thể
+        SVC->>REPO: inventoryRepository.findByWarehouseIdAndProductVariant_Code
+        REPO-->>SVC: quantity + reserved_quantity
+    end
+    SVC-->>API: List ProductVariantResponse
+    API-->>UI: 200 OK
+    UI-->>Admin: Hiển thị bảng (giá, tồn kho, giữ chỗ)
+
+    par Tải danh sách sản phẩm cho dropdown
+        UI->>API: GET /api/products
+        API-->>UI: Danh sách sản phẩm
+    end
+
+    %% ==========================================
+    %% 2. XEM BIEN THE THEO SAN PHAM
+    %% ==========================================
+
+    Admin->>UI: Chọn 1 sản phẩm để xem biến thể
+    UI->>API: GET /api/variants?productCode={code}
+    API->>SVC: listByProduct(productCode)
+    SVC->>REPO: productRepository.findById(productCode)
+    alt Sản phẩm không tồn tại
+        SVC-->>API: BusinessException 404
+        API-->>UI: 404 - Không tìm thấy sản phẩm
+    else Sản phẩm tồn tại
+        SVC->>REPO: variantRepository.findByProduct(product)
+        REPO->>DB: SELECT product_variants
+        DB-->>REPO: Danh sách
+        SVC-->>API: List ProductVariantResponse
+        API-->>UI: 200 OK
+        UI-->>Admin: Hiển thị biến thể của sản phẩm
+    end
+
+    %% ==========================================
+    %% 3. XEM PHAN TRANG
+    %% ==========================================
+
+    Admin->>UI: Chuyển trang / tìm kiếm nhanh
+    UI->>API: GET /api/variants/paginated?keyword=&page=&size=
+    API->>SVC: getVariantsPaginated(keyword, page, size)
+    Note over SVC: Sắp xếp theo createdAt DESC
+    SVC->>REPO: variantRepository.searchPaginated(keyword, pageable)
+    REPO->>DB: SELECT ... LIMIT ? OFFSET ?
+    DB-->>REPO: Page kết quả
+    SVC-->>API: PageResponse ProductVariantResponse
+    API-->>UI: 200 OK
+    UI-->>Admin: Hiển thị trang biến thể
+
+    %% ==========================================
+    %% 4. XEM CHI TIET
+    %% ==========================================
+
+    Admin->>UI: Chọn 1 biến thể
+    UI->>API: GET /api/variants/{code}
+    API->>SVC: getDetail(code)
+    Note over SVC: normalizeCode = trim + toUpperCase
+    SVC->>REPO: variantRepository.findById(code)
+    alt Không tìm thấy
+        SVC-->>API: BusinessException 404
+        API-->>UI: 404 - Không tìm thấy biến thể
+    else Tìm thấy
+        SVC-->>API: ProductVariantResponse
+        API-->>UI: 200 OK
+        UI-->>Admin: Hiển thị chi tiết biến thể
+    end
+
+    %% ==========================================
+    %% 5. THEM BIEN THE
+    %% ==========================================
+
+    Admin->>UI: Nhập form + chọn ảnh + bấm "Thêm biến thể"
+    UI->>API: POST /api/variants (multipart + image)
+    API->>JW: Kiểm tra JWT + phân quyền
+    alt Không phải ROLE_ADMIN
+        JW-->>API: 403 Forbidden
+        API-->>UI: 403 - Không có quyền
+    else Là ROLE_ADMIN
+        API->>SVC: create(request, image)
+        SVC->>REPO: variantRepository.existsById(code)
+        alt Mã biến thể đã tồn tại
+            SVC-->>API: BusinessException 409
+            API-->>UI: 409 - Mã biến thể đã tồn tại
+        else Mã chưa tồn tại
+            SVC->>REPO: productRepository.findById(productCode)
+            alt Thiếu mã sản phẩm
+                SVC-->>API: BusinessException 400
+                API-->>UI: 400 - Vui lòng cung cấp mã sản phẩm
+            else Mã sản phẩm không tồn tại
+                SVC-->>API: BusinessException 422
+                API-->>UI: 422 - Mã sản phẩm không tồn tại
+            else Hợp lệ
+                SVC->>FS: storeVariantImage(image)
+                FS-->>SVC: imageUrl
+                Note over SVC: name / color / ram / storage / price
+                SVC->>REPO: variantRepository.save(variant)
+                REPO->>DB: INSERT INTO product_variants
+                DB-->>REPO: OK
+                SVC-->>API: ProductVariantResponse
+                API-->>UI: 201 Created
+                UI-->>Admin: Thêm biến thể thành công
+            end
+        end
+    end
+
+    %% ==========================================
+    %% 6. CAP NHAT BIEN THE
+    %% ==========================================
+
+    Admin->>UI: Sửa form + bấm "Lưu"
+    UI->>API: PUT /api/variants/{code} (multipart + image tùy chọn)
+    API->>SVC: update(code, request, image)
+    SVC->>REPO: variantRepository.findById(code)
+    alt Không tìm thấy
+        SVC-->>API: BusinessException 404
+        API-->>UI: 404 - Không tìm thấy biến thể
+    else Tìm thấy
+        SVC->>REPO: productRepository.findById(productCode mới)
+        alt Đổi sang sản phẩm khác
+            SVC->>REPO: inventoryRepository.findByWarehouseIdAndProductVariant_Code
+            SVC->>REPO: importDetailRepository.existsByProductVariant_Code
+            alt Đã có dữ liệu kho hoặc lịch sử nhập
+                SVC-->>API: BusinessException 409
+                API-->>UI: 409 - Không thể đổi sản phẩm
+            end
+        end
+        Note over SVC: Cập nhật product + name/color/ram/storage/price
+        opt Có upload ảnh mới
+            SVC->>FS: storeVariantImage(ảnh mới)
+            FS-->>SVC: imageUrl mới
+            SVC->>FS: deleteVariantImage(ảnh cũ)
+        end
+        SVC->>REPO: variantRepository.save(variant)
+        REPO->>DB: UPDATE product_variants
+        DB-->>REPO: OK
+        SVC-->>API: ProductVariantResponse
+        API-->>UI: 200 OK
+        UI-->>Admin: Cập nhật thành công
+    end
+
+    %% ==========================================
+    %% 7. XOA BIEN THE
+    %% ==========================================
+
+    Admin->>UI: Bấm "Xóa" + xác nhận
+    UI->>API: DELETE /api/variants/{code}
+    API->>SVC: delete(code)
+    SVC->>REPO: variantRepository.findById(code)
+    alt Không tìm thấy
+        SVC-->>API: BusinessException 404
+        API-->>UI: 404 - Không tìm thấy biến thể
+    else Tìm thấy
+        SVC->>REPO: inventoryRepository.findByWarehouseIdAndProductVariant_Code
+        alt Còn quantity > 0 hoặc reserved_quantity > 0
+            SVC-->>API: BusinessException 409
+            API-->>UI: 409 - Biến thể còn tồn kho
+        else Tồn = 0
+            SVC->>REPO: importDetailRepository.existsByProductVariant_Code
+            alt Đã phát sinh phiếu nhập
+                SVC-->>API: BusinessException 409
+                API-->>UI: 409 - Đã phát sinh phiếu nhập
+            else Chưa nhập
+                SVC->>REPO: orderRepository.countByDetailsVariantCode
+                alt Đã phát sinh đơn hàng
+                    SVC-->>API: BusinessException 409
+                    API-->>UI: 409 - Đã phát sinh đơn hàng
+                else Đủ điều kiện xóa
+                    SVC->>FS: deleteVariantImage(imageUrl)
+                    SVC->>REPO: cartItemRepository.deleteByVariant + inventoryRepository.deleteByProductVariant
+                    REPO->>DB: DELETE cart_items, inventory theo biến thể
+                    DB-->>REPO: OK
+                    SVC->>REPO: variantRepository.delete(variant)
+                    REPO->>DB: DELETE product_variants
+                    DB-->>REPO: OK
+                    SVC-->>API: (không nội dung)
+                    API-->>UI: 204 No Content
+                    UI-->>Admin: Xóa biến thể thành công
+                end
+            end
+        end
+    end
+
+    %% ==========================================
+    %% 8. IMPORT EXCEL
+    %% ==========================================
+
+    Admin->>UI: Chọn file Excel + Import
+    UI->>API: POST /api/variants/import (multipart file)
+    API->>XL: parseVariantRows(inputStream)
+    Note over XL: A=Mã, B=Mã SP, C=Tên, D=Màu, E=RAM, F=Dung lượng, G=Giá
+    XL-->>API: Danh sách ParsedVariantRow
+    API->>SVC: importRows(rows)
+    loop Từng dòng
+        alt Mã trống
+            Note over SVC: skippedEmpty++
+        else Thiếu mã sản phẩm
+            Note over SVC: failedRows++ (kèm lý do)
+        else Mã đã tồn tại
+            Note over SVC: duplicatedCodes++
+        else Hợp lệ
+            Note over SVC: Import Excel không kèm ảnh (image = null)
+            SVC->>REPO: variantRepository.save(variant)
+            REPO->>DB: INSERT INTO product_variants
+            Note over SVC: created++
+        end
+    end
+    SVC-->>API: ImportResult (created / duplicated / failed)
+    API-->>UI: 200 OK
+    UI-->>Admin: Báo cáo kết quả import
+
+    %% ==========================================
+    %% 9. EXPORT EXCEL
+    %% ==========================================
+
+    Admin->>UI: Bấm "Xuất Excel"
+    UI->>API: GET /api/variants?format=xlsx
+    API->>SVC: list(code, name)
+    SVC-->>API: List ProductVariantResponse
+    API->>XL: writeVariants(variants, outputStream)
+    XL-->>API: File .xlsx
+    API-->>UI: File DanhSachBienThe.xlsx
+    UI-->>Admin: Tải file về máy

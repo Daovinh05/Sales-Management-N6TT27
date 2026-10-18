@@ -1,0 +1,144 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'primaryColor': '#DBEAFE', 'primaryTextColor': '#111827', 'primaryBorderColor': '#2563EB', 'lineColor': '#2563EB', 'textColor': '#111827', 'mainBkg': '#EFF6FF', 'secondBkg': '#DBEAFE', 'attributeBackgroundColorOdd': '#F8FAFC', 'attributeBackgroundColorEven': '#EFF6FF', 'fontSize': '14px'}}}%%
+%% ============================================================
+%% ERD - QUẢN LÝ SẢN PHẨM & BIẾN THỂ (đối chiếu entity thật)
+%% Lưu ý bám code:
+%%   - Category / Brand / Supplier dùng `code` làm khóa (join theo *_code)
+%%   - PRODUCT chỉ giữ thông tin chung; GIÁ và TỒN nằm ở PRODUCT_VARIANT
+%%   - Mọi liên kết nghiệp vụ (kho, nhập, giỏ, đơn) trỏ về variant_code
+%% ============================================================
+erDiagram
+
+    %% ==========================================
+    %% DANH MỤC / THƯƠNG HIỆU / NHÀ CUNG CẤP
+    %% ==========================================
+
+    CATEGORY {
+        string code PK
+        string name UK
+        datetime created_at
+    }
+
+    BRAND {
+        string code PK
+        string name UK
+        datetime created_at
+    }
+
+    SUPPLIER {
+        string code PK
+        string name
+        string address
+        string phone
+        datetime created_at
+    }
+
+    %% ==========================================
+    %% SẢN PHẨM & BIẾN THỂ
+    %% ==========================================
+
+    PRODUCT {
+        string code PK
+        string name
+        string category_code FK
+        string brand_code FK
+        string supplier_code FK
+        datetime created_at
+    }
+
+    PRODUCT_VARIANT {
+        string code PK
+        string product_code FK
+        string name
+        text image_url
+        string color
+        string ram
+        string storage
+        decimal price
+        int stock_quantity
+        datetime created_at
+    }
+
+    %% ==========================================
+    %% TỒN KHO
+    %% ==========================================
+
+    WAREHOUSE {
+        bigint id PK
+        string name
+        string address
+        string phone
+        string status
+        datetime created_at
+    }
+
+    INVENTORY {
+        bigint id PK
+        bigint warehouse_id FK
+        string variant_code FK
+        int quantity
+        int reserved_quantity
+        datetime created_at
+        datetime updated_at
+    }
+
+    %% ==========================================
+    %% NHẬP HÀNG (liên kết tới biến thể)
+    %% ==========================================
+
+    IMPORT_RECEIPT {
+        bigint id PK
+        bigint created_by FK
+        string supplier_code FK
+        decimal total_amount
+        string status
+        string note
+        datetime created_at
+    }
+
+    IMPORT_DETAIL {
+        bigint id PK
+        bigint receipt_id FK
+        string variant_code FK
+        int quantity
+        decimal unit_price
+    }
+
+    %% ==========================================
+    %% GIỎ HÀNG & ĐƠN HÀNG (liên kết tới biến thể)
+    %% ==========================================
+
+    CART_ITEM {
+        bigint id PK
+        bigint cart_id FK
+        string variant_code FK
+        int quantity
+    }
+
+    ORDER_DETAIL {
+        bigint id PK
+        string order_code FK
+        string variant_code FK
+        string product_name
+        int quantity
+        decimal unit_price
+    }
+
+    %% ==========================================
+    %% QUAN HỆ
+    %% ==========================================
+
+    CATEGORY ||--o{ PRODUCT : "phân loại"
+    BRAND ||--o{ PRODUCT : "thuộc"
+    SUPPLIER |o--o{ PRODUCT : "cung cấp"
+
+    PRODUCT ||--o{ PRODUCT_VARIANT : "có"
+
+    PRODUCT_VARIANT ||--o{ INVENTORY : "tồn kho"
+    WAREHOUSE ||--o{ INVENTORY : "lưu trữ"
+
+    PRODUCT_VARIANT ||--o{ IMPORT_DETAIL : "được nhập"
+    IMPORT_RECEIPT ||--|{ IMPORT_DETAIL : "gồm"
+
+    PRODUCT_VARIANT ||--o{ CART_ITEM : "trong giỏ"
+
+    PRODUCT_VARIANT ||--o{ ORDER_DETAIL : "được đặt"

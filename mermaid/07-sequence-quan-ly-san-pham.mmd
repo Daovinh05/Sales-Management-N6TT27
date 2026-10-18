@@ -1,0 +1,218 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'actorBkg': '#DBEAFE', 'actorTextColor': '#111827', 'actorBorder': '#2563EB', 'actorLineColor': '#2563EB', 'signalColor': '#334155', 'signalTextColor': '#111827', 'labelBoxBkgColor': '#FEF9C3', 'labelBoxBorderColor': '#CA8A04', 'labelTextColor': '#111827', 'noteBkgColor': '#FEF9C3', 'noteTextColor': '#111827', 'noteBorderColor': '#CA8A04', 'activationBkgColor': '#DBEAFE', 'activationBorderColor': '#2563EB', 'sequenceNumberColor': '#FFFFFF', 'textColor': '#111827', 'fontSize': '14px'}}}%%
+%% ============================================================
+%% SEQUENCE - QUẢN LÝ SẢN PHẨM
+%% Đối chiếu code: ProductController + ProductServiceImpl + ExcelHelper
+%% ============================================================
+sequenceDiagram
+
+    autonumber
+
+    actor Admin as Admin
+    participant UI as React Admin<br/>(ProductManagement.jsx)
+    participant JW as JwtFilter<br/>+ @PreAuthorize
+    participant API as ProductController
+    participant SVC as ProductService
+    participant REPO as Repository (JPA)
+    participant XL as ExcelHelper
+    participant DB as MySQL
+
+    %% ==========================================
+    %% 1. XEM DANH SACH / TIM KIEM
+    %% ==========================================
+
+    Admin->>UI: Mở trang Quản lý sản phẩm
+    UI->>API: GET /api/products?code=&name=
+    Note over API: GET permitAll (đọc công khai)
+    API->>SVC: list(code, name)
+    SVC->>REPO: productRepository.search(code, name)
+    REPO->>DB: SELECT products + category + brand + supplier
+    DB-->>REPO: Danh sách sản phẩm
+    REPO-->>SVC: List Product
+    loop Với mỗi sản phẩm
+        SVC->>REPO: variantRepository.findFirstByProductOrderByCodeAsc
+        REPO-->>SVC: Biến thể đầu (ảnh + giá)
+        SVC->>REPO: inventoryRepository.sumAvailableQuantityByProduct
+        REPO-->>SVC: Tồn khả dụng
+    end
+    SVC-->>API: List ProductResponse
+    API-->>UI: 200 OK
+    UI-->>Admin: Hiển thị bảng sản phẩm
+
+    par Tải dữ liệu cho form lọc và form thêm/sửa
+        UI->>API: GET /api/categories
+        API-->>UI: Danh mục
+    and
+        UI->>API: GET /api/brands
+        API-->>UI: Thương hiệu
+    and
+        UI->>API: GET /api/suppliers
+        API-->>UI: Nhà cung cấp
+    end
+
+    %% ==========================================
+    %% 2. XEM CHI TIET
+    %% ==========================================
+
+    Admin->>UI: Chọn 1 sản phẩm
+    UI->>API: GET /api/products/{code}
+    API->>SVC: getDetail(code)
+    Note over SVC: normalizeCode = trim + toUpperCase
+    SVC->>REPO: productRepository.findById(code)
+    REPO->>DB: SELECT product
+    DB-->>REPO: Product
+    REPO-->>SVC: Optional Product
+    alt Không tìm thấy
+        SVC-->>API: BusinessException 404
+        API-->>UI: 404 - Không tìm thấy sản phẩm
+        UI-->>Admin: Thông báo không tìm thấy
+    else Tìm thấy
+        SVC-->>API: ProductResponse
+        API-->>UI: 200 OK
+        UI-->>Admin: Hiển thị chi tiết sản phẩm
+    end
+
+    %% ==========================================
+    %% 3. THEM SAN PHAM
+    %% ==========================================
+
+    Admin->>UI: Nhập form + bấm "Thêm sản phẩm"
+    UI->>API: POST /api/products (JSON)
+    API->>JW: Kiểm tra JWT + phân quyền
+    alt Không phải ROLE_ADMIN
+        JW-->>API: 403 Forbidden
+        API-->>UI: 403 - Không có quyền
+    else Là ROLE_ADMIN
+        API->>SVC: create(ProductRequest)
+        SVC->>REPO: productRepository.existsById(code)
+        REPO->>DB: SELECT exists
+        DB-->>REPO: true / false
+        REPO-->>SVC: boolean
+        alt Mã đã tồn tại
+            SVC-->>API: BusinessException 409
+            API-->>UI: 409 - Mã sản phẩm đã tồn tại
+        else Mã chưa tồn tại
+            SVC->>REPO: categoryRepository.findById(categoryCode)
+            alt Danh mục không tồn tại
+                SVC-->>API: BusinessException 422
+                API-->>UI: 422 - Danh mục không tồn tại
+            else Danh mục hợp lệ hoặc để trống
+                SVC->>REPO: brandRepository.findById(brandCode)
+                SVC->>REPO: supplierRepository.findById(supplierCode)
+                Note over SVC: Brand / Supplier không tồn tại -> 422
+                SVC->>REPO: productRepository.save(product)
+                REPO->>DB: INSERT INTO products
+                DB-->>REPO: OK
+                REPO-->>SVC: Product đã lưu
+                SVC-->>API: ProductResponse
+                API-->>UI: 201 Created
+                UI-->>Admin: Thêm sản phẩm thành công
+            end
+        end
+    end
+
+    %% ==========================================
+    %% 4. CAP NHAT SAN PHAM
+    %% ==========================================
+
+    Admin->>UI: Sửa form + bấm "Lưu"
+    UI->>API: PUT /api/products/{code} (JSON)
+    API->>SVC: update(code, ProductUpdateRequest)
+    SVC->>REPO: productRepository.findById(code)
+    REPO-->>SVC: Optional Product
+    alt Không tìm thấy
+        SVC-->>API: BusinessException 404
+        API-->>UI: 404 - Không tìm thấy sản phẩm
+    else Tìm thấy
+        Note over SVC: Cập nhật name + category + brand + supplier
+        SVC->>REPO: productRepository.save(product)
+        REPO->>DB: UPDATE products
+        DB-->>REPO: OK
+        SVC-->>API: ProductResponse
+        API-->>UI: 200 OK
+        UI-->>Admin: Cập nhật thành công
+    end
+
+    %% ==========================================
+    %% 5. XOA SAN PHAM
+    %% ==========================================
+
+    Admin->>UI: Bấm "Xóa" + xác nhận
+    UI->>API: DELETE /api/products/{code}
+    API->>SVC: delete(code)
+    SVC->>REPO: productRepository.findById(code)
+    alt Không tìm thấy
+        SVC-->>API: BusinessException 404
+        API-->>UI: 404 - Không tìm thấy sản phẩm
+    else Tìm thấy
+        SVC->>REPO: variantRepository.findByProduct(product)
+        REPO-->>SVC: Danh sách biến thể
+        loop Kiểm tra từng biến thể trước khi xóa
+            SVC->>REPO: inventoryRepository.findByWarehouseIdAndProductVariant_Code
+            alt Còn quantity > 0 hoặc reserved_quantity > 0
+                SVC-->>API: BusinessException 409
+                API-->>UI: 409 - Biến thể còn tồn kho
+            else Tồn = 0
+                SVC->>REPO: importDetailRepository.existsByProductVariant_Code
+                alt Đã phát sinh phiếu nhập
+                    SVC-->>API: BusinessException 409
+                    API-->>UI: 409 - Đã phát sinh phiếu nhập
+                else Chưa nhập
+                    SVC->>REPO: orderRepository.countByDetailsVariantCode
+                    alt Đã phát sinh đơn hàng
+                        SVC-->>API: BusinessException 409
+                        API-->>UI: 409 - Đã phát sinh đơn hàng
+                    end
+                end
+            end
+        end
+        Note over SVC: Qua hết kiểm tra -> dọn dữ liệu con rồi xóa sản phẩm
+        SVC->>REPO: cartItemRepository.deleteByVariant + inventoryRepository.deleteByProductVariant
+        REPO->>DB: DELETE cart_items, inventory, product_variants
+        DB-->>REPO: OK
+        SVC->>REPO: productRepository.delete(product)
+        REPO->>DB: DELETE products
+        DB-->>REPO: OK
+        SVC-->>API: (không nội dung)
+        API-->>UI: 204 No Content
+        UI-->>Admin: Xóa sản phẩm thành công
+    end
+
+    %% ==========================================
+    %% 6. IMPORT EXCEL
+    %% ==========================================
+
+    Admin->>UI: Chọn file Excel + Import
+    UI->>API: POST /api/products/import (multipart file)
+    API->>XL: parseProductRows(inputStream)
+    Note over XL: Cột A=Mã, B=Tên, C=Mã DM, D=Mã TH, E=Mã NCC
+    XL-->>API: Danh sách ParsedProductRow
+    API->>SVC: importRows(rows)
+    loop Từng dòng
+        alt Mã trống
+            Note over SVC: skippedEmpty++
+        else Thiếu tên sản phẩm
+            Note over SVC: failedRows++ (kèm lý do)
+        else Mã đã tồn tại
+            Note over SVC: duplicatedCodes++
+        else Hợp lệ
+            SVC->>REPO: productRepository.save(product)
+            REPO->>DB: INSERT INTO products
+            Note over SVC: created++
+        end
+    end
+    SVC-->>API: ImportResult (created / duplicated / failed)
+    API-->>UI: 200 OK
+    UI-->>Admin: Báo cáo kết quả import
+
+    %% ==========================================
+    %% 7. EXPORT EXCEL
+    %% ==========================================
+
+    Admin->>UI: Bấm "Xuất Excel"
+    UI->>API: GET /api/products?format=xlsx
+    API->>SVC: list(code, name)
+    SVC-->>API: List ProductResponse
+    API->>XL: writeProducts(products, outputStream)
+    XL-->>API: File .xlsx
+    API-->>UI: File DanhSachSanPham.xlsx
+    UI-->>Admin: Tải file về máy

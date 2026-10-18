@@ -1,0 +1,136 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'primaryColor': '#FFFFFF', 'primaryTextColor': '#111827', 'primaryBorderColor': '#3B82F6', 'lineColor': '#64748B', 'textColor': '#111827', 'fontSize': '14px'}}}%%
+%% ============================================================
+%% USE CASE - QUẢN LÝ SẢN PHẨM & QUẢN LÝ BIẾN THỂ
+%% Đối chiếu code:
+%%   - ProductController      -> /api/products
+%%   - ProductVariantController -> /api/variants
+%%   - SecurityConfig: GET /api/products/**, /api/variants/** = permitAll (đọc công khai)
+%%   - Ghi (POST/PUT/DELETE) = @PreAuthorize("hasRole('ADMIN')")
+%% ============================================================
+flowchart LR
+
+    classDef actor fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#111827;
+    classDef read fill:#DBEAFE,stroke:#2563EB,stroke-width:2px,color:#111827;
+    classDef write fill:#FCE7F3,stroke:#DB2777,stroke-width:2px,color:#111827;
+    classDef excel fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#111827;
+    classDef stock fill:#FEF9C3,stroke:#CA8A04,stroke-width:2px,color:#111827;
+
+    %% =========================
+    %% ACTORS
+    %% =========================
+
+    Guest["Khách vãng lai (Guest)"]
+    Staff["Warehouse Staff"]
+    Admin["Admin"]
+
+    %% =========================
+    %% SYSTEM
+    %% =========================
+
+    subgraph SYS["CHỨC NĂNG QUẢN LÝ SẢN PHẨM & BIẾN THỂ"]
+
+        subgraph PROD["Quản lý sản phẩm"]
+
+            %% Đọc công khai (GET)
+            P1["Xem danh sách sản phẩm"]
+            P2["Tìm kiếm / lọc theo mã, tên"]
+            P3["Xem chi tiết sản phẩm theo mã"]
+
+            %% Chỉ Admin (ghi)
+            P4["Thêm sản phẩm"]
+            P5["Cập nhật sản phẩm"]
+            P6["Xóa sản phẩm"]
+            P7["Gán Danh mục / Thương hiệu / Nhà cung cấp"]
+            P8["Import sản phẩm từ Excel"]
+            P9["Export danh sách sản phẩm ra Excel"]
+
+        end
+
+        subgraph VAR["Quản lý biến thể"]
+
+            %% Đọc công khai (GET)
+            V1["Xem danh sách biến thể"]
+            V2["Xem biến thể theo sản phẩm"]
+            V3["Xem biến thể phân trang"]
+            V4["Xem chi tiết biến thể theo mã"]
+
+            %% Chỉ Admin (ghi)
+            V5["Thêm biến thể"]
+            V6["Cập nhật biến thể"]
+            V7["Xóa biến thể"]
+            V8["Upload / thay ảnh biến thể"]
+            V9["Import biến thể từ Excel"]
+            V10["Export danh sách biến thể ra Excel"]
+
+            %% Tồn kho (đọc từ Inventory)
+            V11["Xem tồn kho / số lượng giữ chỗ"]
+
+        end
+
+    end
+
+    %% =========================
+    %% GUEST - đọc công khai
+    %% =========================
+
+    Guest --> P1
+    Guest --> P2
+    Guest --> P3
+    Guest --> V1
+    Guest --> V2
+    Guest --> V4
+
+    %% =========================
+    %% WAREHOUSE STAFF - đọc + xem tồn kho
+    %% =========================
+
+    Staff --> P1
+    Staff --> P2
+    Staff --> P3
+    Staff --> V1
+    Staff --> V2
+    Staff --> V3
+    Staff --> V4
+    Staff --> V11
+
+    %% =========================
+    %% ADMIN - toàn quyền
+    %% =========================
+
+    Admin --> P1
+    Admin --> P2
+    Admin --> P3
+    Admin --> P4
+    Admin --> P5
+    Admin --> P6
+    Admin --> P7
+    Admin --> P8
+    Admin --> P9
+
+    Admin --> V1
+    Admin --> V2
+    Admin --> V3
+    Admin --> V4
+    Admin --> V5
+    Admin --> V6
+    Admin --> V7
+    Admin --> V8
+    Admin --> V9
+    Admin --> V10
+    Admin --> V11
+
+    %% =========================
+    %% APPLY COLORS
+    %% =========================
+
+    class Guest,Staff,Admin actor;
+    class P1,P2,P3,V1,V2,V3,V4 read;
+    class P4,P5,P6,P7,V5,V6,V7,V8 write;
+    class P8,P9,V9,V10 excel;
+    class V11 stock;
+
+    style SYS fill:#FFFFFF,stroke:#3B82F6,stroke-width:3px,color:#111827;
+    style PROD fill:#EFF6FF,stroke:#2563EB,stroke-width:2px,color:#111827;
+    style VAR fill:#F5F3FF,stroke:#7C3AED,stroke-width:2px,color:#111827;
+
+    linkStyle default stroke:#64748B,stroke-width:2px;
