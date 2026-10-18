@@ -49,11 +49,17 @@ Một số vị trí khác có thể tra theo chức năng:
 - Quản lý người dùng: `frontend/src/pages/admin/UserManagement.jsx`, `backend/src/main/java/com/salemanagement/controller/UserManagementController.java`.
 - Quản lý đánh giá: `frontend/src/pages/admin/ReviewManagement.jsx`, `backend/src/main/java/com/salemanagement/controller/ReviewController.java`.
 
-### 2.2. Kỹ năng dùng skill và công cụ hỗ trợ code
+### 2.2. Kỹ năng sử dụng Agent và công cụ hỗ trợ code
 
-Có thể dùng để hiểu quan hệ giữa màn hình, API, service và dữ liệu trước khi sửa. Không nên chỉ dựa vào kết quả phân tích tự động: cần đối chiếu với mã nguồn và chạy kiểm tra sau thay đổi. Dự án cũng có các sơ đồ trong `mermaid/` làm nguồn ngữ cảnh để người phát triển và Agent thống nhất cách hiểu kiến trúc, dữ liệu và luồng nghiệp vụ.
+Trong quá trình phát triển, Agent được sử dụng như công cụ hỗ trợ đọc hiểu, truy vết và chỉnh sửa code; quyết định phạm vi, kiểm tra nghiệp vụ và xác nhận kết quả vẫn do người thực hiện chịu trách nhiệm. Các kỹ năng đã áp dụng gồm:
 
-Quy trình áp dụng skill: xác định câu hỏi cần trả lời → dùng skill tìm thành phần liên quan → kiểm tra các file nguồn → yêu cầu thay đổi nhỏ, có tiêu chí kiểm thử → xem diff và xác minh. Không dùng skill để tạo thay đổi hàng loạt nếu chưa hiểu tác động đến các màn hình/API đang dùng chung.
+- **Đọc hiểu và truy vết code:** tìm luồng từ biểu mẫu React qua API, controller, service đến repository/entity; đối chiếu với sơ đồ trong `mermaid/` khi cần hiểu kiến trúc hoặc nghiệp vụ.
+- **Phân tích và sửa lỗi theo nguyên nhân:** dùng thông báo trên giao diện, phản hồi API và log Docker để khoanh vùng lỗi; sửa ở đúng lớp thay vì chỉ thay câu thông báo phía giao diện.
+- **Thực hiện thay đổi xuyên suốt frontend/backend:** cập nhật đồng bộ biểu mẫu, kiểm tra đầu vào, API và xử lý dữ liệu; ví dụ chuẩn hóa tên đăng nhập trước khi kiểm tra trùng và lưu.
+- **Kiểm chứng thay đổi:** xem diff, kiểm tra lỗi cú pháp/diagnostic, build frontend/backend bằng Docker và gọi API để xác nhận kết quả thực tế.
+- **Quản lý môi trường Docker an toàn:** kiểm kê container, image, volume và build cache; chỉ dọn cache cũ và tài nguyên xác định là mồ côi, giữ lại container đang phục vụ cùng volume dữ liệu.
+
+Các công cụ đã dùng trong quy trình gồm VS Code/Copilot Agent, tìm kiếm và đọc mã nguồn, `git diff`, Docker Compose, build ứng dụng và kiểm tra HTTP API. Đây là kỹ năng và công cụ hỗ trợ phát triển; trong các phiên làm việc được ghi nhận ở báo cáo này, không có skill chuyên biệt có tên nào được kích hoạt riêng. Khi bổ sung skill chuyên biệt trong tương lai, cần ghi đúng tên và mục đích sử dụng, đồng thời luôn đối chiếu kết quả với mã nguồn và kiểm thử.
 
 ### 2.3. Dùng log và diff để theo dõi hiệu quả làm việc
 
