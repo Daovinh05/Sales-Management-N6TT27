@@ -86,7 +86,7 @@ Quy trình của em, bước nào cũng có kiểm chứng chứ không phó m�
 2. **Khóa thiết kế, chống code trôi:** đổi luồng thì sửa diagram trước, sửa code sau. Quy tắc: **diagram và code không được lệch nhau**.
 3. **Giải thích thay vì đọc code chay:** `02-erd.mmd` (`orders` ↔ `order_detail` ↔ `inventory`), `04-sequence` là thứ em mở khi thầy/bạn hỏi.
 
-**File liên quan:** `mermaid/01-use-case.mmd`, `02-erd.mmd`, `03-system-architecture.mmd`, `04-sequence-order.mmd`, `docs/Token.md` (luồng JWT em viết tay).
+**File liên quan:** `mermaid/01-use-case.mmd`, `02-erd.mmd`, `03-system-architecture.mmd`, `04-sequence-order.mmd` (chuẩn hóa luồng đặt, giữ chỗ, modal, PayOS), `09-use-case-ban-hang-don-hang.mmd`, `10-erd-don-hang-thanh-toan-ton-kho.mmd`, `11-sequence-xac-thuc-jwt.mmd`, `12-sequence-dat-hang-thanh-toan.mmd`, `13-sequence-quan-ly-don-hang-admin.mmd`, `14-sequence-thong-ke-doanh-thu.mmd`, `docs/Token.md` (luồng JWT em viết tay).
 
 **Skill files (cấu trúc: name, description, khi nào dùng):**
 - `explore` — "đọc nhiều file rồi tóm tắt", dùng trước mọi task (ví dụ tìm `boxRef` mất do merge: đọc 2 nhánh git, chỉ đúng đoạn bị xóa).

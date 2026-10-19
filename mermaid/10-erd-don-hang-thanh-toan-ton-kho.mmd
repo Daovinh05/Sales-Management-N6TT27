@@ -1,0 +1,139 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'primaryColor': '#DBEAFE', 'primaryTextColor': '#111827', 'primaryBorderColor': '#2563EB', 'lineColor': '#2563EB', 'textColor': '#111827', 'mainBkg': '#EFF6FF', 'secondBkg': '#DBEAFE', 'attributeBackgroundColorOdd': '#F8FAFC', 'attributeBackgroundColorEven': '#EFF6FF', 'fontSize': '14px'}}}%%
+%% ============================================================
+%% ERD - ĐƠN HÀNG, THANH TOÁN, TỒN KHO & XÁC THỰC (ĐÀO VĂN VINH)
+%% Đối chiếu thực thể JPA Entity & bảng MySQL thực tế:
+%%   - User, Role, RefreshToken, PasswordResetToken (bảo mật, JWT)
+%%   - Order, OrderDetail (đơn hàng, chi tiết đơn, cờ stockDeducted)
+%%   - Inventory (kho trung tâm id=1, công thức bán được: quantity - reservedQuantity)
+%%   - ProductVariant (biến thể sản phẩm, lấy giá gốc & liên kết kho)
+%% ============================================================
+erDiagram
+
+    %% ==========================================
+    %% 1. TÀI KHOẢN & XÁC THỰC JWT
+    %% ==========================================
+
+    USERS {
+        bigint id PK
+        string username UK
+        string password
+        string full_name
+        string email UK
+        string phone
+        string address
+        string status
+        datetime created_at
+        datetime updated_at
+    }
+
+    ROLES {
+        bigint id PK
+        string name UK
+        string description
+    }
+
+    USER_ROLES {
+        bigint user_id PK, FK
+        bigint role_id PK, FK
+    }
+
+    REFRESH_TOKENS {
+        bigint id PK
+        bigint user_id FK
+        string token UK
+        datetime expires_at
+        boolean revoked
+        datetime created_at
+    }
+
+    PASSWORD_RESET_TOKENS {
+        bigint id PK
+        bigint user_id FK
+        string token UK
+        datetime expiry_date
+    }
+
+    %% ==========================================
+    %% 2. ĐƠN HÀNG & CHI TIẾT ĐƠN HÀNG
+    %% ==========================================
+
+    ORDERS {
+        string code PK
+        string username FK
+        string customer_name
+        string customer_phone
+        string email
+        string shipping_address
+        text note
+        decimal total_amount
+        decimal discount_amount
+        decimal payment_amount
+        string status
+        string payment_method
+        bigint payos_order_code UK
+        string payment_link_id
+        boolean paid
+        datetime paid_at
+        boolean stock_deducted
+        datetime created_at
+    }
+
+    ORDER_DETAILS {
+        bigint id PK
+        string order_code FK
+        string variant_code FK
+        string product_name
+        int quantity
+        decimal unit_price
+    }
+
+    %% ==========================================
+    %% 3. TỒN KHO & BIẾN THỂ SẢN PHẨM
+    %% ==========================================
+
+    PRODUCT_VARIANT {
+        string code PK
+        string product_code FK
+        string name
+        decimal price
+        int stock_quantity
+        string ram
+        string storage
+        string color
+        text image_url
+        datetime created_at
+    }
+
+    INVENTORY {
+        bigint id PK
+        bigint warehouse_id FK
+        string variant_code FK
+        int quantity
+        int reserved_quantity
+        datetime created_at
+        datetime updated_at
+    }
+
+    WAREHOUSE {
+        bigint id PK
+        string name
+        string address
+        string phone
+        string status
+    }
+
+    %% ==========================================
+    %% QUAN HỆ GIỮA CÁC THỰC THỂ
+    %% ==========================================
+
+    USERS ||--o{ USER_ROLES : "has"
+    ROLES ||--o{ USER_ROLES : "assigned"
+    USERS ||--o{ REFRESH_TOKENS : "owns"
+    USERS ||--o{ PASSWORD_RESET_TOKENS : "requests"
+    USERS ||--o{ ORDERS : "places"
+
+    ORDERS ||--|{ ORDER_DETAILS : "contains"
+    PRODUCT_VARIANT ||--o{ ORDER_DETAILS : "ordered_in"
+
+    WAREHOUSE ||--o{ INVENTORY : "stores"
+    PRODUCT_VARIANT ||--o| INVENTORY : "stocked_as"

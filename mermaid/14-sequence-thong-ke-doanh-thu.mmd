@@ -1,0 +1,94 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'actorBkg': '#DBEAFE', 'actorTextColor': '#111827', 'actorBorder': '#2563EB', 'actorLineColor': '#2563EB', 'signalColor': '#334155', 'signalTextColor': '#111827', 'labelBoxBkgColor': '#FEF9C3', 'labelBoxBorderColor': '#CA8A04', 'labelTextColor': '#111827', 'noteBkgColor': '#FEF9C3', 'noteTextColor': '#111827', 'noteBorderColor': '#CA8A04', 'activationBkgColor': '#DBEAFE', 'activationBorderColor': '#2563EB', 'sequenceNumberColor': '#FFFFFF', 'textColor': '#111827', 'fontSize': '14px'}}}%%
+%% ============================================================
+%% SEQUENCE - THỐNG KÊ DOANH THU & BÁO CÁO ADMIN (ĐÀO VĂN VINH)
+%% Đối chiếu source code:
+%%   - Frontend: ThongKe.jsx (biểu đồ doanh thu SVG/CSS, KPI, top 5, tồn thấp)
+%%   - Backend: StatsController, StatsServiceImpl
+%%   - Repository: OrderRepository (JPQL revenueByDay, countByStatusBetween),
+%%                 OrderDetailRepository (JPQL topSelling)
+%%   - Security: @PreAuthorize("hasRole('ADMIN')")
+%%   - Quy tắc nghiệp vụ: Doanh thu CHỈ tính từ đơn HOAN_THANH; Fill đủ ngày trống
+%%     (zero-revenue fill) để biểu đồ mượt mà không bị ngắt quãng.
+%% ============================================================
+sequenceDiagram
+
+    autonumber
+
+    actor Admin as Quản trị viên (Admin)
+    participant UI as React Admin<br/>(ThongKe.jsx)
+    participant SEC as Spring Security<br/>(JwtFilter + @PreAuthorize)
+    participant API as StatsController<br/>(/api/admin/stats/*)
+    participant SVC as StatsServiceImpl
+    participant ORD_REPO as OrderRepository
+    participant DTL_REPO as OrderDetailRepository
+    participant WH_SVC as WarehouseService<br/>(/api/inventory)
+    participant DB as MySQL Database
+
+    %% ==========================================
+    %% 1. TẢI DỮ LIỆU BÁO CÁO THEO KHOẢNG NGÀY
+    %% ==========================================
+    rect rgb(239, 246, 255)
+    Note over Admin,DB: 1. KHỞI TẠO BỘ LỌC THỜI GIAN & GỌI SONG SONG 4 API THỐNG KÊ
+    Admin->>UI: Mở trang "Thống kê" (mặc định chọn 30 ngày gần nhất: from -> to)
+    UI->>UI: Chuẩn bị tham số: fromDate, toDate (ISO yyyy-MM-dd)
+
+    par Gọi 4 API thống kê song song (Promise.all)
+        UI->>API: GET /api/admin/stats/overview?from={from}&to={to}
+        API->>SEC: Kiểm tra quyền ADMIN (@PreAuthorize)
+        SEC-->>API: Hợp lệ
+        API->>SVC: overview(from, to)
+        Note over SVC: Tính tổng hợp: Doanh thu thực tế, Số đơn hoàn thành, Tổng đơn phát sinh, Số đơn hủy
+        SVC-->>API: StatsOverviewResponse
+        API-->>UI: HTTP 200 OK (KPI cards)
+    and
+        UI->>API: GET /api/admin/stats/revenue-by-day?from={from}&to={to}
+        API->>SVC: revenueByDay(from, to)
+        SVC->>SVC: Khởi tạo LinkedHashMap cho toàn bộ ngày từ from đến to với Doanh thu = 0
+        Note over SVC: Kỹ thuật Zero-Fill: đảm bảo ngày không có đơn vẫn có điểm trên biểu đồ!
+        SVC->>ORD_REPO: revenueByDay("HOAN_THANH", startOf(from), endOf(to))
+        ORD_REPO->>DB: SELECT DATE(created_at), SUM(payment_amount), COUNT(code)<br/>FROM orders WHERE status = 'HOAN_THANH' GROUP BY DATE(created_at)
+        DB-->>ORD_REPO: Doanh thu thực tế theo từng ngày
+        ORD_REPO-->>SVC: List<Object[]>
+        SVC->>SVC: Ghi đè doanh thu vào các ngày tương ứng trong Map
+        SVC-->>API: List<RevenuePointResponse>
+        API-->>UI: HTTP 200 OK (Mảng điểm vẽ biểu đồ)
+    and
+        UI->>API: GET /api/admin/stats/orders-by-status?from={from}&to={to}
+        API->>SVC: ordersByStatus(from, to)
+        SVC->>ORD_REPO: countByStatusBetween(startOf(from), endOf(to))
+        ORD_REPO->>DB: SELECT status, COUNT(code) FROM orders<br/>WHERE created_at BETWEEN ? AND ? GROUP BY status
+        DB-->>ORD_REPO: Số lượng đơn theo 6 trạng thái
+        ORD_REPO-->>SVC: List<Object[]>
+        SVC-->>API: List<StatusCountResponse>
+        API-->>UI: HTTP 200 OK (Tỷ lệ trạng thái đơn)
+    and
+        UI->>API: GET /api/admin/stats/top-products?from={from}&to={to}&limit=5
+        API->>SVC: topProducts(from, to, 5)
+        SVC->>DTL_REPO: topSelling("HOAN_THANH", startOf(from), endOf(to))
+        DTL_REPO->>DB: SELECT d.variant_code, d.product_name, d.unit_price, SUM(d.quantity)<br/>FROM order_details d JOIN orders o ON d.order_code = o.code<br/>WHERE o.status = 'HOAN_THANH' GROUP BY d.variant_code ORDER BY SUM(d.quantity) DESC
+        DB-->>DTL_REPO: Top sản phẩm bán chạy nhất
+        DTL_REPO-->>SVC: List<Object[]>
+        SVC-->>API: List<TopProductResponse> (Mã, Tên, SL đã bán, Doanh số)
+        API-->>UI: HTTP 200 OK
+    and
+        UI->>WH_SVC: GET /api/inventory
+        WH_SVC->>DB: SELECT * FROM inventory WHERE warehouse_id = 1
+        DB-->>WH_SVC: Danh sách tồn kho các biến thể
+        WH_SVC-->>UI: List<InventoryResponse>
+        Note over UI: Frontend lọc client: availableQuantity <= 5 để hiển thị bảng Cảnh báo hàng sắp hết!
+    end
+    end
+
+    %% ==========================================
+    %% 2. RENDER TRỰC QUAN & XUẤT BÁO CÁO EXCEL
+    %% ==========================================
+    rect rgb(254, 249, 195)
+    Note over Admin,DB: 2. KẾT QUẢ HIỂN THỊ TRÊN GIAO DIỆN & XUẤT FILE EXCEL
+    UI-->>Admin: Hiển thị 4 thẻ KPI số liệu tổng quan (Doanh thu, Đơn hoàn thành, Tổng đơn, Đơn hủy)
+    UI-->>Admin: Vẽ biểu đồ cột / đường biểu diễn doanh thu 30 ngày (tự căn chỉnh min/max)
+    UI-->>Admin: Hiển thị bảng Top 5 sản phẩm bán chạy nhất và bảng hàng tồn kho thấp
+
+    Admin->>UI: Bấm "Xuất Excel"
+    UI->>UI: Gọi thư viện writeXlsxFile sinh file danh-sach-don-hang.xlsx
+    UI-->>Admin: Tải file Excel báo cáo doanh thu về máy tính cá nhân
+    end

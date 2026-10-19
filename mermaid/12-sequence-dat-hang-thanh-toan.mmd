@@ -1,0 +1,144 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'actorBkg': '#DBEAFE', 'actorTextColor': '#111827', 'actorBorder': '#2563EB', 'actorLineColor': '#2563EB', 'signalColor': '#334155', 'signalTextColor': '#111827', 'labelBoxBkgColor': '#FEF9C3', 'labelBoxBorderColor': '#CA8A04', 'labelTextColor': '#111827', 'noteBkgColor': '#FEF9C3', 'noteTextColor': '#111827', 'noteBorderColor': '#CA8A04', 'activationBkgColor': '#DBEAFE', 'activationBorderColor': '#2563EB', 'sequenceNumberColor': '#FFFFFF', 'textColor': '#111827', 'fontSize': '14px'}}}%%
+%% ============================================================
+%% SEQUENCE - ĐẶT HÀNG, GIỮ CHỖ TỒN KHO & THANH TOÁN (ĐÀO VĂN VINH)
+%% Đối chiếu source code:
+%%   - Frontend: Checkout.jsx, PaymentModal.jsx, OrderSuccess.jsx
+%%   - Backend: OrderController, OrderServiceImpl, PaymentController, PaymentServiceImpl
+%%   - Repository: OrderRepository, InventoryRepository, ProductVariantRepository
+%%   - Quy tắc cốt lõi: Khóa bi quan (@Lock PESSIMISTIC_WRITE), Giữ chỗ kho (reservedQuantity),
+%%     Xử lý COD / VietQR / PayOS webhook / Đóng modal giữa chừng / Hủy đơn nhả kho.
+%% ============================================================
+sequenceDiagram
+
+    autonumber
+
+    actor Customer as Khách hàng
+    participant UI as React Checkout<br/>(Checkout.jsx)
+    participant Modal as React PaymentModal<br/>(PaymentModal.jsx)
+    participant ORD_CTRL as OrderController<br/>(/api/orders/*)
+    participant ORD_SVC as OrderServiceImpl
+    participant PAY_CTRL as PaymentController<br/>(/api/payments/*)
+    participant PAY_SVC as PaymentServiceImpl
+    participant REPO as JPA Repositories<br/>(Variant / Inventory / Order)
+    participant DB as MySQL Database
+    participant PayOS as Cổng thanh toán<br/>PayOS / VietQR
+
+    %% ==========================================
+    %% 1. TẠO ĐƠN HÀNG & GIỮ CHỖ TỒN KHO
+    %% ==========================================
+    rect rgb(239, 246, 255)
+    Note over Customer,PayOS: BƯỚC 1: ĐẶT HÀNG — KHÓA BI QUAN & GIỮ CHỖ TỒN KHO
+    Customer->>UI: Điền thông tin giao hàng & bấm "Đặt hàng"
+    UI->>ORD_CTRL: POST /api/orders (OrderRequest: items, shipping, voucher...)
+    ORD_CTRL->>ORD_SVC: create(request, username)
+
+    loop Với mỗi sản phẩm trong đơn hàng
+        ORD_SVC->>REPO: variantRepository.findById(variantCode)
+        DB-->>ORD_SVC: ProductVariant (giá niêm yết price từ server)
+        Note over ORD_SVC: Không tin unitPrice từ client; tự lấy giá gốc từ DB
+        ORD_SVC->>REPO: inventoryRepository.findByWarehouseIdAndVariantForUpdate(1, variantCode)
+        Note over REPO,DB: Thực thi: SELECT ... FOR UPDATE (Khóa bi quan dòng kho)
+        DB-->>ORD_SVC: Inventory (quantity, reservedQuantity)
+
+        alt Tồn khả dụng không đủ: (quantity - reservedQuantity) < buyQuantity
+            ORD_SVC-->>ORD_CTRL: Ném BusinessException ("Sản phẩm chỉ còn X sản phẩm có thể bán")
+            ORD_CTRL-->>UI: HTTP 400 Bad Request
+            UI-->>Customer: Báo lỗi hết hàng / tồn không đủ, đơn không được tạo
+        else Đủ hàng bán
+            ORD_SVC->>ORD_SVC: reservedQuantity = reservedQuantity + buyQuantity
+            Note over ORD_SVC: Giữ chỗ: tăng reservedQuantity, CHƯA trừ quantity
+            ORD_SVC->>REPO: inventoryRepository.save(inventory)
+        end
+    end
+
+    ORD_SVC->>ORD_SVC: totalAmount = sum(price * qty); paymentAmount = max(0, total - discount)
+    ORD_SVC->>ORD_SVC: status = "CHO_DUYET", stockDeducted = false, paid = false
+    ORD_SVC->>REPO: orderRepository.save(order)
+    DB-->>ORD_SVC: Order đã tạo (mã DHx)
+    ORD_SVC-->>ORD_CTRL: OrderResponse
+    ORD_CTRL-->>UI: HTTP 201 Created (OrderResponse)
+    UI->>Modal: Mở PaymentModal(order) hiển thị số tiền thanh toán
+    end
+
+    %% ==========================================
+    %% 2. CÁC NHÁNH THANH TOÁN TẠI MODAL
+    %% ==========================================
+
+    %% --- NHÁNH A: THANH TOÁN TIỀN MẶT COD ---
+    rect rgb(254, 249, 195)
+    Note over Customer,PayOS: NHÁNH 2A: THANH TOÁN TIỀN MẶT (COD)
+    Customer->>Modal: Chọn tab "Tiền mặt (COD)" -> Bấm "Xác nhận đặt hàng (COD)"
+    Modal->>ORD_CTRL: POST /api/orders/{code}/payment { paymentMethod: "COD" }
+    ORD_CTRL->>ORD_SVC: confirmPayment(code, "COD", username)
+    ORD_SVC->>REPO: order.setPaymentMethod("COD"); orderRepository.save(order)
+    Note over ORD_SVC: Đơn vẫn giữ ở CHO_DUYET, kho vẫn giữ chỗ; trừ tồn thực tế khi Admin duyệt Hoàn thành
+    ORD_SVC-->>ORD_CTRL: OrderResponse
+    ORD_CTRL-->>Modal: HTTP 200 OK
+    Modal-->>Customer: Toast "Đặt hàng thành công", đóng modal -> Chuyển sang OrderSuccess.jsx
+    end
+
+    %% --- NHÁNH B: CHUYỂN KHOẢN VIETQR (PAYOS HOẶC DEMO) ---
+    rect rgb(240, 253, 250)
+    Note over Customer,PayOS: NHÁNH 2B: CHUYỂN KHOẢN VIETQR (TÍCH HỢP PAYOS & FALLBACK)
+    Customer->>Modal: Chọn tab "Chuyển khoản VietQR"
+    Modal->>ORD_CTRL: POST /api/orders/{code}/vietqr-link
+    ORD_CTRL->>PAY_SVC: createVietQrLink(code, username)
+    PAY_SVC->>PayOS: Gọi API PayOS tạo payment-link kèm mã DHx
+    PayOS-->>PAY_SVC: QR Code string + Checkout URL
+    PAY_SVC-->>ORD_CTRL: VietQrLinkResponse
+    ORD_CTRL-->>Modal: VietQrLinkResponse
+    Modal-->>Customer: Render mã QR động + STK, Ngân hàng, Nội dung CK
+
+    par Polling kiểm tra kết quả thanh toán từ Client
+        loop Mỗi 3 giây Polling
+            Modal->>ORD_CTRL: GET /api/orders/{code}/detail
+            ORD_CTRL-->>Modal: OrderResponse (paid: false/true)
+        end
+    and Xử lý Webhook từ PayOS khi khách quét chuyển khoản
+        Customer->>PayOS: Khách dùng App ngân hàng quét QR & chuyển khoản
+        PayOS->>PAY_CTRL: POST /api/payments/payos-webhook (body kèm chữ ký HMAC)
+        PAY_CTRL->>PAY_SVC: handlePayosWebhook(body)
+        PAY_SVC->>PAY_SVC: Xác thực chữ ký HMAC chống giả mạo
+        PAY_SVC->>REPO: order.setPaid(true); order.setPaidAt(now()); order.setPaymentMethod("VIETQR")
+        PAY_SVC->>REPO: orderRepository.save(order)
+        PAY_SVC-->>PAY_CTRL: WebhookOutcome(accepted=true)
+        PAY_CTRL-->>PayOS: HTTP 200 OK
+    end
+
+    Note over Modal: Lần Polling tiếp theo nhận paid = true!
+    Modal-->>Customer: Hiển thị "Thanh toán thành công!", tự động đóng modal -> OrderSuccess.jsx
+    end
+
+    %% --- NHÁNH C: ĐÓNG MODAL GIỮA CHỪNG (KHÔNG TRẢ TIỀN NGAY) ---
+    rect rgb(255, 237, 213)
+    Note over Customer,PayOS: NHÁNH 2C: KHÁCH ĐÓNG MODAL GIỮA CHỪNG (XỬ LÝ BIÊN)
+    Customer->>Modal: Bấm nút [X] hoặc click ra ngoài modal
+    Modal->>Modal: Mở popup xác nhận rời đi (pm-leave-box)
+    Modal-->>Customer: "Bạn có chắc muốn rời khỏi thanh toán? Đơn #DHx vẫn giữ hàng chờ bạn."
+    alt Khách chọn "Ở lại thanh toán"
+        Customer->>Modal: Bấm "Ở lại thanh toán" -> Đóng popup xác nhận, tiếp tục ở lại
+    else Khách chọn "Rời đi"
+        Customer->>Modal: Bấm "Rời đi" -> Đóng PaymentModal
+        Note over UI: Đơn #DHx vẫn giữ chỗ kho (reservedQuantity không đổi, status CHO_DUYET)
+        UI-->>Customer: Hiển thị Banner màu cam cảnh báo đơn chưa thanh toán kèm nút "Thanh toán ngay"
+        Note over Customer: Khách có thể vào Lịch sử đơn hàng (OrderHistory.jsx) bấm "Thanh toán tiếp" bất kỳ lúc nào!
+    end
+    end
+
+    %% --- NHÁNH D: KHÁCH HỦY ĐƠN TẠI MODAL ---
+    rect rgb(254, 242, 242)
+    Note over Customer,PayOS: NHÁNH 2D: KHÁCH BẤM HỦY ĐƠN NGAY TRÊN MODAL
+    Customer->>Modal: Bấm nút đỏ "Hủy đơn hàng"
+    Modal->>ORD_CTRL: POST /api/orders/{code}/cancel
+    ORD_CTRL->>ORD_SVC: cancelByOwner(code, username)
+    ORD_SVC->>ORD_SVC: releaseReservedStock(order)
+    loop Với mỗi sản phẩm trong đơn
+        ORD_SVC->>REPO: inventory.setReservedQuantity(reservedQuantity - detail.quantity)
+        ORD_SVC->>REPO: inventoryRepository.save(inventory)
+        Note over REPO: Nhả chỗ tồn kho ngay lập tức, không để thất thoát hàng
+    end
+    ORD_SVC->>REPO: order.setStatus("DA_HUY"); orderRepository.save(order)
+    ORD_SVC-->>ORD_CTRL: OrderResponse
+    ORD_CTRL-->>Modal: HTTP 200 OK
+    Modal-->>Customer: Toast thông báo "Đã hủy đơn hàng, tồn kho được hoàn lại"
+    end
