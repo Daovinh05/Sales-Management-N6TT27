@@ -1,0 +1,148 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'actorBkg': '#DBEAFE', 'actorTextColor': '#111827', 'actorBorder': '#2563EB', 'actorLineColor': '#2563EB', 'signalColor': '#334155', 'signalTextColor': '#111827', 'labelBoxBkgColor': '#FEF9C3', 'labelBoxBorderColor': '#CA8A04', 'labelTextColor': '#111827', 'noteBkgColor': '#FEF9C3', 'noteTextColor': '#111827', 'noteBorderColor': '#CA8A04', 'activationBkgColor': '#DBEAFE', 'activationBorderColor': '#2563EB', 'sequenceNumberColor': '#FFFFFF', 'textColor': '#111827', 'fontSize': '14px'}}}%%
+%% ============================================================
+%% SEQUENCE - QUẢN LÝ ĐƠN HÀNG ADMIN & VÒNG ĐỜI TRẠNG THÁI (ĐÀO VĂN VINH)
+%% Đối chiếu source code:
+%%   - Frontend: OrderManagement.jsx (lọc, phân trang, duyệt 1 chiều, xuất excel)
+%%   - Backend: OrderController, OrderServiceImpl
+%%   - Security: @PreAuthorize("hasRole('ADMIN')")
+%%   - Cơ chế cốt lõi: Duyệt tiến 1 chiều NEXT_STATUSES, Chặn duyệt đơn thiếu PTTT,
+%%     Trừ kho thực tế tại HOAN_THANH (cờ stockDeducted), Hủy đơn nhả/trả tồn.
+%% ============================================================
+sequenceDiagram
+
+    autonumber
+
+    actor Admin as Quản trị viên (Admin)
+    participant UI as React Admin UI<br/>(OrderManagement.jsx)
+    participant SEC as Spring Security<br/>(JwtFilter + @PreAuthorize)
+    participant API as OrderController<br/>(/api/orders/*)
+    participant SVC as OrderServiceImpl
+    participant REPO as OrderRepository
+    participant INV as InventoryRepository
+    participant DB as MySQL Database
+
+    %% ==========================================
+    %% 1. TRA CỨU & XEM DANH SÁCH ĐƠN HÀNG
+    %% ==========================================
+    rect rgb(239, 246, 255)
+    Note over Admin,DB: 1. TRA CỨU, LỌC & XEM CHI TIẾT ĐƠN HÀNG
+    Admin->>UI: Mở trang "Quản lý Đơn Hàng" (chọn bộ lọc: mã, tên khách, trạng thái, PTTT)
+    UI->>API: GET /api/orders?code=&customer=&status=&payment= (kèm Bearer JWT)
+    API->>SEC: Kiểm tra quyền ADMIN (@PreAuthorize)
+    SEC-->>API: Quyền hợp lệ
+    API->>SVC: list(code, customer, status, payment)
+    SVC->>REPO: orderRepository.filter(...)
+    REPO->>DB: SELECT * FROM orders WHERE ... ORDER BY created_at DESC
+    DB-->>REPO: Danh sách đơn hàng
+    REPO-->>SVC: List<Order>
+    SVC-->>API: List<OrderResponse>
+    API-->>UI: HTTP 200 OK (Danh sách đơn hàng)
+    UI-->>Admin: Hiển thị bảng đơn hàng (phân trang 10 đơn/trang)
+    end
+
+    %% ==========================================
+    %% 2. DUYỆT ĐƠN TIẾN 1 CHIỀU & CHẶN ĐƠN THIẾU PTTT
+    %% ==========================================
+    rect rgb(245, 243, 255)
+    Note over Admin,DB: 2. TIẾN TRÌNH DUYỆT ĐƠN 1 CHIỀU & VALIDATION NGHIỆP VỤ
+    Admin->>UI: Bấm xem chi tiết đơn #DHx (trạng thái hiện tại: CHO_DUYET)
+    UI->>API: GET /api/orders/DHx
+    API->>SVC: detail("DHx")
+    SVC->>REPO: orderRepository.findById("DHx")
+    DB-->>SVC: Order entity kèm danh sách OrderDetail
+    SVC-->>API: OrderResponse
+    API-->>UI: HTTP 200 OK
+    UI-->>Admin: Hiển thị modal chi tiết đơn hàng + Dropdown trạng thái tiếp theo
+
+    Admin->>UI: Chọn chuyển sang "DA_XAC_NHAN" -> Bấm "Cập nhật"
+    UI->>API: PATCH /api/orders/DHx/status { status: "DA_XAC_NHAN" }
+    API->>SVC: updateStatus("DHx", "DA_XAC_NHAN")
+
+    Note over SVC: Kiểm tra luồng 1 chiều: CHO_DUYET -> DA_XAC_NHAN (Hợp lệ)
+    alt Kiểm tra phương thức thanh toán: paymentMethod == null hoặc trống
+        Note over SVC: Chặn duyệt đơn khách chưa chọn phương thức thanh toán!
+        SVC-->>API: Ném BusinessException ("Đơn chưa chọn phương thức thanh toán, không thể xác nhận")
+        API-->>UI: HTTP 400 Bad Request
+        UI-->>Admin: Báo lỗi: không thể xác nhận khi khách chưa chọn COD hoặc VietQR
+    else Đã có phương thức thanh toán hợp lệ (COD hoặc VIETQR)
+        SVC->>REPO: order.setStatus("DA_XAC_NHAN"), orderRepository.save(order)
+        DB-->>REPO: Cập nhật thành công
+        SVC-->>API: OrderResponse mới
+        API-->>UI: HTTP 200 OK
+        UI-->>Admin: Toast "Đã cập nhật đơn sang Đã xác nhận"
+    end
+    end
+
+    %% ==========================================
+    %% 3. DUYỆT HOÀN THÀNH — XUẤT KHO THỰC TẾ
+    %% ==========================================
+    rect rgb(240, 253, 250)
+    Note over Admin,DB: 3. BƯỚC HOÀN THÀNH (HOAN_THANH) — TRỪ KHO THẬT & CỜ stockDeducted
+    Note over Admin,UI: Sau các bước trung gian (DANG_CHUAN_BI -> DANG_GIAO), hàng đã giao tới tay khách
+    Admin->>UI: Chuyển trạng thái đơn sang "HOAN_THANH"
+    UI->>API: PATCH /api/orders/DHx/status { status: "HOAN_THANH" }
+    API->>SVC: updateStatus("DHx", "HOAN_THANH")
+
+    SVC->>SVC: deductStockIfNeeded(order)
+    alt Cờ stockDeducted == false (chưa trừ kho trước đó)
+        loop Với từng sản phẩm trong đơn hàng
+            SVC->>INV: findByWarehouseIdAndProductVariant_CodeForUpdate(1, variantCode)
+            Note over INV,DB: Khóa bi quan dòng kho: SELECT ... FOR UPDATE
+            DB-->>SVC: Inventory (quantity, reservedQuantity)
+            alt Tồn kho quantity < số lượng mua trong đơn
+                SVC-->>API: Ném BusinessException ("Tồn kho sản phẩm không đủ để hoàn thành đơn")
+                API-->>UI: HTTP 400 Bad Request
+            else Tồn kho quantity đủ
+                Note over SVC: TRỪ THẬT: Cả quantity và reservedQuantity cùng giảm!<br/>quantity = quantity - buyQty<br/>reservedQuantity = reservedQuantity - buyQty
+                SVC->>INV: inventoryRepository.save(inventory)
+            end
+        end
+        SVC->>SVC: order.setStockDeducted(true)
+        Note over SVC: Đóng cờ stockDeducted = true để chống trừ kho lần 2!
+    end
+
+    alt Nếu là đơn tiền mặt COD
+        Note over SVC: Hoàn thành đồng nghĩa shipper đã thu tiền mặt:
+        SVC->>SVC: order.setPaid(true), order.setPaidAt(LocalDateTime.now())
+    end
+
+    SVC->>REPO: order.setStatus("HOAN_THANH"), orderRepository.save(order)
+    DB-->>SVC: Lưu thành công
+    SVC-->>API: OrderResponse
+    API-->>UI: HTTP 200 OK
+    UI-->>Admin: Toast thành công. Đơn HOAN_THANH là trạng thái kết thúc, khóa dropdown không cho đổi nữa!
+    end
+
+    %% ==========================================
+    %% 4. HỦY ĐƠN HÀNG & HOÀN TRẢ TỒN KHO
+    %% ==========================================
+    rect rgb(254, 242, 242)
+    Note over Admin,DB: 4. HỦY ĐƠN HÀNG (DA_HUY) — NHẢ CHỖ HOẶC CỘNG TRẢ KHO
+    Admin->>UI: Chọn hủy đơn hàng (trạng thái mục tiêu: DA_HUY)
+    UI->>API: PATCH /api/orders/DHx/status { status: "DA_HUY" }
+    API->>SVC: updateStatus("DHx", "DA_HUY")
+
+    alt Đơn chưa trừ kho (stockDeducted == false)
+        Note over SVC: Đơn đang ở CHO_DUYET / DA_XAC_NHAN / DANG_CHUAN_BI:
+        SVC->>SVC: releaseReservedStock(order)
+        loop Với từng sản phẩm
+            SVC->>INV: inventory.setReservedQuantity(reservedQuantity - detail.quantity)
+            SVC->>INV: inventoryRepository.save(inventory)
+        end
+        Note over SVC: Nhả chỗ giữ tồn kho để người khác có thể mua ngay
+    else Đơn đã trừ kho (stockDeducted == true)
+        Note over SVC: Đơn đã trừ kho (trường hợp hiếm admin hủy sau hoàn thành):
+        SVC->>SVC: restoreStock(order)
+        loop Với từng sản phẩm
+            SVC->>INV: inventory.setQuantity(quantity + detail.quantity)
+            SVC->>INV: inventoryRepository.save(inventory)
+        end
+        SVC->>SVC: order.setStockDeducted(false)
+        Note over SVC: Cộng trả lại quantity vào kho và ghi chú hoàn tiền
+    end
+
+    SVC->>REPO: order.setStatus("DA_HUY"), orderRepository.save(order)
+    SVC-->>API: OrderResponse
+    API-->>UI: HTTP 200 OK
+    UI-->>Admin: Cập nhật giao diện đơn đã hủy, hàng trong kho được bảo toàn chính xác
+    end

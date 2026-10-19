@@ -1,0 +1,187 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'primaryColor': '#FFFFFF', 'primaryTextColor': '#111827', 'primaryBorderColor': '#3B82F6', 'lineColor': '#64748B', 'textColor': '#111827', 'fontSize': '14px'}}}%%
+%% ============================================================
+%% USE CASE - PHÂN HỆ XÁC THỰC, BÁN HÀNG, THANH TOÁN & QUẢN LÝ ĐƠN HÀNG
+%% Người thực hiện: Đào Văn Vinh
+%% Đối chiếu source code:
+%%   - Auth: AuthController, AuthServiceImpl, JwtFilter, AuthModal.jsx, store/auth.jsx
+%%   - Order & Checkout: OrderController, OrderServiceImpl, Checkout.jsx
+%%   - Payment: PaymentController, PaymentServiceImpl, PaymentModal.jsx
+%%   - History: OrderHistory.jsx (/api/orders/mine)
+%%   - Admin Orders: OrderManagement.jsx (PATCH /api/orders/{code}/status)
+%%   - Admin Stats: StatsController, StatsServiceImpl, ThongKe.jsx
+%% ============================================================
+flowchart LR
+
+    %% =========================
+    %% STYLING (BRIGHT THEME)
+    %% =========================
+    classDef actor fill:#F1F5F9,stroke:#475569,stroke-width:2px,color:#111827;
+    classDef auth fill:#DBEAFE,stroke:#2563EB,stroke-width:2px,color:#111827;
+    classDef order fill:#EDE9FE,stroke:#7C3AED,stroke-width:2px,color:#111827;
+    classDef payment fill:#CCFBF1,stroke:#0D9488,stroke-width:2px,color:#111827;
+    classDef history fill:#FEF9C3,stroke:#CA8A04,stroke-width:2px,color:#111827;
+    classDef admin fill:#FCE7F3,stroke:#DB2777,stroke-width:2px,color:#111827;
+    classDef stats fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#111827;
+    classDef external fill:#FEE2E2,stroke:#DC2626,stroke-width:2px,color:#111827;
+
+    %% =========================
+    %% ACTORS
+    %% =========================
+    Customer["Khách hàng (Customer)"]
+    Guest["Khách vãng lai (Guest)"]
+    Admin["Quản trị viên (Admin)"]
+    PayOS["Cổng thanh toán PayOS"]
+
+    %% =========================
+    %% SYSTEM BOUNDARY
+    %% =========================
+    subgraph SYSTEM["PHÂN HỆ BÁN HÀNG, ĐƠN HÀNG & THỐNG KÊ (ĐÀO VĂN VINH)"]
+
+        %% ----------------------------------
+        %% XÁC THỰC & TÀI KHOẢN
+        %% ----------------------------------
+        subgraph MOD_AUTH["Xác thực & Tài khoản"]
+            UC_REG["Đăng ký tài khoản mới<br/>(POST /api/auth/register)"]
+            UC_LOGIN["Đăng nhập & Nhận JWT<br/>(POST /api/auth/login)"]
+            UC_LOGOUT["Đăng xuất & Xóa Token<br/>(POST /api/auth/logout)"]
+            UC_REFRESH["Tự động Refresh Token<br/>(POST /api/auth/refresh)"]
+            UC_RESET_PWD["Quên & Đặt lại mật khẩu<br/>(/password/forgot, /reset)"]
+        end
+
+        %% ----------------------------------
+        %% ĐẶT HÀNG & GIỎ HÀNG
+        %% ----------------------------------
+        subgraph MOD_ORDER["Đặt hàng & Giữ chỗ tồn kho"]
+            UC_CHECKOUT["Điền thông tin giao hàng & Voucher<br/>(Checkout.jsx)"]
+            UC_PLACE_ORDER["Tạo đơn hàng & Khóa giữ chỗ kho<br/>(POST /api/orders -> status CHO_DUYET)"]
+            UC_CHECK_STOCK["Kiểm tra tồn khả dụng<br/>(quantity - reserved >= qty)"]
+        end
+
+        %% ----------------------------------
+        %% THANH TOÁN
+        %% ----------------------------------
+        subgraph MOD_PAYMENT["Thanh toán & Xử lý biên"]
+            UC_PAY_COD["Chọn thanh toán COD<br/>(POST /orders/{code}/payment)"]
+            UC_PAY_QR["Tạo link VietQR / PayOS<br/>(POST /orders/{code}/vietqr-link)"]
+            UC_WEBHOOK["Nhận Webhook PayOS tự động<br/>(POST /api/payments/payos-webhook)"]
+            UC_CONFIRM_QR["Xác nhận thủ công chuyển khoản<br/>(Chế độ demo)"]
+            UC_LEAVE_MODAL["Đóng modal giữa chừng<br/>(Nhắc thanh toán bù, giữ chỗ kho)"]
+            UC_CANCEL_PAY["Hủy đơn ngay tại modal<br/>(POST /orders/{code}/cancel -> nhả chỗ)"]
+        end
+
+        %% ----------------------------------
+        %% LỊCH SỬ ĐƠN HÀNG
+        %% ----------------------------------
+        subgraph MOD_HISTORY["Lịch sử đơn hàng (Khách)"]
+            UC_MY_ORDERS["Xem danh sách đơn đã đặt<br/>(GET /api/orders/mine)"]
+            UC_ORDER_DETAIL["Xem chi tiết đơn hàng<br/>(GET /api/orders/{code}/detail)"]
+            UC_PAY_RETRY["Thanh toán bù cho đơn đang chờ<br/>(Mở lại PaymentModal)"]
+            UC_CUST_CANCEL["Hủy đơn hàng chờ duyệt / xác nhận<br/>(POST /orders/{code}/cancel)"]
+        end
+
+        %% ----------------------------------
+        %% QUẢN LÝ ĐƠN HÀNG ADMIN
+        %% ----------------------------------
+        subgraph MOD_ADMIN_ORDER["Quản lý đơn hàng (Admin)"]
+            UC_ADM_LIST["Tra cứu & Lọc đơn hàng<br/>(GET /api/orders?code,customer,status,pay)"]
+            UC_ADM_DETAIL["Xem chi tiết & sản phẩm trong đơn<br/>(GET /api/orders/{code})"]
+            UC_ADM_STATUS["Duyệt trạng thái 1 chiều<br/>(CHO_DUYET -> DA_XAC_NHAN -> DANG_GIAO...)"]
+            UC_CHECK_PAY["Chặn duyệt đơn chưa có PTTT<br/>(400 Bad Request nếu trống)"]
+            UC_STOCK_DEDUCT["Xuất kho thực tế khi Hoàn thành<br/>(Giảm quantity & reserved, set stockDeducted)"]
+            UC_ADM_CANCEL["Hủy đơn & Hoàn tồn kho<br/>(Nhả reserved hoặc cộng trả quantity)"]
+            UC_EXPORT_EXCEL["Xuất danh sách đơn ra Excel<br/>(write-excel-file)"]
+            UC_DELETE_ORDER["Xóa đơn hàng<br/>(DELETE /api/orders/{code})"]
+        end
+
+        %% ----------------------------------
+        %% THỐNG KÊ & BÁO CÁO ADMIN
+        %% ----------------------------------
+        subgraph MOD_STATS["Thống kê & Báo cáo (Admin)"]
+            UC_STAT_OVERVIEW["Tổng quan chỉ số KPI<br/>(GET /api/admin/stats/overview)"]
+            UC_STAT_REV_DAY["Biểu đồ doanh thu theo ngày<br/>(GET /api/admin/stats/revenue-by-day)"]
+            UC_STAT_STATUS["Thống kê đơn theo trạng thái<br/>(GET /api/admin/stats/orders-by-status)"]
+            UC_STAT_TOP["Top 5 sản phẩm bán chạy<br/>(GET /api/admin/stats/top-products)"]
+            UC_STAT_LOW_STOCK["Cảnh báo hàng sắp hết<br/>(availableQuantity <= 5)"]
+        end
+
+    end
+
+    %% =========================
+    %% QUAN HỆ KHÁCH HÀNG
+    %% =========================
+    Customer --> UC_LOGIN
+    Customer --> UC_LOGOUT
+    Customer --> UC_REFRESH
+    Customer --> UC_CHECKOUT
+    Customer --> UC_PLACE_ORDER
+    Customer --> UC_PAY_COD
+    Customer --> UC_PAY_QR
+    Customer --> UC_CONFIRM_QR
+    Customer --> UC_LEAVE_MODAL
+    Customer --> UC_CANCEL_PAY
+    Customer --> UC_MY_ORDERS
+    Customer --> UC_ORDER_DETAIL
+    Customer --> UC_PAY_RETRY
+    Customer --> UC_CUST_CANCEL
+
+    %% =========================
+    %% QUAN HỆ KHÁCH VÃNG LAI
+    %% =========================
+    Guest --> UC_REG
+    Guest --> UC_LOGIN
+    Guest --> UC_RESET_PWD
+    Guest --> UC_CHECKOUT
+    Guest --> UC_PLACE_ORDER
+    Guest --> UC_PAY_COD
+    Guest --> UC_PAY_QR
+
+    %% =========================
+    %% QUAN HỆ ADMIN
+    %% =========================
+    Admin --> UC_LOGIN
+    Admin --> UC_LOGOUT
+    Admin --> UC_ADM_LIST
+    Admin --> UC_ADM_DETAIL
+    Admin --> UC_ADM_STATUS
+    Admin --> UC_ADM_CANCEL
+    Admin --> UC_EXPORT_EXCEL
+    Admin --> UC_DELETE_ORDER
+    Admin --> UC_STAT_OVERVIEW
+    Admin --> UC_STAT_REV_DAY
+    Admin --> UC_STAT_STATUS
+    Admin --> UC_STAT_TOP
+    Admin --> UC_STAT_LOW_STOCK
+
+    %% =========================
+    %% QUAN HỆ HỆ THỐNG / BÊN THỨ 3
+    %% =========================
+    PayOS --> UC_WEBHOOK
+
+    %% =========================
+    %% QUAN HỆ NỘI BỘ (INCLUDES)
+    %% =========================
+    UC_PLACE_ORDER -.->|include| UC_CHECK_STOCK
+    UC_ADM_STATUS -.->|validate| UC_CHECK_PAY
+    UC_ADM_STATUS -.->|khi HOAN_THANH| UC_STOCK_DEDUCT
+
+    %% =========================
+    %% GÁN MÀU SẮC (THEME)
+    %% =========================
+    class Customer,Guest,Admin actor;
+    class PayOS external;
+    class UC_REG,UC_LOGIN,UC_LOGOUT,UC_REFRESH,UC_RESET_PWD auth;
+    class UC_CHECKOUT,UC_PLACE_ORDER,UC_CHECK_STOCK order;
+    class UC_PAY_COD,UC_PAY_QR,UC_WEBHOOK,UC_CONFIRM_QR,UC_LEAVE_MODAL,UC_CANCEL_PAY payment;
+    class UC_MY_ORDERS,UC_ORDER_DETAIL,UC_PAY_RETRY,UC_CUST_CANCEL history;
+    class UC_ADM_LIST,UC_ADM_DETAIL,UC_ADM_STATUS,UC_CHECK_PAY,UC_STOCK_DEDUCT,UC_ADM_CANCEL,UC_EXPORT_EXCEL,UC_DELETE_ORDER admin;
+    class UC_STAT_OVERVIEW,UC_STAT_REV_DAY,UC_STAT_STATUS,UC_STAT_TOP,UC_STAT_LOW_STOCK stats;
+
+    style SYSTEM fill:#FFFFFF,stroke:#3B82F6,stroke-width:3px,color:#111827;
+    style MOD_AUTH fill:#EFF6FF,stroke:#2563EB,stroke-width:2px,color:#111827;
+    style MOD_ORDER fill:#F5F3FF,stroke:#7C3AED,stroke-width:2px,color:#111827;
+    style MOD_PAYMENT fill:#F0FDFA,stroke:#0D9488,stroke-width:2px,color:#111827;
+    style MOD_HISTORY fill:#FEFCE8,stroke:#CA8A04,stroke-width:2px,color:#111827;
+    style MOD_ADMIN_ORDER fill:#FDF2F8,stroke:#DB2777,stroke-width:2px,color:#111827;
+    style MOD_STATS fill:#F0FDF4,stroke:#16A34A,stroke-width:2px,color:#111827;
+
+    linkStyle default stroke:#64748B,stroke-width:2px;

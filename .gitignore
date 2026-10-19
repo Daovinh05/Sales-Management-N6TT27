@@ -14,3 +14,7 @@ frontend/.env.local
 # Backend build output (dự phòng ở root, chính vẫn ở backend/.gitignore)
 target/
 *.log
+
+# Graphify - knowledge graph sinh tự động (cache, graph.json, graph.html, wiki...)
+# Build lại bằng lệnh "Graphify: Build Knowledge Graph" hoặc `graphify update .`
+graphify-out/

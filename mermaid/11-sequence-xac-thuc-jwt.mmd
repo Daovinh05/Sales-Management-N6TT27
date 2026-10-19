@@ -1,0 +1,135 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'actorBkg': '#DBEAFE', 'actorTextColor': '#111827', 'actorBorder': '#2563EB', 'actorLineColor': '#2563EB', 'signalColor': '#334155', 'signalTextColor': '#111827', 'labelBoxBkgColor': '#FEF9C3', 'labelBoxBorderColor': '#CA8A04', 'labelTextColor': '#111827', 'noteBkgColor': '#FEF9C3', 'noteTextColor': '#111827', 'noteBorderColor': '#CA8A04', 'activationBkgColor': '#DBEAFE', 'activationBorderColor': '#2563EB', 'sequenceNumberColor': '#FFFFFF', 'textColor': '#111827', 'fontSize': '14px'}}}%%
+%% ============================================================
+%% SEQUENCE - XÁC THỰC NGƯỜI DÙNG & QUẢN LÝ JWT TOKEN (ĐÀO VĂN VINH)
+%% Đối chiếu source code:
+%%   - Frontend: AuthModal.jsx, store/auth.jsx, services/api.js
+%%   - Backend: AuthController, AuthServiceImpl, JwtProvider, JwtFilter, RefreshTokenService
+%%   - Security: SecurityConfig (@PreAuthorize, BCryptPasswordEncoder)
+%% ============================================================
+sequenceDiagram
+
+    autonumber
+
+    actor User as Người dùng<br/>(Khách / Admin)
+    participant UI as React Frontend<br/>(AuthModal / store/auth.jsx)
+    participant AXIOS as Axios Interceptor<br/>(services/api.js)
+    participant API as AuthController<br/>(/api/auth/*)
+    participant SVC as AuthServiceImpl
+    participant SEC as Spring Security<br/>(AuthenticationManager)
+    participant JWT as JwtProvider
+    participant RFS as RefreshTokenService
+    participant DB as MySQL Database
+
+    %% ==========================================
+    %% 1. ĐĂNG KÝ TÀI KHOẢN MỚI
+    %% ==========================================
+    rect rgb(239, 246, 255)
+    Note over User,DB: 1. LUỒNG ĐĂNG KÝ TÀI KHOẢN (REGISTER)
+    User->>UI: Điền form đăng ký (username, password, email, phone, address)
+    UI->>API: POST /api/auth/register (RegisterRequest)
+    Note over API: @Valid kiểm tra username không rỗng, min 6 ký tự
+    API->>SVC: register(request)
+    SVC->>DB: userRepository.existsByUsername / existsByEmail
+    alt Tên đăng nhập hoặc Email đã tồn tại
+        DB-->>SVC: Trả về kết quả trùng lặp
+        SVC-->>API: Ném IllegalArgumentException ("Tên đăng nhập / Email đã được sử dụng")
+        API-->>UI: HTTP 400 Bad Request
+        UI-->>User: Báo lỗi trên biểu mẫu
+    else Thông tin hợp lệ
+        SVC->>DB: Lấy / Tạo ROLE_CUSTOMER mặc định
+        SVC->>SVC: passwordEncoder.encode(password) (BCrypt)
+        SVC->>DB: userRepository.save(User ACTIVE)
+        DB-->>SVC: User đã lưu thành công
+        SVC-->>API: User entity
+        API-->>UI: HTTP 201 Created (id, username, "Đăng ký thành công")
+        UI-->>User: Thông báo thành công, chuyển sang tab Đăng nhập
+    end
+    end
+
+    %% ==========================================
+    %% 2. ĐĂNG NHẬP & CẤP TOKEN
+    %% ==========================================
+    rect rgb(245, 243, 255)
+    Note over User,DB: 2. LUỒNG ĐĂNG NHẬP & CẤP TOKEN (LOGIN)
+    User->>UI: Nhập username và password
+    UI->>API: POST /api/auth/login (LoginRequest)
+    API->>SVC: login(request)
+    SVC->>SEC: authenticate(UsernamePasswordAuthenticationToken)
+    SEC->>DB: Load User + Roles theo username
+    DB-->>SEC: UserDetails + BCrypt password hash
+    SEC->>SEC: Kiểm tra khớp mật khẩu BCrypt
+    alt Sai mật khẩu hoặc tài khoản không tồn tại
+        SEC-->>SVC: Ném BadCredentialsException
+        SVC-->>API: 401 Unauthorized ("Tên đăng nhập hoặc mật khẩu không chính xác")
+        API-->>UI: 401 Unauthorized
+        UI-->>User: Báo lỗi đăng nhập thất bại
+    else Xác thực thành công
+        SEC-->>SVC: Authentication object chứa CustomUserDetails
+        SVC->>JWT: generateToken(authentication)
+        Note over JWT: Sinh Access Token JWT (hạn 30 phút, chứa username, roles)
+        JWT-->>SVC: String accessToken
+        SVC->>RFS: create(user)
+        Note over RFS: Sinh UUID ngẫu nhiên cho Refresh Token (hạn 7 ngày)
+        RFS->>DB: refreshTokenRepository.save(token, expiresAt, revoked=false)
+        DB-->>RFS: RefreshToken đã lưu
+        RFS-->>SVC: String refreshToken
+        SVC-->>API: JwtResponse (token, refreshToken, id, username, email, roles)
+        API-->>UI: HTTP 200 OK
+        UI->>UI: Lưu vào localStorage: 'token', 'refreshToken', 'user'
+        UI-->>User: Đóng modal, cập nhật Header hiển thị tên và quyền người dùng
+    end
+    end
+
+    %% ==========================================
+    %% 3. GỌI API BẢO MẬT & TỰ ĐỘNG REFRESH TOKEN
+    %% ==========================================
+    rect rgb(240, 253, 250)
+    Note over User,DB: 3. TRUY CẬP API CÓ BẢO MẬT & CƠ CHẾ TOKEN ROTATION
+    UI->>AXIOS: Gọi API nghiệp vụ (vd: GET /api/orders/mine)
+    AXIOS->>AXIOS: Gắn header: Authorization: Bearer <accessToken>
+    AXIOS->>API: HTTP Request + Bearer Token
+    Note over API: JwtFilter chặn lại để giải mã JWT
+    alt Access Token còn hạn và hợp lệ
+        API->>DB: Nạp quyền vào SecurityContextHolder
+        API-->>AXIOS: HTTP 200 OK (Dữ liệu đơn hàng)
+        AXIOS-->>UI: Dữ liệu thành công
+    else Access Token hết hạn (ExpiredJwtException -> 401)
+        API-->>AXIOS: HTTP 401 Unauthorized
+        Note over AXIOS: Axios Response Interceptor bắt mã 401
+        AXIOS->>API: POST /api/auth/refresh { refreshToken }
+        API->>SVC: refresh(request)
+        SVC->>RFS: verify(refreshToken)
+        RFS->>DB: Tìm RefreshToken theo UUID
+        DB-->>RFS: RefreshToken entity
+        Note over SVC: Cơ chế Xoay vòng Token (Token Rotation):<br/>1. Thu hồi (revoke) token cũ chống dùng lại<br/>2. Cấp Access Token mới (30p)<br/>3. Cấp Refresh Token mới (7 ngày)
+        SVC->>RFS: revoke(oldToken)
+        RFS->>DB: UPDATE refresh_tokens SET revoked=true
+        SVC->>JWT: generateTokenFromUsername(username)
+        JWT-->>SVC: newAccessToken
+        SVC->>RFS: create(user)
+        RFS->>DB: INSERT new RefreshToken
+        SVC-->>API: JwtResponse (mới)
+        API-->>AXIOS: HTTP 200 OK (cặp token mới)
+        AXIOS->>AXIOS: Cập nhật localStorage token mới
+        AXIOS->>API: Gửi lại request ban đầu với Access Token mới
+        API-->>AXIOS: HTTP 200 OK
+        AXIOS-->>UI: Dữ liệu trả về thông suốt
+    end
+    end
+
+    %% ==========================================
+    %% 4. ĐĂNG XUẤT (LOGOUT)
+    %% ==========================================
+    rect rgb(254, 242, 242)
+    Note over User,DB: 4. LUỒNG ĐĂNG XUẤT (LOGOUT)
+    User->>UI: Nhấn nút "Đăng xuất"
+    UI->>API: POST /api/auth/logout { refreshToken }
+    API->>SVC: logout(refreshToken)
+    SVC->>RFS: revoke(refreshToken)
+    RFS->>DB: UPDATE refresh_tokens SET revoked=true WHERE token = ?
+    DB-->>RFS: Đã đánh dấu thu hồi
+    SVC-->>API: Thành công
+    API-->>UI: HTTP 200 OK ("Đăng xuất thành công")
+    UI->>UI: localStorage.removeItem('token', 'refreshToken', 'user')
+    UI-->>User: Chuyển về trạng thái khách vãng lai (Guest)
+    end
