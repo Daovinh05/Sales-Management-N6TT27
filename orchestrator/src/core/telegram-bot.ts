@@ -8,6 +8,8 @@ import { PKG_ROOT, runsRoot } from "../config.js";
 import { redactSecrets, truncate } from "../util/text.js";
 import type { RunState } from "../types.js";
 
+const STALE_ACTIVE_RUN_MS = 30 * 60 * 1000;
+
 export interface TelegramCommandContext {
   authorizedChatId: string;
   sendMessage(text: string): Promise<void>;
@@ -109,9 +111,15 @@ export async function startTelegramControlBot(options: {
     getStatus: (runId) => formatRunStatus(loadRun(resolveRunDir(root, validateRunId(runId)))),
     getApprovals: (runId) => formatApprovals(loadRun(resolveRunDir(root, validateRunId(runId)))),
     startRun: async (request) => {
-      ensureNoActiveRun(root, activeChildren);
+      const staleRunIds = ensureNoActiveRun(root, activeChildren);
       await launchCli(activeChildren, ["run", request, "--no-interactive"], options.workspace, api);
-      await api.sendMessage("Đã nhận yêu cầu và khởi chạy run. Gõ /status latest để theo dõi.");
+      const staleNote = staleRunIds.length > 0
+        ? `Bỏ qua state run cũ không cập nhật hơn 30 phút: ${staleRunIds.join(", ")}.`
+        : undefined;
+      await api.sendMessage([
+        "Đã nhận yêu cầu và khởi chạy run. Gõ /status latest để theo dõi.",
+        staleNote,
+      ].filter(Boolean).join("\n"));
     },
     resumeRun: async (runId) => {
       const validatedId = validateRunId(runId);
@@ -119,9 +127,12 @@ export async function startTelegramControlBot(options: {
       if (state.status !== "awaiting_approval") {
         throw new Error(`Run ${state.id} đang ở trạng thái ${state.status}; chỉ run chờ duyệt mới tiếp tục được.`);
       }
-      ensureNoActiveRun(root, activeChildren, state.id);
+      const staleRunIds = ensureNoActiveRun(root, activeChildren, state.id);
       await launchCli(activeChildren, ["resume", state.id, "--no-interactive"], options.workspace, api);
-      await api.sendMessage(`Đang tiếp tục run ${state.id}.`);
+      const staleNote = staleRunIds.length > 0
+        ? `Bỏ qua state run cũ không cập nhật hơn 30 phút: ${staleRunIds.join(", ")}.`
+        : undefined;
+      await api.sendMessage([`Đang tiếp tục run ${state.id}.`, staleNote].filter(Boolean).join("\n"));
     },
     resolveApproval: async (runId, approvalId, decision, reason) => {
       const validatedId = validateRunId(runId);
@@ -176,14 +187,22 @@ function validateRunId(value?: string): string | undefined {
   return value;
 }
 
-function ensureNoActiveRun(runsDirectory: string, children: Map<string, ChildProcess>, exceptRunId?: string): void {
+function ensureNoActiveRun(runsDirectory: string, children: Map<string, ChildProcess>, exceptRunId?: string): string[] {
   for (const child of children.values()) {
     if (child.exitCode === null && child.signalCode === null) throw new Error("Đang có một run do bot khởi chạy; hãy chờ hoặc dùng /status.");
   }
-  const active = listRuns(runsDirectory).find((run) =>
+  const activeRuns = listRuns(runsDirectory).filter((run) =>
     run.id !== exceptRunId && ["planning", "running"].includes(run.status),
   );
+  const cutoff = Date.now() - STALE_ACTIVE_RUN_MS;
+  const recentRuns = activeRuns.filter((run) => {
+    const updatedAt = Date.parse(run.updatedAt);
+    // Invalid timestamps fail safe: they still block a new run.
+    return !Number.isFinite(updatedAt) || updatedAt >= cutoff;
+  });
+  const active = recentRuns[0];
   if (active) throw new Error(`Run ${active.id} đang được ghi nhận là running; dùng /status ${active.id} để kiểm tra trước.`);
+  return activeRuns.map((run) => run.id);
 }
 
 async function launchCli(
