@@ -84,10 +84,13 @@ Các biến được hỗ trợ:
 
 | Biến | Mặc định | Ý nghĩa |
 |---|---|---|
-| `LLM_PROVIDER` | `openai` | `openai` hoặc `mock` |
+| `LLM_PROVIDER` | `openai` | `openai`, `opencode` hoặc `mock` |
 | `LLM_BASE_URL` | `https://api.deepseek.com/v1` | Base URL OpenAI-compatible (giữ `/v1` nếu provider yêu cầu) |
 | `LLM_MODEL` | `deepseek-chat` | Model dùng cho planner và 4 agent |
 | `LLM_API_KEY` | — | API key; **không commit** |
+| `LLM_OPENCODE_SERVER_URL` | `http://127.0.0.1:4096` | URL của OpenCode server cục bộ khi `LLM_PROVIDER=opencode` |
+| `LLM_OPENCODE_USERNAME` | `opencode` | Tên Basic Auth nếu đã bật xác thực cho OpenCode server |
+| `LLM_OPENCODE_PASSWORD` | — | Mật khẩu Basic Auth; **không commit** |
 | `LLM_FALLBACK_BASE_URL` | — | Endpoint dự phòng OpenAI-compatible; tự dùng khi endpoint chính quá tải/mất kết nối |
 | `LLM_FALLBACK_MODEL` | — | Model tại endpoint dự phòng |
 | `LLM_FALLBACK_API_KEY` | — | Key riêng cho endpoint dự phòng; **không commit** |
@@ -102,6 +105,19 @@ Các biến được hỗ trợ:
 | `TELEGRAM_CHAT_ID` | — | Chat ID nhận thông báo; không commit |
 
 Thứ tự nạp `.env`: `<workspace>/.env` rồi `orchestrator/.env`. Chỉ các biến có prefix `LLM_`, `AGENT_`, `ORCHESTRATOR_` và cờ `TELEGRAM_NOTIFY` được nạp vào môi trường agent. Telegram bot token/chat ID được đọc riêng cho notifier, không đưa vào môi trường tiến trình con. Secret khác trong `.env` của dự án (ví dụ `JWT_SECRET`) cũng không bị nạp.
+
+#### Dùng OpenCode với Copilot Student hoặc ChatGPT Plus
+
+OpenCode có thể đăng nhập provider bằng OAuth, nên không cần đưa token đăng nhập vào `.env`. Trong một terminal, mở OpenCode tại repository rồi chạy `/connect`, chọn GitHub Copilot hoặc OpenAI/ChatGPT và hoàn tất đăng nhập. Chạy `opencode models` để xem model khả dụng; dùng đúng tên `provider/model` ở `LLM_MODEL`. Sau đó giữ OpenCode server chạy ở terminal riêng bằng `opencode serve --port 4096`, rồi cấu hình:
+
+```dotenv
+LLM_PROVIDER=opencode
+LLM_OPENCODE_SERVER_URL=http://127.0.0.1:4096
+LLM_MODEL=github-copilot/<model-id>
+LLM_API_KEY=
+```
+
+Với ChatGPT Plus, dùng model có prefix `openai/` nếu lệnh `opencode models` liệt kê model đó. `doctor --online` sẽ ping OpenCode qua server. Nếu model không có quyền hoặc server chưa chạy, doctor sẽ báo lỗi kết nối/model. OpenCode trả kết quả sinh văn bản; orchestrator yêu cầu model đóng gói tool call thành JSON rồi tự thực thi tool bằng runtime hiện có. Model có thể kém ổn định hơn function calling gốc nếu không tuân thủ JSON.
 
 Để bật báo cáo Telegram, đặt trong `orchestrator/.env`:
 
@@ -500,7 +516,7 @@ src/
 │   ├── bus.ts             # message bus
 │   └── git.ts             # snapshot/diff/status
 ├── tools/                 # fs, shell, test, team tools
-├── llm/                   # OpenAI-compatible + mock
+├── llm/                   # OpenAI-compatible + OpenCode server + mock
 └── util/                  # logger, fs, text, errors
 ```
 
@@ -510,7 +526,8 @@ src/
 
 | Triệu chứng | Cách xử lý |
 |---|---|
-| `thiếu LLM_API_KEY` | Điền `LLM_API_KEY` trong `orchestrator/.env`, hoặc chạy `--mock` |
+| `thiếu LLM_API_KEY` | Điền `LLM_API_KEY` trong `orchestrator/.env`; với OpenCode, chọn `LLM_PROVIDER=opencode`; hoặc chạy `--mock` |
+| `OpenCode ... fetch failed` / `ECONNREFUSED` | Khởi động OpenCode server bằng `opencode serve --port 4096`, kiểm tra URL và model bằng `opencode models` |
 | `doctor` báo Java/Maven lỗi | Cài JDK 21; kiểm tra `backend/mvnw.cmd`; backend test cần Java trên PATH |
 | Frontend build lỗi | Chạy `cd frontend; npm install` trước, kiểm tra `npm run build` thủ công |
 | Run dừng `awaiting_approval` | `approvals <runId>` → `approve/reject` → `resume <runId>` |
