@@ -215,7 +215,7 @@ export function loadConfig(options: LoadConfigOptions): LoadedConfig {
 
 export function assertProviderReady(config: AgentConfig): void {
   if (config.provider.type === "mock") return;
-  if (!config.provider.apiKey) {
+  if (config.provider.type === "openai" && !config.provider.apiKey) {
     throw new Error(
       [
         "Chưa có API key cho LLM.",
@@ -260,7 +260,7 @@ export function loadDotEnv(file: string, allowed?: (key: string) => boolean): nu
 
 function applyEnv(config: AgentConfig, warnings: string[]): void {
   const provider = process.env.LLM_PROVIDER?.trim().toLowerCase();
-  if (provider === "mock" || provider === "openai") {
+  if (provider === "mock" || provider === "openai" || provider === "opencode") {
     config.provider.type = provider;
   } else if (provider) {
     warnings.push(`LLM_PROVIDER="${provider}" không hợp lệ, dùng "${config.provider.type}".`);
@@ -268,6 +268,9 @@ function applyEnv(config: AgentConfig, warnings: string[]): void {
   if (process.env.LLM_BASE_URL) config.provider.baseUrl = process.env.LLM_BASE_URL;
   if (process.env.LLM_MODEL) config.provider.model = process.env.LLM_MODEL;
   if (process.env.LLM_API_KEY) config.provider.apiKey = process.env.LLM_API_KEY;
+  if (process.env.LLM_OPENCODE_SERVER_URL) config.provider.opencodeServerUrl = process.env.LLM_OPENCODE_SERVER_URL;
+  if (process.env.LLM_OPENCODE_USERNAME) config.provider.opencodeUsername = process.env.LLM_OPENCODE_USERNAME;
+  if (process.env.LLM_OPENCODE_PASSWORD) config.provider.opencodePassword = process.env.LLM_OPENCODE_PASSWORD;
   if (process.env.LLM_FALLBACK_BASE_URL) config.provider.fallbackBaseUrl = process.env.LLM_FALLBACK_BASE_URL;
   if (process.env.LLM_FALLBACK_MODEL) config.provider.fallbackModel = process.env.LLM_FALLBACK_MODEL;
   if (process.env.LLM_FALLBACK_API_KEY) config.provider.fallbackApiKey = process.env.LLM_FALLBACK_API_KEY;
@@ -373,6 +376,7 @@ export function runsRoot(): string {
 export function redactedConfig(config: AgentConfig): AgentConfig {
   const clone = structuredClone(config);
   if (clone.provider.apiKey) clone.provider.apiKey = "[REDACTED]";
+  if (clone.provider.opencodePassword) clone.provider.opencodePassword = "[REDACTED]";
   if (clone.provider.fallbackApiKey) clone.provider.fallbackApiKey = "[REDACTED]";
   return clone;
 }

@@ -196,11 +196,14 @@ export interface TestSuiteConfig {
 }
 
 export interface ProviderConfig {
-  type: "openai" | "mock";
+  type: "openai" | "opencode" | "mock";
   baseUrl: string;
   model: string;
   apiKeyEnv: string;
   apiKey?: string;
+  opencodeServerUrl?: string;
+  opencodeUsername?: string;
+  opencodePassword?: string;
   fallbackBaseUrl?: string;
   fallbackModel?: string;
   fallbackApiKey?: string;

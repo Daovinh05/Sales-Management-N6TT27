@@ -414,12 +414,14 @@ async function commandDoctor(args: ParsedArgs): Promise<void> {
   rows.push(["Workspace tồn tại", pathExists(workspace), workspace]);
   const git = getGitInfo(workspace);
   rows.push(["Git repo", git.isRepo, git.isRepo ? `${git.branch} @ ${git.commit}` : "không phải repo"]);
-  const apiReady = config.provider.type === "mock" || Boolean(config.provider.apiKey);
+  const apiReady = config.provider.type === "mock" || config.provider.type === "opencode" || Boolean(config.provider.apiKey);
   rows.push([
-    "API key",
+    config.provider.type === "opencode" ? "OpenCode server" : "API key",
     apiReady,
     config.provider.type === "mock"
       ? "mock mode"
+      : config.provider.type === "opencode"
+        ? `${config.provider.opencodeServerUrl || "http://127.0.0.1:4096"} · ${config.provider.model}`
       : apiReady
         ? `đã có (${config.provider.apiKeyEnv})`
         : `thiếu ${config.provider.apiKeyEnv}`,
