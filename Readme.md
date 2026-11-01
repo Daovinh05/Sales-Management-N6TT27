@@ -89,6 +89,10 @@ Test backend:
 cd backend && ./mvnw test
 ```
 
+## AI Agent Team
+
+Repo có orchestrator TypeScript điều phối 4 AI agent (Backend, Frontend, Testing, Debug): lập DAG, chạy test/debug có giới hạn, approval gate và báo cáo. Xem [AI_AGENT_TEAM.md](AI_AGENT_TEAM.md) để chạy nhanh và [orchestrator/README.md](orchestrator/README.md) để biết cấu hình/CLI. Hệ thống không tự commit/push.
+
 ## Support
 
 Gặp lỗi khi chạy thì kiểm tra `docker ps`, `docker logs sales-backend`, `docker logs sales-frontend` trước. Mở issue tại https://github.com/Daovinh05/Sales-Management-N6TT27/issues kèm log và các bước tái hiện.

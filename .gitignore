@@ -18,3 +18,12 @@ target/
 # Graphify - knowledge graph sinh tự động (cache, graph.json, graph.html, wiki...)
 # Build lại bằng lệnh "Graphify: Build Knowledge Graph" hoặc `graphify update .`
 graphify-out/
+
+
+# Orchestrator AI Agent Team (xem AI_AGENT_TEAM.md)
+orchestrator/node_modules/
+orchestrator/dist/
+orchestrator/runs/
+orchestrator/.env
+orchestrator/*.log
+orchestrator/coverage/
