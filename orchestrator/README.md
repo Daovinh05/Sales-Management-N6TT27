@@ -140,6 +140,8 @@ node dist/cli.js telegram
 
 Trong chat riêng đã cấu hình làm `TELEGRAM_CHAT_ID`, dùng `/help` để xem lệnh. Bot hỗ trợ `/run <yêu cầu>`, `/status [runId|latest]`, `/approvals [runId|latest]`, `/approve <runId> <approvalId|all>`, `/reject <runId> <approvalId|all> [lý do]` và `/resume <runId>`. Chỉ chat riêng có ID khớp cấu hình mới được phép điều khiển; tin nhắn từ chat khác bị bỏ qua. Bot không chạy đồng thời nhiều run.
 
+Khi nhận lệnh `/run` hoặc `/resume`, bot tự gửi cập nhật khi phase, task, kết quả test hoặc quality đổi; `/status` vẫn dùng để hỏi trạng thái hiện tại bất cứ lúc nào.
+
 Để duyệt thao tác từ Telegram, đặt `AGENT_APPROVAL_MODE=gate`; sau đó dùng `/approve` hoặc `/reject`. Nếu đặt `auto`, run tự duyệt thao tác cần approval và không cần lệnh duyệt Telegram. Luồng điều khiển không hỗ trợ hủy run đang chạy; dừng tiến trình từ cửa sổ PowerShell.
 
 Khi đã cấu hình đủ cả ba biến `LLM_FALLBACK_*`, orchestrator tự chuyển sang endpoint dự phòng khi endpoint chính trả 408/429/502/503/504, timeout hoặc lỗi kết nối. Hai endpoint có thể dùng model và API key khác nhau; không cần bật fallback nếu chỉ muốn đổi provider thủ công.
