@@ -112,7 +112,7 @@ export async function startTelegramControlBot(options: {
     getApprovals: (runId) => formatApprovals(loadRun(resolveRunDir(root, validateRunId(runId)))),
     startRun: async (request) => {
       const staleRunIds = ensureNoActiveRun(root, activeChildren);
-      await launchCli(activeChildren, ["run", request, "--no-interactive"], options.workspace, api);
+      await launchCli(activeChildren, ["run", request, "--no-interactive"], options.workspace, root, api);
       const staleNote = staleRunIds.length > 0
         ? `Bỏ qua state run cũ không cập nhật hơn 30 phút: ${staleRunIds.join(", ")}.`
         : undefined;
@@ -128,7 +128,7 @@ export async function startTelegramControlBot(options: {
         throw new Error(`Run ${state.id} đang ở trạng thái ${state.status}; chỉ run chờ duyệt mới tiếp tục được.`);
       }
       const staleRunIds = ensureNoActiveRun(root, activeChildren, state.id);
-      await launchCli(activeChildren, ["resume", state.id, "--no-interactive"], options.workspace, api);
+      await launchCli(activeChildren, ["resume", state.id, "--no-interactive"], options.workspace, root, api);
       const staleNote = staleRunIds.length > 0
         ? `Bỏ qua state run cũ không cập nhật hơn 30 phút: ${staleRunIds.join(", ")}.`
         : undefined;
@@ -209,6 +209,7 @@ async function launchCli(
   children: Map<string, ChildProcess>,
   args: string[],
   workspace: string,
+  runsDirectory: string,
   api: { sendMessage(text: string): Promise<void> },
 ): Promise<void> {
   const cliFile = path.join(PKG_ROOT, "dist", "cli.js");
@@ -222,11 +223,54 @@ async function launchCli(
   children.set(key, child);
   let output = "";
   let announcedRun = false;
+  let progressRunId = args[0] === "resume" ? args[1] : undefined;
+  let progressTimer: ReturnType<typeof setInterval> | undefined;
+  let progressInFlight = false;
+  let lastProgressSignature = "";
+
+  const publishProgress = async (runId: string): Promise<void> => {
+    if (progressInFlight) return;
+    progressInFlight = true;
+    try {
+      const state = loadRun(resolveRunDir(runsDirectory, runId));
+      if (["planned", "awaiting_approval", "completed", "completed_with_issues", "failed", "cancelled"].includes(state.status)) return;
+      const message = formatRunStatus(state);
+      const signature = message;
+      if (signature !== lastProgressSignature) {
+        await api.sendMessage(message);
+        lastProgressSignature = signature;
+      }
+    } catch {
+      // Ignore transient state-file and Telegram failures; the next poll retries.
+    } finally {
+      progressInFlight = false;
+    }
+  };
+
+  const startProgressWatch = (runId: string): void => {
+    if (progressTimer) return;
+    progressRunId = runId;
+    void publishProgress(runId);
+    progressTimer = setInterval(() => void publishProgress(runId), 1500);
+  };
+
+  const stopProgressWatch = (): void => {
+    if (progressTimer) clearInterval(progressTimer);
+    progressTimer = undefined;
+    if (!progressRunId) return;
+    void (async () => {
+      while (progressInFlight) await new Promise((resolve) => setTimeout(resolve, 50));
+      await publishProgress(progressRunId!);
+    })();
+  };
+
+  if (progressRunId) startProgressWatch(progressRunId);
   child.stdout?.on("data", (chunk: Buffer) => {
     output = `${output}${chunk.toString("utf8")}`.slice(-20_000);
-    const runId = /Run (run-[A-Za-z0-9-]+) ·/.exec(output)?.[1];
+    const runId = /\bRun\s+(run-[A-Za-z0-9-]+)(?=\s)/.exec(output)?.[1];
     if (runId && !announcedRun) {
       announcedRun = true;
+      startProgressWatch(runId);
       void api.sendMessage(`Run ${runId} đã bắt đầu.`).catch(() => undefined);
     }
   });
@@ -234,10 +278,12 @@ async function launchCli(
     // CLI output may contain provider details. Never forward raw stderr to Telegram.
   });
   child.once("error", () => {
+    stopProgressWatch();
     children.delete(key);
     void api.sendMessage("Không khởi chạy được tiến trình orchestrator.").catch(() => undefined);
   });
   child.once("exit", (code) => {
+    stopProgressWatch();
     children.delete(key);
     if (!announcedRun && code !== 0) {
       void api.sendMessage(`Lệnh orchestrator kết thúc với mã ${code ?? "không rõ"}; kiểm tra cấu hình và log local.`)
@@ -264,12 +310,16 @@ function formatRunStatus(state: RunState): string {
   const done = state.tasks.filter((task) => task.status === "done").length;
   const failed = state.tasks.filter((task) => ["failed", "blocked"].includes(task.status)).length;
   const pendingApprovals = state.approvals.filter((approval) => approval.status === "pending").length;
+  const activeTasks = state.tasks.filter((task) => task.status === "in_progress");
   const tests = state.tasks.flatMap((task) => task.result?.testsRun ?? []);
   const testPassed = tests.filter((test) => test.passed).length;
+  const quality = state.quality.passed === true ? "ĐẠT" : state.quality.passed === false ? "CHƯA ĐẠT" : "đang đánh giá";
   return [
     `Run ${state.id}: ${state.status} (${state.phase})`,
     `Task: ${done}/${state.tasks.length} hoàn tất${failed ? `, ${failed} lỗi/bị chặn` : ""}`,
+    ...(activeTasks.length ? [`Đang làm: ${activeTasks.map((task) => `${task.id} · ${truncate(task.title, 100)}`).join("; ")}`] : []),
     `Test: ${tests.length ? `${testPassed}/${tests.length} đạt` : "chưa có kết quả"}`,
+    `Quality: ${quality} · vòng ${state.quality.cycles}/${state.quality.maxCycles}`,
     ...(pendingApprovals ? [`Approval đang chờ: ${pendingApprovals}`] : []),
     ...(state.reportPath ? [`Báo cáo: ${state.reportPath}`] : []),
   ].join("\n");
