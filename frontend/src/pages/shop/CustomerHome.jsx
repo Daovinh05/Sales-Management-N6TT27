@@ -5,7 +5,7 @@ import FilterSidebar, { isFilterDefault } from '../../components/shop/FilterSide
 import ShopProductCard from '../../components/shop/ShopProductCard.jsx';
 import { fetchBrands, fetchCategories, fetchProducts, fetchRandom } from '../../services/shop.js';
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 16;
 
 export default function CustomerHome({ query, onBuy, onView }) {
   const [f, setF] = useState({ cat: '', price: 'tat-ca', brand: '' });

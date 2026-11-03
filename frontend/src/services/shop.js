@@ -6,6 +6,7 @@ const API_ROOT = () => (api.defaults.baseURL || '').replace(/\/api$/, '');
 export const resolveImage = (filename) => {
   if (!filename) return '';
   if (/^https?:\/\//i.test(filename)) return filename;
+  if (filename.startsWith('/images/')) return `${API_ROOT()}${filename}`;
   return `${API_ROOT()}/uploads/variants/${encodeURIComponent(filename)}`;
 };
 

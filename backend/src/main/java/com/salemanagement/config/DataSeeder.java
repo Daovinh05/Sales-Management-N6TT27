@@ -134,6 +134,9 @@ public class DataSeeder {
                 brand.setName("Samsung");
                 brandRepository.save(brand);
             }
+            seedBrand(brandRepository, "TH03", "Xiaomi");
+            seedBrand(brandRepository, "TH04", "OPPO");
+            seedBrand(brandRepository, "TH05", "Vivo");
             Supplier supplier = supplierRepository.findById("NCC01")
                     .orElseGet(() -> {
                         Supplier created = new Supplier();
@@ -196,7 +199,148 @@ public class DataSeeder {
             seedProduct(productRepository, variantRepository, brandRepository, supplier,
                     phoneCategory, "SP05", "Samsung Galaxy Z Flip 6", "TH02",
                     "BT05", "8GB/256GB - Bạc", "Bạc", "8GB", "256GB", "26990000", 3, "bt05");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP06", "iPhone 17 256GB", "TH01",
+                    "BT08", "256GB - Black", "Black", "8GB", "256GB", "24990000", 12, "bt08");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP07", "iPhone 17 Pro 256GB", "TH01",
+                    "BT09", "256GB - Deep Blue", "Deep Blue", "12GB", "256GB", "34990000", 8, "bt09");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP08", "iPhone 16 Pro Max 256GB", "TH01",
+                    "BT10", "256GB - Natural Titanium", "Natural Titanium", "8GB", "256GB", "31990000", 6, "bt10");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP09", "Samsung Galaxy S25+ 256GB", "TH02",
+                    "BT11", "12GB/256GB - Navy", "Navy", "12GB", "256GB", "23990000", 9, "bt11");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP10", "Samsung Galaxy S24 FE 256GB", "TH02",
+                    "BT12", "8GB/256GB - Graphite", "Graphite", "8GB", "256GB", "14990000", 14, "bt12");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP11", "Samsung Galaxy Z Flip7 256GB", "TH02",
+                    "BT13", "12GB/256GB - Blue Shadow", "Blue Shadow", "12GB", "256GB", "27990000", 5, "bt13");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP12", "Xiaomi 15 5G 256GB", "TH03",
+                    "BT14", "12GB/256GB - Green", "Green", "12GB", "256GB", "22990000", 10, "bt14");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP13", "Xiaomi Redmi Note 14 Pro+ 5G", "TH03",
+                    "BT15", "12GB/256GB - Lavender", "Lavender", "12GB", "256GB", "10990000", 16, "bt15");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP14", "OPPO Reno13 5G 256GB", "TH04",
+                    "BT16", "12GB/256GB - Plume White", "Plume White", "12GB", "256GB", "15990000", 7, "bt16");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP15", "Vivo V50 5G 256GB", "TH05",
+                    "BT17", "12GB/256GB - Rose Red", "Rose Red", "12GB", "256GB", "13990000", 11, "bt17");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP16", "Samsung Galaxy A56 5G 256GB", "TH02",
+                    "BT18", "8GB/256GB - Awesome Graphite", "Awesome Graphite", "8GB", "256GB", "10990000", 10, "bt18");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP17", "iPhone 17 Pro Max 512GB", "TH01",
+                    "BT19", "512GB - Deep Blue", "Deep Blue", "12GB", "512GB", "38990000", 7, "bt19");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP18", "iPhone 17 Air 256GB", "TH01",
+                    "BT20", "256GB - Sky Blue", "Sky Blue", "8GB", "256GB", "29990000", 9, "bt20");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP19", "iPhone 16 Pro 256GB", "TH01",
+                    "BT21", "256GB - Natural Titanium", "Natural Titanium", "8GB", "256GB", "28990000", 8, "bt21");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP20", "iPhone 15 Pro Max 256GB", "TH01",
+                    "BT22", "256GB - Natural Titanium", "Natural Titanium", "8GB", "256GB", "25990000", 6, "bt22");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP21", "Samsung Galaxy Z Fold7 512GB", "TH02",
+                    "BT23", "12GB/512GB - Jet Black", "Jet Black", "12GB", "512GB", "46990000", 4, "bt23");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP22", "Samsung Galaxy S25 Edge 256GB", "TH02",
+                    "BT24", "12GB/256GB - Titanium Silver", "Titanium Silver", "12GB", "256GB", "27990000", 7, "bt24");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP23", "Samsung Galaxy A36 5G 256GB", "TH02",
+                    "BT25", "8GB/256GB - Awesome Lavender", "Awesome Lavender", "8GB", "256GB", "8990000", 12, "bt25");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP24", "Samsung Galaxy A26 5G 128GB", "TH02",
+                    "BT26", "6GB/128GB - Black", "Black", "6GB", "128GB", "6490000", 15, "bt26");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP25", "Samsung Galaxy A16 5G 128GB", "TH02",
+                    "BT27", "8GB/128GB - Light Green", "Light Green", "8GB", "128GB", "4990000", 18, "bt27");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP26", "Xiaomi 15 Ultra 512GB", "TH03",
+                    "BT28", "16GB/512GB - Silver Chrome", "Silver Chrome", "16GB", "512GB", "34990000", 5, "bt28");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP27", "Xiaomi 14T Pro 512GB", "TH03",
+                    "BT29", "12GB/512GB - Titan Gray", "Titan Gray", "12GB", "512GB", "16990000", 10, "bt29");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP28", "Xiaomi Redmi Note 14 Pro 5G 256GB", "TH03",
+                    "BT30", "8GB/256GB - Midnight Black", "Midnight Black", "8GB", "256GB", "8990000", 14, "bt30");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP29", "OPPO Find X8 Pro 512GB", "TH04",
+                    "BT31", "16GB/512GB - Space Black", "Space Black", "16GB", "512GB", "29990000", 5, "bt31");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP30", "OPPO A5 Pro 5G 256GB", "TH04",
+                    "BT32", "8GB/256GB - Mocha Brown", "Mocha Brown", "8GB", "256GB", "7990000", 13, "bt32");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP31", "Vivo X200 Pro 512GB", "TH05",
+                    "BT33", "16GB/512GB - Titanium Gray", "Titanium Gray", "16GB", "512GB", "29990000", 4, "bt33");
+            seedProduct(productRepository, variantRepository, brandRepository, supplier,
+                    phoneCategory, "SP32", "Vivo Y39 5G 256GB", "TH05",
+                    "BT34", "8GB/256GB - Ocean Blue", "Ocean Blue", "8GB", "256GB", "6990000", 11, "bt34");
+            // Replace legacy random seed images for the catalog products.
+            for (String code : new String[]{"BT01", "BT02", "BT03", "BT04", "BT05", "BT06", "BT07", "BT08", "BT09", "BT10", "BT11", "BT12", "BT13", "BT14", "BT15", "BT16", "BT17", "BT18", "BT19", "BT20", "BT21", "BT22", "BT23", "BT24", "BT25", "BT26", "BT27", "BT28", "BT29", "BT30", "BT31", "BT32", "BT33", "BT34"}) {
+                variantRepository.findById(code).ifPresent(variant -> {
+                    String image = switch (variant.getProduct().getCode()) {
+                        case "SP01" -> "/images/iphone-17-pro-max.png";
+                        case "SP02" -> "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=800&auto=format&fit=crop";
+                        case "SP03" -> "https://images.unsplash.com/photo-1605236453806-6ff36851218e?q=80&w=800&auto=format&fit=crop";
+                        case "SP04" -> "https://welectronics.com/images/stories/virtuemart/product/SamsungGalaxyS25Ultrasilver71.jpg";
+                        case "SP05" -> "https://images.samsung.com/sec/smartphones/galaxy-z-flip6/images/galaxy-z-flip6-features-colors-silver-tb.jpg";
+                        case "SP06" -> "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?q=90&w=1200&auto=format&fit=crop";
+                        case "SP07" -> "https://www.istudiosg.com/cdn/shop/files/IMG-18064773_m_jpeg_1_eca337ea-ba30-4f9c-81c8-c6b4bbda5b05.jpg?v=1757450028&width=1445";
+                        case "SP08" -> "https://bizweb.dktcdn.net/100/398/567/products/iphone-16-pro-max-tu-nhien-1.png?v=1727218057233";
+                        case "SP09" -> "https://onewaymobile.vn/upload/1Samsung/S25%20Plus/5.png";
+                        case "SP10" -> "https://www.pbtech.co.nz/imgprod/M/P/MPHSAM0072112.jpg?h=38284356";
+                        case "SP11" -> "https://www.softbank.jp/online-shop/set/data/special/products/lineup/samsung-galaxy/img/shared/samsung-galaxy-z-flip7.png";
+                        case "SP12" -> "/images/xiaomi-15.png";
+                        case "SP13" -> "https://media.power-cdn.net/images/h-6b4126192109d752c13f0cc3a0b6552b/products/3824950/3824950_10_1200x1200_w_g.jpg";
+                        case "SP14" -> "https://img14.360buyimg.com/pop/jfs/t1/148405/3/45632/50141/673706afFc2332df2/911a1028a4c95f56.jpg";
+                        case "SP15" -> "https://imagenes.20minutos.es/files/image_640_auto/uploads/imagenes/2025/03/18/vivo-v50-satin-black-combo-low.png";
+                        case "SP16" -> "https://images.price.tools/images/samsung-galaxy-a56-5g-2025-256gb-l-hlv4HTqs.jpg";
+                        case "SP17" -> "/images/iphone-17-pro-max.png";
+                        case "SP18" -> "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?q=90&w=1200&auto=format&fit=crop";
+                        case "SP19" -> "https://cdn.cimri.io/image/1000x1000/apple-iphone-16-pro-256gb_917069182.jpg";
+                        case "SP20" -> "https://images.unsplash.com/photo-1605236453806-6ff36851218e?q=90&w=1200&auto=format&fit=crop";
+                        case "SP21" -> "https://www.au.com/content/dam/au-com/common/graph/app/galaxy_z_fold7/galaxy_z_fold7_jetblack_01_28a35caa5ea2b3f0.jpg";
+                        case "SP22" -> "https://onewaymobile.vn/upload/1Samsung/S25%20Plus/5.png";
+                        case "SP23", "SP24", "SP25" -> "https://images.price.tools/images/samsung-galaxy-a56-5g-2025-256gb-l-hlv4HTqs.jpg";
+                        case "SP26" -> "https://cdnpro.eraspace.com/media/catalog/product/x/i/xiaomi_15_ultra_silver_chrome_01.jpg";
+                        case "SP27" -> "https://media.ldlc.com/r1600/ld/products/00/06/21/88/LD0006218872.jpg";
+                        case "SP28" -> "https://boutique.orange.fr/commun/img/mobiles/xl/xiaomi-redmi-note-14-pro-5g-noir.png";
+                        case "SP29" -> "https://cdn.beebom.com/mobile/oppo-find-x8-pro/oppo-find-x8-pro-black.png";
+                        case "SP30" -> "https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=90&w=1200&auto=format&fit=crop";
+                        case "SP31" -> "https://imagenes.20minutos.es/files/image_640_auto/uploads/imagenes/2025/03/18/vivo-v50-satin-black-combo-low.png";
+                        case "SP32" -> "https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=90&w=1200&auto=format&fit=crop";
+                        default -> "https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=800&auto=format&fit=crop";
+                    };
+                    if (variant.getImageUrl() == null || variant.getImageUrl().isBlank()
+                            || variant.getImageUrl().contains("picsum.photos")
+                            || variant.getImageUrl().contains("images.unsplash.com")
+                            || variant.getImageUrl().contains("teknikproffset.no")
+                            || variant.getImageUrl().contains("cdn.x-kom.pl")
+                            || variant.getImageUrl().contains("images.ctfassets.net")
+                            || ((variant.getProduct().getCode().equals("SP01") || variant.getProduct().getCode().equals("SP17"))
+                                    && variant.getImageUrl().contains("lmt-web.mstatic.lv"))
+                            || (variant.getProduct().getCode().equals("SP12")
+                                    && variant.getImageUrl().contains("media.ldlc.com"))) {
+                        variant.setImageUrl(image);
+                        variantRepository.save(variant);
+                    }
+                });
+            }
         };
+    }
+
+    private void seedBrand(BrandRepository brandRepository, String code, String name) {
+        if (!brandRepository.existsById(code)) {
+            Brand brand = new Brand();
+            brand.setCode(code);
+            brand.setName(name);
+            brandRepository.save(brand);
+        }
     }
 
     private void seedVariant(ProductVariantRepository variantRepository,
