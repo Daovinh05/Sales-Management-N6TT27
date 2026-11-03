@@ -107,6 +107,9 @@ export function Footer() {
           />
         </div>
       </div>
+      <div className="tz-container">
+        <p>Đây là phiên bản orchastrator mới nhất 0.1.0.</p>
+      </div>
     </footer>
   );
 }
